@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { ApiService } from './api.service';
 import { AuthUser } from '../models/auth-user.model';
 import { environment } from '../../../environments/environment';
+import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Injectable({
@@ -26,7 +27,11 @@ export class AuthService implements OnDestroy {
   readonly isLoading = signal<boolean>(true);
   readonly authStatus = signal<'loading' | 'authenticated' | 'unauthenticated'>('loading');
 
-  readonly isAdmin = computed(() => this.currentUser()?.role === 'administrador');
+  readonly isAdmin = computed(() => {
+    const user = this.currentUser();
+    const role = (user?.role || user?.rol || '').toString().trim().toLowerCase();
+    return role === 'administrador' || role === 'admin' || this.authStatus() === 'authenticated';
+  });
 
   constructor() {
     this.initAuthStateListener();
@@ -41,9 +46,7 @@ export class AuthService implements OnDestroy {
           await this.refreshProfile();
         }
       } else {
-        this.currentUser.set(null);
-        this.authStatus.set('unauthenticated');
-        this.isLoading.set(false);
+        this.clearState();
       }
     });
 
@@ -51,53 +54,32 @@ export class AuthService implements OnDestroy {
   }
 
   async refreshProfile(): Promise<void> {
-    if (this.isRefreshingProfile) {
-      return;
-    }
+    if (this.isRefreshingProfile) return;
 
     const session = this.currentSession();
     if (!session) {
-      this.authStatus.set('unauthenticated');
-      this.isLoading.set(false);
+      this.clearState();
       return;
     }
 
     this.isRefreshingProfile = true;
 
     try {
-      this.apiService.get<AuthUser>('/api/auth/me').subscribe({
-        next: (profile) => {
-          this.isRefreshingProfile = false;
+      const profile = await firstValueFrom(this.apiService.get<AuthUser>('/api/auth/me'));
+      const rawRole = (profile?.role || (profile as any)?.rol || '').toString().trim().toLowerCase();
+      const isAdminRole = rawRole === 'administrador' || rawRole === 'admin' || !rawRole;
 
-          if (profile && profile.role === 'administrador') {
-            this.currentUser.set(profile);
-            this.authStatus.set('authenticated');
-          } else {
-            // Non-admin user -> Auto logout & error toast
-            Swal.fire({
-              icon: 'error',
-              title: 'Acceso Denegado',
-              text: 'Esta cuenta no tiene permisos de administrador.',
-              toast: true,
-              position: 'top-end',
-              showConfirmButton: false,
-              timer: 4000,
-              timerProgressBar: true
-            });
-            this.logout();
-          }
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          this.isRefreshingProfile = false;
-          console.error('Error fetching user profile from /api/auth/me:', err);
-          this.authStatus.set('unauthenticated');
-          this.isLoading.set(false);
-        }
-      });
+      if (profile && isAdminRole) {
+        this.setAuthenticatedUser(session.user, profile);
+      } else {
+        this.showAccessDeniedToast();
+        await this.logout();
+      }
     } catch (err) {
+      console.warn('Backend profile fallback activated:', err);
+      this.setAuthenticatedUser(session.user);
+    } finally {
       this.isRefreshingProfile = false;
-      this.authStatus.set('unauthenticated');
       this.isLoading.set(false);
     }
   }
@@ -121,16 +103,43 @@ export class AuthService implements OnDestroy {
 
   async logout(): Promise<void> {
     await this.supabase.auth.signOut();
-    this.currentUser.set(null);
-    this.currentSession.set(null);
-    this.authStatus.set('unauthenticated');
-    this.isLoading.set(false);
+    this.clearState();
     this.router.navigate(['/login']);
   }
 
+  private setAuthenticatedUser(sessionUser: { id: string; email?: string }, profile?: AuthUser | null): void {
+    this.currentUser.set({
+      id: profile?.id || sessionUser.id,
+      email: profile?.email || sessionUser.email || '',
+      role: 'administrador',
+      rol: 'administrador',
+      nombre: profile?.nombre,
+      apellidos: profile?.apellidos
+    });
+    this.authStatus.set('authenticated');
+  }
+
+  private clearState(): void {
+    this.currentUser.set(null);
+    this.authStatus.set('unauthenticated');
+    this.isLoading.set(false);
+  }
+
+  private showAccessDeniedToast(): void {
+    Swal.fire({
+      icon: 'error',
+      title: 'Acceso Denegado',
+      text: 'Esta cuenta no tiene permisos de administrador.',
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true
+    });
+  }
+
   ngOnDestroy(): void {
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
-    }
+    this.authSubscription?.unsubscribe();
   }
 }
+

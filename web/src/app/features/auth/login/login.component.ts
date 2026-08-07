@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login',
@@ -23,7 +24,7 @@ import { AuthService } from '../../../core/services/auth.service';
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <!-- Error Banner -->
           <div *ngIf="errorMessage()" class="p-3.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-center gap-2.5">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 shrink-0 text-red-600">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
             </svg>
             <span>{{ errorMessage() }}</span>
@@ -118,11 +119,24 @@ export class LoginComponent implements OnInit {
     this.isSubmitting.set(false);
 
     if (result.success) {
-      if (this.authService.isAdmin()) {
-        this.router.navigate(['/dashboard']);
-      }
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
+      Toast.fire({
+        icon: 'success',
+        title: '¡Inicio de sesión correcto!'
+      });
+      this.router.navigate(['/dashboard']);
     } else {
-      this.errorMessage.set(result.error || 'Ocurrió un error al iniciar sesión.');
+      let errText = result.error || 'Ocurrió un error al iniciar sesión.';
+      if (errText.includes('Invalid login credentials')) {
+        errText = 'Correo o contraseña incorrectos.';
+      }
+      this.errorMessage.set(errText);
     }
   }
 }

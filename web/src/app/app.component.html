@@ -1,11 +1,7 @@
 <!-- Global Loading Screen while Auth State is settling -->
-<div *ngIf="authService.isLoading()" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center font-sans">
-  <div class="relative flex items-center justify-center mb-6">
-    <div class="w-16 h-16 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
-    <div class="absolute w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 animate-pulse"></div>
-  </div>
-  <h3 class="text-lg font-bold text-white tracking-wide">Cargando aplicación...</h3>
-  <p class="text-xs text-slate-400 mt-1">Verificando sesión de usuario</p>
+<div *ngIf="authService.isLoading()" class="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center font-sans text-slate-800">
+  <div class="w-8 h-8 rounded-full border-2 border-slate-300 border-t-slate-800 animate-spin mb-3"></div>
+  <p class="text-sm font-medium text-slate-600">Cargando...</p>
 </div>
 
 <!-- Main Router Outlet -->
