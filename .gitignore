@@ -1,36 +1,36 @@
-# dependencies
+# Dependencies
 node_modules/
 .pnp
 .pnp.js
 
-# testing
+# Testing
 coverage/
 
-# next.js
-.next/
-out/
-
-# production
+# Production & Builds
 build/
+web/dist/
+web/.angular/
 
-# debug
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# Local environment files
 .env*.local
 .env
 
-# vercel
-.vercel
-
-# typescript
+# TypeScript build info
 *.tsbuildinfo
-next-env.d.ts
 
 # OS & Editors
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
+# Sprint 1 Scope Filter - Ignore post-Sprint 1 modules
+web/src/app/features/dashboard/
+web/src/app/features/residents/
+web/src/app/features/payments/
+web/src/app/features/announcements/

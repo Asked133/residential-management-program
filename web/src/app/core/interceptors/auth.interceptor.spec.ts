@@ -1,0 +1,82 @@
+import { TestBed } from '@angular/core/testing';
+import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { authInterceptor } from './auth.interceptor';
+import { AuthService } from '../services/auth.service';
+import { environment } from '../../../environments/environment';
+import { signal } from '@angular/core';
+
+describe('authInterceptor', () => {
+  let httpTestingController: HttpTestingController;
+  let httpClient: HttpClient;
+  let mockAuthService: any;
+
+  beforeEach(() => {
+    mockAuthService = {
+      currentSession: signal<any>({ access_token: 'fake-jwt-token' }),
+      logout: jasmine.createSpy('logout')
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting()
+      ]
+    });
+
+    httpClient = TestBed.inject(HttpClient);
+    httpTestingController = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpTestingController.verify();
+  });
+
+  it('should attach Authorization Bearer header for API requests', () => {
+    const testUrl = `${environment.apiUrl}/api/auth/me`;
+
+    httpClient.get(testUrl).subscribe();
+
+    const req = httpTestingController.expectOne(testUrl);
+    expect(req.request.headers.has('Authorization')).toBeTrue();
+    expect(req.request.headers.get('Authorization')).toBe('Bearer fake-jwt-token');
+    req.flush({});
+  });
+
+  it('should NOT attach Authorization header for non-API requests (e.g. Supabase)', () => {
+    const testUrl = 'https://qunkgbmxmxmjponyxzdu.supabase.co/rest/v1/';
+
+    httpClient.get(testUrl).subscribe();
+
+    const req = httpTestingController.expectOne(testUrl);
+    expect(req.request.headers.has('Authorization')).toBeFalse();
+    req.flush({});
+  });
+
+  it('should invoke logout on 401 error', () => {
+    const testUrl = `${environment.apiUrl}/api/residents`;
+
+    httpClient.get(testUrl).subscribe({
+      error: (err) => expect(err.status).toBe(401)
+    });
+
+    const req = httpTestingController.expectOne(testUrl);
+    req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    expect(mockAuthService.logout).toHaveBeenCalled();
+  });
+
+  it('should NOT invoke logout on 403 error', () => {
+    const testUrl = `${environment.apiUrl}/api/residents`;
+
+    httpClient.get(testUrl).subscribe({
+      error: (err) => expect(err.status).toBe(403)
+    });
+
+    const req = httpTestingController.expectOne(testUrl);
+    req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
+
+    expect(mockAuthService.logout).not.toHaveBeenCalled();
+  });
+});

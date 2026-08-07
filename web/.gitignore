@@ -1,0 +1,48 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Compiled output & temp files
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Dependencies
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# IDEs & OS files
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+.DS_Store
+Thumbs.db
+
+# Angular Cache & Builds
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+
+# Local environments
+.env
+.env*.local
+
+# Sprint 1 Scope Filter - Ignore non-Sprint 1 modules
+src/app/features/dashboard/
+src/app/features/residents/
+src/app/features/payments/
+src/app/features/announcements/
