@@ -67,9 +67,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowClients", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:3000",  // Next.js dev server
-                "http://localhost:8081"   // React Native / Expo
+                "http://localhost:3000",  
+                "http://localhost:8081",
+                "https://residential-management-program.vercel.app"
               )
+              .AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -77,9 +79,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ──────────────────────────────────────────────────
-// 6. Middleware pipeline (el orden importa)
-// ──────────────────────────────────────────────────
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -87,7 +87,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowClients");
 
-// Authentication ANTES de Authorization — siempre en este orden
 app.UseAuthentication();
 app.UseAuthorization();
 
