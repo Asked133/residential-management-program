@@ -30,7 +30,7 @@ Thumbs.db
 .idea/
 
 # Sprint 1 Scope Filter - Ignore post-Sprint 1 modules
-web/src/app/features/dashboard/
 web/src/app/features/residents/
 web/src/app/features/payments/
 web/src/app/features/announcements/
+

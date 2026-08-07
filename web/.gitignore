@@ -42,7 +42,7 @@ testem.log
 .env*.local
 
 # Sprint 1 Scope Filter - Ignore non-Sprint 1 modules
-src/app/features/dashboard/
 src/app/features/residents/
 src/app/features/payments/
 src/app/features/announcements/
+
