@@ -1,0 +1,8 @@
+<!-- Global Loading Screen while Auth State is settling -->
+<div *ngIf="authService.isLoading()" class="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center font-sans text-slate-800">
+  <div class="w-8 h-8 rounded-full border-2 border-slate-300 border-t-slate-800 animate-spin mb-3"></div>
+  <p class="text-sm font-medium text-slate-600">Cargando...</p>
+</div>
+
+<!-- Main Router Outlet -->
+<router-outlet></router-outlet>
