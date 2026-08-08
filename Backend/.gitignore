@@ -1,0 +1,91 @@
+## ──────────────────────────────────────────
+##  .gitignore — .NET / ASP.NET Core Backend
+## ──────────────────────────────────────────
+
+# ── Build output ──────────────────────────
+[Bb]in/
+[Oo]bj/
+out/
+build/
+publish/
+
+# ── NuGet packages ────────────────────────
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+# NuGet restore lockfile (keep if you rely on locked restore)
+# packages.lock.json
+
+# ── Visual Studio / Rider ─────────────────
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.DotSettings.user
+
+# ── Rider / JetBrains ─────────────────────
+.idea/
+*.sln.iml
+
+# ── MSBuild / Roslyn ──────────────────────
+*.log
+*.binlog
+*.cache
+*.pidb
+*.svd
+*.pdb
+*.pgc
+*.pgd
+
+# ── Test results ──────────────────────────
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+TestResult.xml
+coverage*/
+*.coverage
+*.coveragexml
+*.trx
+
+# ── Publish profiles ──────────────────────
+**/Properties/PublishProfiles/
+PublishScripts/
+
+# ── Runtime & configuration secrets ───────
+appsettings.Development.json
+appsettings.Local.json
+appsettings.Production.json
+secrets.json
+*.pfx
+*.p12
+*.key
+*.pem
+
+# ── Entity Framework migrations snapshots (optional) ──
+# Uncomment if you don't want to track auto-generated snapshot
+# **/Migrations/*Snapshot.cs
+
+# ── Docker ────────────────────────────────
+.dockerignore
+docker-compose.override.yml
+
+# ── Node (if any tooling is present) ──────
+node_modules/
+npm-debug.log*
+
+# ── OS artifacts ──────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Environment files ─────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Logs ──────────────────────────────────
+logs/
+*.log
