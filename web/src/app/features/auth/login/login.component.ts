@@ -116,8 +116,6 @@ export class LoginComponent implements OnInit {
     const { email, password } = this.loginForm.value;
     const result = await this.authService.login(email, password);
 
-    this.isSubmitting.set(false);
-
     if (result.success) {
       const Toast = Swal.mixin({
         toast: true,
@@ -130,8 +128,8 @@ export class LoginComponent implements OnInit {
         icon: 'success',
         title: '¡Inicio de sesión correcto!'
       });
-      this.router.navigate(['/dashboard']);
     } else {
+      this.isSubmitting.set(false);
       let errText = result.error || 'Ocurrió un error al iniciar sesión.';
       if (errText.includes('Invalid login credentials')) {
         errText = 'Correo o contraseña incorrectos.';

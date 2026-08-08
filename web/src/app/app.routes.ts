@@ -1,15 +1,17 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { LoginComponent } from './features/auth/login/login.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
 
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+    component: LoginComponent
   },
   {
     path: 'dashboard',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+    component: DashboardComponent
   },
   {
     path: '',
@@ -21,4 +23,5 @@ export const routes: Routes = [
     redirectTo: '/login'
   }
 ];
+
 

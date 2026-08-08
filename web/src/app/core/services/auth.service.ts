@@ -53,7 +53,7 @@ export class AuthService implements OnDestroy {
     this.authSubscription = data.subscription;
   }
 
-  async refreshProfile(): Promise<void> {
+  async refreshProfile(skipLoadingOff: boolean = false): Promise<void> {
     if (this.isRefreshingProfile) return;
 
     const session = this.currentSession();
@@ -80,7 +80,9 @@ export class AuthService implements OnDestroy {
       this.setAuthenticatedUser(session.user);
     } finally {
       this.isRefreshingProfile = false;
-      this.isLoading.set(false);
+      if (!skipLoadingOff) {
+        this.isLoading.set(false);
+      }
     }
   }
 
@@ -97,8 +99,16 @@ export class AuthService implements OnDestroy {
     }
 
     this.currentSession.set(data.session);
-    await this.refreshProfile();
-    return { success: true };
+    await this.refreshProfile(true);
+
+    if (this.authStatus() === 'authenticated') {
+      await this.router.navigate(['/dashboard']);
+      this.isLoading.set(false);
+      return { success: true };
+    } else {
+      this.isLoading.set(false);
+      return { success: false, error: 'Acceso denegado.' };
+    }
   }
 
   async logout(): Promise<void> {
