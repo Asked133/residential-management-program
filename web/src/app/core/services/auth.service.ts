@@ -20,7 +20,7 @@ export class AuthService implements OnDestroy {
   );
 
   private authSubscription: Subscription | null = null;
-  private isRefreshingProfile = false;
+  private refreshProfilePromise: Promise<void> | null = null;
 
   readonly currentUser = signal<AuthUser | null>(null);
   readonly currentSession = signal<Session | null>(null);
@@ -42,7 +42,7 @@ export class AuthService implements OnDestroy {
       this.currentSession.set(session);
 
       if (session) {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           await this.refreshProfile();
         }
       } else {
@@ -53,8 +53,10 @@ export class AuthService implements OnDestroy {
     this.authSubscription = data.subscription;
   }
 
-  async refreshProfile(skipLoadingOff: boolean = false): Promise<void> {
-    if (this.isRefreshingProfile) return;
+  async refreshProfile(): Promise<void> {
+    if (this.refreshProfilePromise) {
+      return this.refreshProfilePromise;
+    }
 
     const session = this.currentSession();
     if (!session) {
@@ -62,8 +64,15 @@ export class AuthService implements OnDestroy {
       return;
     }
 
-    this.isRefreshingProfile = true;
+    this.refreshProfilePromise = this.doRefreshProfile(session);
+    try {
+      await this.refreshProfilePromise;
+    } finally {
+      this.refreshProfilePromise = null;
+    }
+  }
 
+  private async doRefreshProfile(session: Session): Promise<void> {
     try {
       const profile = await firstValueFrom(this.apiService.get<AuthUser>('/api/auth/me'));
       const rawRole = (profile?.role || (profile as any)?.rol || '').toString().trim().toLowerCase();
@@ -79,10 +88,7 @@ export class AuthService implements OnDestroy {
       console.warn('Backend profile fallback activated:', err);
       this.setAuthenticatedUser(session.user);
     } finally {
-      this.isRefreshingProfile = false;
-      if (!skipLoadingOff) {
-        this.isLoading.set(false);
-      }
+      this.isLoading.set(false);
     }
   }
 
@@ -99,16 +105,16 @@ export class AuthService implements OnDestroy {
     }
 
     this.currentSession.set(data.session);
-    await this.refreshProfile(true);
+    await this.refreshProfile();
 
     if (this.authStatus() === 'authenticated') {
       await this.router.navigate(['/dashboard']);
       this.isLoading.set(false);
       return { success: true };
-    } else {
-      this.isLoading.set(false);
-      return { success: false, error: 'Acceso denegado.' };
     }
+
+    this.isLoading.set(false);
+    return { success: false, error: 'Acceso denegado.' };
   }
 
   async logout(): Promise<void> {
