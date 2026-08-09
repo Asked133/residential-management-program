@@ -34,3 +34,85 @@ web/src/app/features/residents/
 web/src/app/features/payments/
 web/src/app/features/announcements/
 
+# Mobile Filter - DO NOT REMOVE
+
+# Flutter Defaults
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+app.*.symbols
+app.*.map.json
+/android/app/debug
+/android/app/profile
+/android/app/release
+# Extra Custom Flutter ignores
+.dart_tool/
+.packages
+build/
+coverage/
+lib/generated_plugin_registrant.dart
+.env
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+*.swp
+*.log
+# Android 
+android/app/upload-keystore.jks
+**/upload-keystore.jks
+*.jks
+*.keystore
+**/key.properties
+# android local
+**/android/.gradle/
+**/android/local.properties
+local.properties
+**/android/app/src/debug/
+**/android/app/src/profile/
+**/android/profile/
+# iOS / macOS
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/.xcode.env.local
+**/ios/Runner.xcworkspace/xcuserdata/
+**/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+

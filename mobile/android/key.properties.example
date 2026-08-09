@@ -1,0 +1,4 @@
+storePassword=projecthaven
+keyPassword=projecthaven
+keyAlias=upload
+storeFile=upload-keystore.jks
