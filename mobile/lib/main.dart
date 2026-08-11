@@ -249,7 +249,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _pingBackend() async {
+Future<void> _pingBackend() async {
     if (_pingShown) {
       return;
     }
@@ -261,8 +261,26 @@ class AppController extends ChangeNotifier {
           .timeout(const Duration(seconds: 45));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        String titleMsg = 'Backend conectado correctamente.';
+        String dbVersionText = 'No disponible';
+
+        // Intentamos parsear el JSON de la respuesta
+        try {
+          final body = jsonDecode(response.body);
+          if (body is Map<String, dynamic>) {
+            titleMsg = body['message'] ?? titleMsg;
+            dbVersionText = body['dbVersion'] ?? 'No disponible';
+          }
+        } catch (_) {
+          // Si falla el parseo, se quedan los valores por defecto
+        }
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _notifyToast('Backend conectado correctamente.', success: true);
+          _notifyToast(
+            titleMsg, 
+            success: true, 
+            subtitle: 'Versión BD: $dbVersionText', // Enviamos la versión como subtítulo
+          );
         });
       } else {
         _notifyToast('No fue posible establecer conexión con el backend.', success: false);
@@ -273,7 +291,6 @@ class AppController extends ChangeNotifier {
       _notifyToast('No fue posible establecer conexión con el backend.', success: false);
     }
   }
-
   Future<Map<String, dynamic>> _getJson(String endpoint) async {
     final uri = Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}$endpoint');
     final headers = <String, String>{};
@@ -327,16 +344,35 @@ class AppController extends ChangeNotifier {
     return error.message;
   }
 
-  void _notifyToast(String message, {required bool success}) {
+void _notifyToast(String message, {required bool success, String? subtitle}) {
     final messenger = messengerKey.currentState;
     messenger?.clearSnackBars();
     messenger?.showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(
-            color: success ? const Color(0xFF166534) : const Color(0xFF991B1B),
-          ),
+        duration: const Duration(seconds: 8), // Aumentado a 8 segundos igual que el web (timer: 8000)
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: TextStyle(
+                color: success ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                fontWeight: subtitle != null ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: success ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                  fontSize: 12, // Tamaño más pequeño simulando el 0.85rem del web
+                  fontWeight: FontWeight.w500, // Simulando el strong
+                ),
+              ),
+            ],
+          ],
         ),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
