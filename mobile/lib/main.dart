@@ -137,10 +137,56 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<void> checkBackendConnection() async {
+Future<void> checkBackendConnection() async {
+
+    while (_isLoading) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+
+    await Future.delayed(const Duration(milliseconds: 300));
+
     await _pingBackend();
   }
 
+  Future<void> _pingBackend() async {
+    if (_pingShown) {
+      return;
+    }
+    _pingShown = true;
+
+    try {
+      final response = await _httpClient
+          .get(Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/ping'))
+          .timeout(const Duration(seconds: 45));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        String titleMsg = 'Backend conectado correctamente.';
+        String dbVersionText = 'No disponible';
+
+        try {
+          final body = jsonDecode(response.body);
+          if (body is Map<String, dynamic>) {
+            titleMsg = body['message'] ?? titleMsg;
+            dbVersionText = body['dbVersion'] ?? 'No disponible';
+          }
+        } catch (_) {}
+
+
+        _notifyToast(
+          titleMsg, 
+          success: true, 
+          subtitle: 'Versión BD: $dbVersionText',
+        );
+      } else {
+        _notifyToast('No fue posible establecer conexión con el backend.', success: false);
+      }
+    } on TimeoutException {
+      _notifyToast('No fue posible establecer conexión con el backend.', success: false);
+    } catch (_) {
+      _notifyToast('No fue posible establecer conexión con el backend.', success: false);
+    }
+  }
   Future<void> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
@@ -249,48 +295,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-Future<void> _pingBackend() async {
-    if (_pingShown) {
-      return;
-    }
-    _pingShown = true;
 
-    try {
-      final response = await _httpClient
-          .get(Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/ping'))
-          .timeout(const Duration(seconds: 45));
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        String titleMsg = 'Backend conectado correctamente.';
-        String dbVersionText = 'No disponible';
-
-        // Intentamos parsear el JSON de la respuesta
-        try {
-          final body = jsonDecode(response.body);
-          if (body is Map<String, dynamic>) {
-            titleMsg = body['message'] ?? titleMsg;
-            dbVersionText = body['dbVersion'] ?? 'No disponible';
-          }
-        } catch (_) {
-          // Si falla el parseo, se quedan los valores por defecto
-        }
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _notifyToast(
-            titleMsg, 
-            success: true, 
-            subtitle: 'Versión BD: $dbVersionText', // Enviamos la versión como subtítulo
-          );
-        });
-      } else {
-        _notifyToast('No fue posible establecer conexión con el backend.', success: false);
-      }
-    } on TimeoutException {
-      _notifyToast('No fue posible establecer conexión con el backend.', success: false);
-    } catch (_) {
-      _notifyToast('No fue posible establecer conexión con el backend.', success: false);
-    }
-  }
   Future<Map<String, dynamic>> _getJson(String endpoint) async {
     final uri = Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}$endpoint');
     final headers = <String, String>{};
