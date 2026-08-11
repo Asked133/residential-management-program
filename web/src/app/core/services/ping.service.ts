@@ -7,6 +7,12 @@ import { environment } from '../../../environments/environment';
 
 export const PING_TIMEOUT = 45000;
 
+export interface PingResponse {
+  message?: string;
+  timestamp?: string;
+  dbVersion?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -20,12 +26,12 @@ export class PingService {
       toast: true,
       position: 'bottom',
       showConfirmButton: false,
-      timer: 5000,
+      timer: 8000,
       timerProgressBar: true,
       width: '100%'
     });
 
-    this.http.get<any>(pingUrl).pipe(
+    this.http.get<PingResponse>(pingUrl).pipe(
       timeout(PING_TIMEOUT),
       catchError(error => {
         console.warn('Backend ping error details:', error);
@@ -45,9 +51,13 @@ export class PingService {
       })
     ).subscribe(response => {
       if (response !== null) {
+        const titleMsg = response.message || 'Backend conectado correctamente.';
+        const dbVersionText = response.dbVersion ? response.dbVersion : 'No disponible';
+
         Toast.fire({
           icon: 'success',
-          title: 'Backend conectado correctamente.',
+          title: titleMsg,
+          html: `<div style="font-size: 0.85rem; margin-top: 4px; font-weight: 500;">Versión BD: <strong>${dbVersionText}</strong></div>`,
           background: '#dcfce7',
           color: '#166534'
         });
@@ -55,3 +65,4 @@ export class PingService {
     });
   }
 }
+
