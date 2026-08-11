@@ -18,9 +18,16 @@ public class AuthController : ControllerBase
 
     // Endpoint público — health check
     [HttpGet("ping")]
-    public IActionResult Ping()
+    public async Task<IActionResult> Ping()
     {
-        return Ok(new { message = "Haven API is running", timestamp = DateTime.UtcNow });
+        var dbVersion = await _supabaseService.GetDbVersionAsync();
+
+        return Ok(new
+        {
+            message = "Haven API is running",
+            timestamp = DateTime.UtcNow,
+            dbVersion
+        });
     }
 
     // Endpoint protegido — retorna el perfil completo del usuario
