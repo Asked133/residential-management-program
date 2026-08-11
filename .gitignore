@@ -116,3 +116,5 @@ local.properties
 **/ios/Runner.xcworkspace/xcuserdata/
 **/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
 
+#Database files
+supabase/

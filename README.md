@@ -45,6 +45,9 @@ residential-management-program/
 ├── docs/                 # Documentación del proyecto
 │   └── product/          # Especificaciones de producto y requerimientos
 └── README.md             # Documentación principal del repositorio
+├ web                     # Código de la versión web
+├ mobile                  # código de la versión móvil
+├ backend                 # infraestructura proyecto 
 ```
 
 ---

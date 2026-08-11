@@ -43,4 +43,24 @@ public class SupabaseService : ISupabaseService
 
         return usuarios?.FirstOrDefault();
     }
+
+    public async Task<string?> GetDbVersionAsync()
+    {
+        var requestUrl = $"{_supabaseUrl}/rest/v1/version?select=numero_version&order=numero_version.desc&limit=1";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+
+        request.Headers.Add("apikey", _anonKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _anonKey);
+
+        var response = await _httpClient.SendAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var records = await response.Content.ReadFromJsonAsync<List<Dictionary<string, object>>>();
+        var version = records?.FirstOrDefault()?["numero_version"]?.ToString();
+
+        return version;
+    }
 }

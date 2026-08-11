@@ -349,7 +349,7 @@ void _notifyToast(String message, {required bool success, String? subtitle}) {
     messenger?.clearSnackBars();
     messenger?.showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 8), // Aumentado a 8 segundos igual que el web (timer: 8000)
+        duration: const Duration(seconds: 8), 
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
