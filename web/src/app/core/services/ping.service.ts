@@ -55,9 +55,12 @@ export class PingService {
         const dbVersionText = response.dbVersion ? response.dbVersion : 'No disponible';
 
         Toast.fire({
-          icon: 'success',
-          title: titleMsg,
-          html: `<div style="font-size: 0.85rem; margin-top: 4px; font-weight: 500;">Versión BD: <strong>${dbVersionText}</strong></div>`,
+          html: `
+            <div style="display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 2px 0;">
+              <span style="font-weight: 600; font-size: 0.95rem; line-height: 1.25;">${titleMsg}</span>
+              <span style="font-size: 0.85rem; font-weight: 500; opacity: 0.9; line-height: 1.25;">Versión BD: <strong>${dbVersionText}</strong></span>
+            </div>
+          `,
           background: '#dcfce7',
           color: '#166534'
         });
