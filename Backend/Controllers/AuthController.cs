@@ -60,7 +60,7 @@ public class AuthController : ControllerBase
             nombre = usuario.Nombre,
             apellidos = usuario.Apellidos,
             telefono = usuario.Telefono,
-            rol = usuario.Rol,
+            rol = usuario.EffectiveRol,
             email = User.FindFirst(ClaimTypes.Email)?.Value
                     ?? User.FindFirst("email")?.Value,
             creadoEn = usuario.CreadoEn
