@@ -1,9 +1,9 @@
 export interface AuthUser {
   id: string;
   email: string;
-  role?: 'administrador' | 'residente';
+  role?: string;
   rol?: string;
   nombre?: string;
   apellidos?: string;
+  telefono?: string;
 }
-

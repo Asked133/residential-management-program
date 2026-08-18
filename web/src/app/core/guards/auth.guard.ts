@@ -12,10 +12,11 @@ export const authGuard: CanActivateFn = () => {
     filter(loading => !loading),
     take(1),
     map(() => {
-      if (authService.authStatus() === 'authenticated' && authService.isAdmin()) {
+      if (authService.authStatus() === 'authenticated') {
         return true;
       }
       return router.createUrlTree(['/login']);
     })
   );
 };
+

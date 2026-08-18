@@ -5,7 +5,6 @@ import { ApiService } from './api.service';
 import { AuthUser } from '../models/auth-user.model';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
-import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root'
@@ -27,11 +26,15 @@ export class AuthService implements OnDestroy {
   readonly isLoading = signal<boolean>(true);
   readonly authStatus = signal<'loading' | 'authenticated' | 'unauthenticated'>('loading');
 
-  readonly isAdmin = computed(() => {
+  readonly userRole = computed<'administrador' | 'residente' | 'vigilante' | null>(() => {
     const user = this.currentUser();
-    const role = (user?.role || user?.rol || '').toString().trim().toLowerCase();
-    return role === 'administrador' || role === 'admin' || this.authStatus() === 'authenticated';
+    if (!user) return null;
+    return this.normalizeRole(user.role || user.rol);
   });
+
+  readonly isAdmin = computed(() => this.userRole() === 'administrador');
+  readonly isResidente = computed(() => this.userRole() === 'residente');
+  readonly isVigilante = computed(() => this.userRole() === 'vigilante');
 
   constructor() {
     this.initAuthStateListener();
@@ -51,6 +54,28 @@ export class AuthService implements OnDestroy {
     });
 
     this.authSubscription = data.subscription;
+  }
+
+  normalizeRole(role?: string | number | null): 'administrador' | 'residente' | 'vigilante' {
+    const raw = (role ?? '').toString().trim().toLowerCase();
+    if (raw === 'administrador' || raw === 'admin' || raw === 'administrator' || raw === '1') return 'administrador';
+    if (raw === 'vigilante' || raw === 'guardia' || raw === 'guard' || raw === '3') return 'vigilante';
+    if (raw === 'residente' || raw === 'resident' || raw === '2') return 'residente';
+    return 'residente';
+  }
+
+  getDashboardRoute(role?: string | null): string {
+    const normalized = this.normalizeRole(role ?? this.currentUser()?.role ?? this.currentUser()?.rol);
+    switch (normalized) {
+      case 'administrador':
+        return '/dashboard/admin';
+      case 'residente':
+        return '/dashboard/residente';
+      case 'vigilante':
+        return '/dashboard/vigilante';
+      default:
+        return '/dashboard';
+    }
   }
 
   async refreshProfile(): Promise<void> {
@@ -75,46 +100,45 @@ export class AuthService implements OnDestroy {
   private async doRefreshProfile(session: Session): Promise<void> {
     try {
       const profile = await firstValueFrom(this.apiService.get<AuthUser>('/api/auth/me'));
-      const rawRole = (profile?.role || (profile as any)?.rol || '').toString().trim().toLowerCase();
-      const isAdminRole = rawRole === 'administrador' || rawRole === 'admin' || !rawRole;
-
-      if (profile && isAdminRole) {
-        this.setAuthenticatedUser(session.user, profile);
-      } else {
-        this.showAccessDeniedToast();
-        await this.logout();
-      }
+      console.log('[AuthService] Respuesta exitosa de /api/auth/me:', profile);
+      this.setAuthenticatedUser(session.user, profile);
     } catch (err) {
-      console.warn('Backend profile fallback activated:', err);
+      console.warn('[AuthService] Fallback activado (error o demora en /api/auth/me):', err);
       this.setAuthenticatedUser(session.user);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  async login(email: string, pass: string): Promise<{ success: boolean; error?: string }> {
+  async login(email: string, pass: string): Promise<{ success: boolean; error?: string; role?: string }> {
     this.isLoading.set(true);
-    const { data, error } = await this.supabase.auth.signInWithPassword({
-      email,
-      password: pass
-    });
+    try {
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email,
+        password: pass
+      });
 
-    if (error) {
+      if (error) {
+        this.isLoading.set(false);
+        return { success: false, error: error.message };
+      }
+
+      this.currentSession.set(data.session);
+      await this.refreshProfile();
+
+      if (this.authStatus() === 'authenticated') {
+        const targetRoute = this.getDashboardRoute();
+        await this.router.navigate([targetRoute]);
+        this.isLoading.set(false);
+        return { success: true, role: this.userRole() || undefined };
+      }
+
       this.isLoading.set(false);
-      return { success: false, error: error.message };
-    }
-
-    this.currentSession.set(data.session);
-    await this.refreshProfile();
-
-    if (this.authStatus() === 'authenticated') {
-      await this.router.navigate(['/dashboard']);
+      return { success: false, error: 'Acceso denegado.' };
+    } catch (err: any) {
       this.isLoading.set(false);
-      return { success: true };
+      return { success: false, error: err?.message || 'Error inesperado de conexión.' };
     }
-
-    this.isLoading.set(false);
-    return { success: false, error: 'Acceso denegado.' };
   }
 
   async logout(): Promise<void> {
@@ -123,14 +147,43 @@ export class AuthService implements OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  private setAuthenticatedUser(sessionUser: { id: string; email?: string }, profile?: AuthUser | null): void {
+  private setAuthenticatedUser(
+    sessionUser: { id: string; email?: string; user_metadata?: Record<string, any>; app_metadata?: Record<string, any> },
+    profile?: any | null
+  ): void {
+    // El rol SIEMPRE debe venir del backend (/api/auth/me).
+    // Soportamos 'rol', 'role', 'role_id' o 'rol_id' (1=admin, 2=residente, 3=vigilante),
+    // y app_metadata del servidor de Supabase. user_metadata de cliente NO se usa para autorizar.
+    const rawRole = (
+      profile?.rol ??
+      profile?.role ??
+      profile?.rol_id ??
+      profile?.role_id ??
+      profile?.rolId ??
+      profile?.roleId ??
+      sessionUser.app_metadata?.['rol'] ??
+      sessionUser.app_metadata?.['role'] ??
+      'Residente'
+    ).toString();
+
+    const normalized = this.normalizeRole(rawRole);
+    const formattedRole = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+
+    console.log('[AuthService] Perfil resuelto:', {
+      profile,
+      rawRole,
+      normalized,
+      formattedRole
+    });
+
     this.currentUser.set({
       id: profile?.id || sessionUser.id,
       email: profile?.email || sessionUser.email || '',
-      role: 'administrador',
-      rol: 'administrador',
-      nombre: profile?.nombre,
-      apellidos: profile?.apellidos
+      role: formattedRole,
+      rol: formattedRole,
+      nombre: profile?.nombre || sessionUser.user_metadata?.['nombre'],
+      apellidos: profile?.apellidos || sessionUser.user_metadata?.['apellidos'],
+      telefono: profile?.telefono || sessionUser.user_metadata?.['telefono']
     });
     this.authStatus.set('authenticated');
   }
@@ -141,21 +194,7 @@ export class AuthService implements OnDestroy {
     this.isLoading.set(false);
   }
 
-  private showAccessDeniedToast(): void {
-    Swal.fire({
-      icon: 'error',
-      title: 'Acceso Denegado',
-      text: 'Esta cuenta no tiene permisos de administrador.',
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 4000,
-      timerProgressBar: true
-    });
-  }
-
   ngOnDestroy(): void {
     this.authSubscription?.unsubscribe();
   }
 }
-
