@@ -1,12 +1,17 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace HavenApi.DTOs;
 
-// 'usuarios' table in Supabase.
 public class UsuarioDto
 {
     [JsonPropertyName("id")]
     public Guid Id { get; set; }
+
+    [JsonPropertyName("rol_id")]
+    public int RolId { get; set; }
+
+    [JsonPropertyName("email")]
+    public string Email { get; set; } = string.Empty;
 
     [JsonPropertyName("nombre")]
     public string Nombre { get; set; } = string.Empty;
@@ -16,9 +21,6 @@ public class UsuarioDto
 
     [JsonPropertyName("telefono")]
     public string Telefono { get; set; } = string.Empty;
-
-    [JsonPropertyName("rol")]
-    public string Rol { get; set; } = string.Empty;
 
     [JsonPropertyName("creado_en")]
     public DateTime CreadoEn { get; set; }

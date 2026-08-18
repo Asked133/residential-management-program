@@ -1,3 +1,4 @@
+﻿using HavenApi.DTOs;
 using HavenApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,6 @@ public class AuthController : ControllerBase
         _supabaseService = supabaseService;
     }
 
-    // Endpoint público — health check
     [HttpGet("ping")]
     public async Task<IActionResult> Ping()
     {
@@ -30,39 +30,57 @@ public class AuthController : ControllerBase
         });
     }
 
-    // Endpoint protegido — retorna el perfil completo del usuario
-    // Combina datos del JWT (auth) + tabla usuarios (negocio)
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDto datos)
+    {
+        var (usuario, error) = await _supabaseService.RegisterUsuarioAsync(datos);
+
+        if (error != null)
+        {
+            if (error.Contains("ya esta registrado"))
+                return Conflict(new { error });
+
+            return BadRequest(new { error });
+        }
+
+        return Created("/api/auth/me", new
+        {
+            id = usuario!.Id,
+            rolId = usuario.RolId,
+            email = usuario.Email,
+            nombre = usuario.Nombre,
+            apellidos = usuario.Apellidos,
+            telefono = usuario.Telefono,
+            creadoEn = usuario.CreadoEn
+        });
+    }
+
     [Authorize]
     [HttpGet("me")]
     public async Task<IActionResult> Me()
     {
-        // 1. Extraer el ID del usuario desde el JWT (claim "sub")
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                           ?? User.FindFirst("sub")?.Value;
 
         if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
-            return Unauthorized(new { error = "Token inválido: no contiene ID de usuario" });
+            return Unauthorized(new { error = "Token invalido: no contiene ID de usuario" });
 
-        // 2. Extraer el access_token del header Authorization para pasarlo a Supabase
         var accessToken = HttpContext.Request.Headers["Authorization"]
             .ToString().Replace("Bearer ", "");
 
-        // 3. Consultar la tabla 'usuarios' en Supabase
         var usuario = await _supabaseService.GetUsuarioByIdAsync(userId, accessToken);
 
         if (usuario == null)
             return NotFound(new { error = "Usuario no encontrado en la tabla 'usuarios'" });
 
-        // 4. Retornar el perfil completo
         return Ok(new
         {
             id = usuario.Id,
+            rolId = usuario.RolId,
+            email = usuario.Email,
             nombre = usuario.Nombre,
             apellidos = usuario.Apellidos,
             telefono = usuario.Telefono,
-            rol = usuario.Rol,
-            email = User.FindFirst(ClaimTypes.Email)?.Value
-                    ?? User.FindFirst("email")?.Value,
             creadoEn = usuario.CreadoEn
         });
     }
