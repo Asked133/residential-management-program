@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="min-h-screen bg-[#f8fafc] text-[#0f172a] font-sans antialiased">
       <!-- Navbar -->
@@ -57,7 +58,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
         <!-- Actions -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 hover:border-slate-300 transition-all cursor-pointer">
+          <div [routerLink]="['/dashboard/admin/residentes']" class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 hover:border-slate-300 transition-all cursor-pointer">
             <div class="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl">
               👥
             </div>
