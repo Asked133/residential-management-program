@@ -10,7 +10,7 @@ export class ResidentesService {
   private readonly apiService = inject(ApiService);
 
   listar(): Promise<Residente[]> {
-    return firstValueFrom(this.apiService.get<Residente[]>('/api/residentes'));
+    return firstValueFrom(this.apiService.get<Residente[]>('/api/auth/residentes'));
   }
 
   crear(payload: {
@@ -18,8 +18,9 @@ export class ResidentesService {
     apellidos: string;
     telefono: string;
     email: string;
+    password: string;
     rol: string;
   }): Promise<Residente> {
-    return firstValueFrom(this.apiService.post<Residente>('/api/residentes', payload));
+    return firstValueFrom(this.apiService.post<Residente>('/api/auth/register', payload));
   }
 }
