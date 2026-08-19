@@ -17,7 +17,7 @@ import Swal from 'sweetalert2';
           Iniciar sesión
         </h2>
         <p class="text-base font-normal text-[#64748b] mt-2 mb-8">
-          Panel de administración — Haven
+          Portal de acceso — Haven
         </p>
 
         <!-- Form -->
@@ -39,7 +39,7 @@ import Swal from 'sweetalert2';
               id="email"
               type="email"
               formControlName="email"
-              placeholder="admin@haven.com"
+              placeholder="usuario@haven.com"
               class="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-base placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0f172a] focus:border-transparent transition-all"
             />
             <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="mt-1.5 text-xs text-red-500 font-medium">
@@ -62,7 +62,7 @@ import Swal from 'sweetalert2';
             />
             <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="mt-1.5 text-xs text-red-500 font-medium">
               <span *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida.</span>
-              <span *ngIf="loginForm.get('password')?.errors?.['minLength']">Mínimo 6 caracteres.</span>
+              <span *ngIf="loginForm.get('password')?.errors?.['minlength']">Mínimo 6 caracteres.</span>
             </div>
           </div>
 
@@ -99,8 +99,9 @@ export class LoginComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    if (this.authService.authStatus() === 'authenticated' && this.authService.isAdmin()) {
-      this.router.navigate(['/dashboard']);
+    if (this.authService.authStatus() === 'authenticated') {
+      const targetRoute = this.authService.getDashboardRoute();
+      this.router.navigate([targetRoute]);
     }
   }
 

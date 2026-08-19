@@ -1,4 +1,4 @@
-﻿using HavenApi.DTOs;
+using HavenApi.DTOs;
 using HavenApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -77,10 +77,12 @@ public class AuthController : ControllerBase
         {
             id = usuario.Id,
             rolId = usuario.RolId,
-            email = usuario.Email,
             nombre = usuario.Nombre,
             apellidos = usuario.Apellidos,
             telefono = usuario.Telefono,
+            rol = usuario.EffectiveRol,
+            email = User.FindFirst(ClaimTypes.Email)?.Value
+                    ?? User.FindFirst("email")?.Value,
             creadoEn = usuario.CreadoEn
         });
     }
