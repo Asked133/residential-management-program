@@ -8,9 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-
-
-final GlobalKey<ScaffoldMessengerState> messengerKey = GlobalKey<ScaffoldMessengerState>();
+final GlobalKey<ScaffoldMessengerState> messengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,11 +20,13 @@ void main() async {
   final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
   if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    throw Exception('No se encontraron las credenciales de Supabase en el archivo .env');
+    throw Exception(
+      'No se encontraron las credenciales de Supabase en el archivo .env',
+    );
   }
 
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
-  
+
   runApp(const havenApp());
 }
 
@@ -64,7 +65,10 @@ class _havenAppState extends State<havenApp> {
       title: 'haven',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: seed,
+          brightness: Brightness.light,
+        ),
         scaffoldBackgroundColor: const Color(0xFFF1F3F7),
         fontFamily: 'Roboto',
       ),
@@ -79,7 +83,12 @@ class _havenAppState extends State<havenApp> {
             return LoginScreen(controller: controller);
           }
 
-          return DashboardScreen(controller: controller);
+          final role = controller.currentUser?.rol;
+          if (role == 'administrador')
+            return AdminDashboardScreen(controller: controller);
+          if (role == 'vigilante')
+            return VigilanteDashboardScreen(controller: controller);
+          return ResidenteDashboardScreen(controller: controller);
         },
       ),
     );
@@ -98,7 +107,7 @@ class AppController extends ChangeNotifier {
   bool _isLoading = true;
   String? _errorMessage;
   bool _pingShown = false;
-  bool get _usesBackend => !kIsWeb;
+
 
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _session != null && _currentUser != null;
@@ -107,7 +116,9 @@ class AppController extends ChangeNotifier {
   String? get accessToken => _session?.accessToken;
 
   Future<void> bootstrap() async {
-    _authSubscription = _supabaseClient.auth.onAuthStateChange.listen((event) async {
+    _authSubscription = _supabaseClient.auth.onAuthStateChange.listen((
+      event,
+    ) async {
       _session = event.session;
       if (event.session == null) {
         _currentUser = null;
@@ -117,7 +128,9 @@ class AppController extends ChangeNotifier {
         return;
       }
 
-      if (event.event == AuthChangeEvent.initialSession || event.event == AuthChangeEvent.tokenRefreshed) {
+      if (event.event == AuthChangeEvent.signedIn ||
+          event.event == AuthChangeEvent.initialSession ||
+          event.event == AuthChangeEvent.tokenRefreshed) {
         await _refreshProfile();
       }
     });
@@ -126,23 +139,17 @@ class AppController extends ChangeNotifier {
     _session = existing;
 
     if (existing != null) {
-      if (_usesBackend) {
-        await _refreshProfile();
-      } else {
-        _hydrateFromSession(existing);
-      }
+      await _refreshProfile();
     } else {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-Future<void> checkBackendConnection() async {
-
+  Future<void> checkBackendConnection() async {
     while (_isLoading) {
       await Future.delayed(const Duration(milliseconds: 100));
     }
-
 
     await Future.delayed(const Duration(milliseconds: 300));
 
@@ -172,21 +179,30 @@ Future<void> checkBackendConnection() async {
           }
         } catch (_) {}
 
-
         _notifyToast(
-          titleMsg, 
-          success: true, 
+          titleMsg,
+          success: true,
           subtitle: 'Versión BD: $dbVersionText',
         );
       } else {
-        _notifyToast('No fue posible establecer conexión con el backend.', success: false);
+        _notifyToast(
+          'No fue posible establecer conexión con el backend.',
+          success: false,
+        );
       }
     } on TimeoutException {
-      _notifyToast('No fue posible establecer conexión con el backend.', success: false);
+      _notifyToast(
+        'No fue posible establecer conexión con el backend.',
+        success: false,
+      );
     } catch (_) {
-      _notifyToast('No fue posible establecer conexión con el backend.', success: false);
+      _notifyToast(
+        'No fue posible establecer conexión con el backend.',
+        success: false,
+      );
     }
   }
+
   Future<void> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
@@ -204,11 +220,7 @@ Future<void> checkBackendConnection() async {
         return;
       }
 
-      if (_usesBackend) {
-        await _refreshProfile();
-      } else {
-        _hydrateFromSession(_session!);
-      }
+      await _refreshProfile();
 
       if (!isAuthenticated) {
         _errorMessage = 'Acceso denegado.';
@@ -236,7 +248,38 @@ Future<void> checkBackendConnection() async {
     notifyListeners();
   }
 
-  Future<void> _refreshProfile() async {
+  String normalizeRole(String? role) {
+    final raw = (role ?? '').toString().trim().toLowerCase();
+    if (raw == 'administrador' ||
+        raw == 'admin' ||
+        raw == 'administrator' ||
+        raw == '1')
+      return 'administrador';
+    if (raw == 'vigilante' || raw == 'guardia' || raw == 'guard' || raw == '3')
+      return 'vigilante';
+    if (raw == 'residente' || raw == 'resident' || raw == '2')
+      return 'residente';
+    return 'residente';
+  }
+
+  Future<void>? _refreshProfilePromise;
+
+  Future<void> _refreshProfile() {
+    if (_refreshProfilePromise != null) return _refreshProfilePromise!;
+    _refreshProfilePromise = _doRefreshProfile();
+    return _refreshProfilePromise!.whenComplete(() {
+      _refreshProfilePromise = null;
+    });
+  }
+
+  /// Returns null if [s] is null, empty, or whitespace-only.
+  static String? _nb(dynamic v) {
+    if (v == null) return null;
+    final s = v.toString().trim();
+    return s.isEmpty ? null : s;
+  }
+
+  Future<void> _doRefreshProfile() async {
     final session = _session;
     if (session == null) {
       _currentUser = null;
@@ -245,38 +288,61 @@ Future<void> checkBackendConnection() async {
       return;
     }
 
+    final um = session.user.userMetadata ?? {};
+    debugPrint('=== DEBUG _doRefreshProfile ===');
+    debugPrint('userMetadata keys: ${um.keys.toList()}');
+    debugPrint('userMetadata: $um');
+    debugPrint('appMetadata: ${session.user.appMetadata}');
+
     try {
       final profile = await _getJson('/api/auth/me');
-      final mapped = AuthUser.fromJson(profile);
-      final role = (mapped.role ?? mapped.rol ?? '').trim().toLowerCase();
-      final allowed = role.isEmpty || role == 'admin' || role == 'administrador';
+      debugPrint('RAW /api/auth/me response: $profile');
+      // Unwrap {data: {...}} if the backend wraps it
+      final Map<String, dynamic> p =
+          (profile['data'] is Map<String, dynamic>)
+              ? profile['data'] as Map<String, dynamic>
+              : profile;
+      debugPrint('Unwrapped profile: $p');
 
-      if (allowed) {
-        _currentUser = mapped.copyWith(
-          id: mapped.id.isEmpty ? session.user.id : mapped.id,
-          email: mapped.email.isEmpty ? session.user.email ?? '' : mapped.email,
-          role: 'administrador',
-          rol: 'administrador',
-        );
-        _errorMessage = null;
-      } else {
-        _currentUser = null;
-        _errorMessage = 'Esta cuenta no tiene permisos de administrador.';
-        await logout();
-        return;
-      }
-    } on UnauthorizedException {
-      rethrow;
-    } on ForbiddenException {
-      rethrow;
-    } catch (_) {
-      _currentUser = AuthUser(
-        id: session.user.id,
-        email: session.user.email ?? '',
-        role: 'administrador',
-        rol: 'administrador',
+      final mapped = AuthUser.fromJson(p);
+      debugPrint('mapped.nombre: "${mapped.nombre}"');
+      debugPrint('mapped.apellidos: "${mapped.apellidos}"');
+      
+      final rawRole =
+          (_nb(p['rol']) ??
+                  _nb(p['role']) ??
+                  _nb(session.user.appMetadata['rol']) ??
+                  _nb(session.user.appMetadata['role']) ??
+                  'residente');
+      final normalized = normalizeRole(rawRole);
+
+      final resolvedNombre = _nb(mapped.nombre) ??
+          _nb(um['nombre']) ??
+          _nb(um['name']) ??
+          _nb(um['full_name']) ??
+          session.user.email?.split('@').first;
+
+      final resolvedApellidos = _nb(mapped.apellidos) ??
+          _nb(um['apellidos']) ??
+          _nb(um['last_name']);
+
+      debugPrint('resolvedNombre: "$resolvedNombre"');
+      debugPrint('resolvedApellidos: "$resolvedApellidos"');
+
+      _currentUser = mapped.copyWith(
+        id: mapped.id.isEmpty ? session.user.id : mapped.id,
+        email: mapped.email.isEmpty ? session.user.email ?? '' : mapped.email,
+        role: normalized,
+        rol: normalized,
+        nombre: resolvedNombre,
+        apellidos: resolvedApellidos,
       );
       _errorMessage = null;
+    } on UnauthorizedException {
+      rethrow;
+    } catch (e) {
+      debugPrint('ERROR in _doRefreshProfile: $e');
+      _hydrateFromSession(session);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -284,17 +350,28 @@ Future<void> checkBackendConnection() async {
   }
 
   void _hydrateFromSession(Session session) {
+    final um = session.user.userMetadata ?? {};
+    final rawRole =
+        (_nb(session.user.appMetadata['rol']) ??
+                _nb(session.user.appMetadata['role']) ??
+                'residente');
+    final normalized = normalizeRole(rawRole);
     _currentUser = AuthUser(
       id: session.user.id,
       email: session.user.email ?? '',
-      role: 'administrador',
-      rol: 'administrador',
+      role: normalized,
+      rol: normalized,
+      nombre: _nb(um['nombre']) ??
+          _nb(um['name']) ??
+          _nb(um['full_name']) ??
+          session.user.email?.split('@').first,
+      apellidos: _nb(um['apellidos']) ??
+          _nb(um['last_name']),
     );
     _errorMessage = null;
     _isLoading = false;
     notifyListeners();
   }
-
 
   Future<Map<String, dynamic>> _getJson(String endpoint) async {
     final uri = Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}$endpoint');
@@ -310,7 +387,10 @@ Future<void> checkBackendConnection() async {
       throw const UnauthorizedException();
     }
     if (response.statusCode == 403) {
-      _notifyToast('No tienes permisos para realizar esta acción.', success: false);
+      _notifyToast(
+        'No tienes permisos para realizar esta acción.',
+        success: false,
+      );
       throw const ForbiddenException();
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -343,18 +423,21 @@ Future<void> checkBackendConnection() async {
     if (message.contains('email') || message.contains('password')) {
       return 'Revisa el correo y la contraseña.';
     }
-    if (message.contains('not confirmed') || message.contains('email not confirmed')) {
+    if (message.contains('not confirmed') ||
+        message.contains('email not confirmed')) {
       return 'Debes confirmar el correo antes de entrar.';
     }
     return error.message;
   }
 
-void _notifyToast(String message, {required bool success, String? subtitle}) {
+  void _notifyToast(String message, {required bool success, String? subtitle}) {
     final messenger = messengerKey.currentState;
     messenger?.clearSnackBars();
     messenger?.showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 8), // Aumentado a 8 segundos igual que el web (timer: 8000)
+        duration: const Duration(
+          seconds: 8,
+        ), // Aumentado a 8 segundos igual que el web (timer: 8000)
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,8 +445,12 @@ void _notifyToast(String message, {required bool success, String? subtitle}) {
             Text(
               message,
               style: TextStyle(
-                color: success ? const Color(0xFF166534) : const Color(0xFF991B1B),
-                fontWeight: subtitle != null ? FontWeight.w600 : FontWeight.normal,
+                color: success
+                    ? const Color(0xFF166534)
+                    : const Color(0xFF991B1B),
+                fontWeight: subtitle != null
+                    ? FontWeight.w600
+                    : FontWeight.normal,
               ),
             ),
             if (subtitle != null) ...[
@@ -371,8 +458,11 @@ void _notifyToast(String message, {required bool success, String? subtitle}) {
               Text(
                 subtitle,
                 style: TextStyle(
-                  color: success ? const Color(0xFF166534) : const Color(0xFF991B1B),
-                  fontSize: 12, // Tamaño más pequeño simulando el 0.85rem del web
+                  color: success
+                      ? const Color(0xFF166534)
+                      : const Color(0xFF991B1B),
+                  fontSize:
+                      12, // Tamaño más pequeño simulando el 0.85rem del web
                   fontWeight: FontWeight.w500, // Simulando el strong
                 ),
               ),
@@ -381,7 +471,9 @@ void _notifyToast(String message, {required bool success, String? subtitle}) {
         ),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
-        backgroundColor: success ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+        backgroundColor: success
+            ? const Color(0xFFDCFCE7)
+            : const Color(0xFFFEE2E2),
       ),
     );
   }
@@ -428,7 +520,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await widget.controller.login(_emailController.text.trim(), _passwordController.text);
+      await widget.controller.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -521,7 +616,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           '••••••••',
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                               color: const Color(0xFF94A3B8),
                             ),
                             onPressed: () {
@@ -559,11 +656,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               ? const SizedBox(
                                   width: 22,
                                   height: 22,
-                                  child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.4,
+                                    color: Colors.white,
+                                  ),
                                 )
                               : const Text(
                                   'Entrar',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                         ),
                       ),
@@ -579,87 +682,317 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key, required this.controller});
+// ==========================================
+// SHARED COMPONENTS
+// ==========================================
+
+class _HeaderBar extends StatelessWidget {
+  const _HeaderBar({
+    required this.controller,
+    required this.title,
+    required this.subtitle,
+    required this.avatarColor,
+  });
+
+  final AppController controller;
+  final String title;
+  final String subtitle;
+  final Color avatarColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final user = controller.currentUser;
+    return Container(
+      height: 64,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: avatarColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'H',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Haven',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: avatarColor.withOpacity(0.1),
+                      border: Border.all(color: avatarColor.withOpacity(0.2)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: avatarColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${user?.nombre ?? title} ${user?.apellidos ?? ''}'
+                              .trim(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1E293B),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          user?.email ?? '',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                InkWell(
+                  onTap: controller.logout,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.logout,
+                          size: 16,
+                          color: Color(0xFF475569),
+                        ),
+                        if (MediaQuery.sizeOf(context).width > 400) ...[
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Cerrar sesión',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF334155),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ==========================================
+// ADMIN SCREENS
+// ==========================================
+
+class AdminDashboardScreen extends StatelessWidget {
+  const AdminDashboardScreen({super.key, required this.controller});
 
   final AppController controller;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            const Positioned.fill(
-              child: ColoredBox(color: Colors.white),
+            _HeaderBar(
+              controller: controller,
+              title: 'Administrador',
+              subtitle: 'Administración',
+              avatarColor: const Color(0xFF0F172A),
             ),
-            Positioned(
-              top: 12,
-              right: 12,
-              child: TextButton(
-                onPressed: controller.logout,
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF334155),
-                  backgroundColor: const Color(0xFFF1F5F9),
-                  side: const BorderSide(color: Color(0xFFD1D5DB)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Cerrar sesión', style: TextStyle(fontWeight: FontWeight.w600)),
-              ),
-            ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final screenWidth = MediaQuery.sizeOf(context).width;
-                    final maxWidth = constraints.maxWidth.isFinite ? constraints.maxWidth : screenWidth;
-                    final contentWidth = screenWidth < 700 ? maxWidth * 0.95 : maxWidth * 0.72;
-                    final clampedWidth = contentWidth.clamp(320.0, 980.0);
-                    final titleSize = screenWidth < 360
-                        ? 68.0
-                        : screenWidth < 420
-                            ? 82.0
-                            : screenWidth < 700
-                                ? 96.0
-                                : 112.0;
-
-                    return SizedBox(
-                      width: clampedWidth,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.fitWidth,
-                            child: Text(
-                              'Bienvenido',
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              softWrap: false,
-                              overflow: TextOverflow.visible,
-                              textWidthBasis: TextWidthBasis.longestLine,
-                              style: GoogleFonts.comicNeue(
-                                fontSize: titleSize,
-                                fontWeight: FontWeight.w700,
-                                height: 1.0,
-                                color: Colors.black,
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1280),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x05000000),
+                                blurRadius: 4,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Panel de Administración',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Bienvenido al centro de control del condominio.',
+                                style: TextStyle(color: Color(0xFF475569)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        Wrap(
+                          spacing: 24,
+                          runSpacing: 24,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ResidentesListScreen(
+                                      controller: controller,
+                                    ),
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                width: 300,
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(
+                                    color: const Color(0xFFE2E8F0),
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x05000000),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEFF6FF),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: const Text(
+                                        '👥',
+                                        style: TextStyle(fontSize: 24),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: const [
+                                        Text(
+                                          'GESTIÓN',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF64748B),
+                                            letterSpacing: 1.2,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Registrar Residentes',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: clampedWidth * 0.78,
-                            height: 28,
-                            child: const CustomPaint(
-                              painter: _UnderlinePainter(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -670,38 +1003,990 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-class _UnderlinePainter extends CustomPainter {
-  const _UnderlinePainter();
+class ResidentesListScreen extends StatefulWidget {
+  const ResidentesListScreen({super.key, required this.controller});
+  final AppController controller;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 12
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+  State<ResidentesListScreen> createState() => _ResidentesListScreenState();
+}
 
-    final path = Path()
-      ..moveTo(size.width * 0.06, size.height * 0.55)
-      ..quadraticBezierTo(
-        size.width * 0.50,
-        size.height * 0.92,
-        size.width * 0.94,
-        size.height * 0.42,
+class _ResidentesListScreenState extends State<ResidentesListScreen> {
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<dynamic> _residentes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchResidentes();
+  }
+
+  Future<void> _fetchResidentes() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final response = await widget.controller._httpClient.get(
+        Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/residentes'),
+        headers: {'Authorization': 'Bearer ${widget.controller.accessToken}'},
       );
-
-    canvas.drawPath(path, paint);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          _residentes = decoded;
+        } else if (decoded is Map && decoded['data'] is List) {
+          _residentes = decoded['data'];
+        }
+      } else {
+        _errorMessage = 'Error de conexión';
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: const Color(0xFFF8FAFC),
+              child: Row(
+                children: [
+                  InkWell(
+                    onTap: () => Navigator.pop(context),
+                    child: Row(
+                      children: const [
+                        Icon(
+                          Icons.arrow_back,
+                          size: 16,
+                          color: Color(0xFF64748B),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Volver al Panel',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1280),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x05000000),
+                                blurRadius: 4,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 16,
+                            runSpacing: 16,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 12,
+                                    runSpacing: 8,
+                                    children: [
+                                      const Text(
+                                        'Directorio de Residentes',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w900,
+                                          color: Color(0xFF0F172A),
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF1F5F9),
+                                          border: Border.all(
+                                            color: const Color(0xFFE2E8F0),
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${_residentes.length} residentes',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF334155),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  const Text(
+                                    'Administra las cuentas y datos de contacto de todos los habitantes de la comunidad.',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _fetchResidentes,
+                                    icon: const Icon(
+                                      Icons.refresh,
+                                      color: Color(0xFF475569),
+                                    ),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: const Color(0xFFF8FAFC),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        side: const BorderSide(
+                                          color: Color(0xFFE2E8F0),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      final bool? added = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ResidentesFormScreen(
+                                            controller: widget.controller,
+                                          ),
+                                        ),
+                                      );
+                                      if (added == true) _fetchResidentes();
+                                    },
+                                    icon: const Icon(
+                                      Icons.add,
+                                      color: Color(0xFF34D399),
+                                      size: 18,
+                                    ),
+                                    label: const Text('Agregar residente'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF0F172A),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 14,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        if (_isLoading && _residentes.isEmpty)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(48.0),
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                          )
+                        else if (_errorMessage != null)
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF2F2),
+                              border: Border.all(
+                                color: const Color(0xFFFECACA),
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.error,
+                                  color: Color(0xFFDC2626),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Error de conexión',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF7F1D1D),
+                                        ),
+                                      ),
+                                      Text(
+                                        _errorMessage!,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFFB91C1C),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: _fetchResidentes,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFFEE2E2),
+                                    foregroundColor: const Color(0xFF7F1D1D),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text('Reintentar'),
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (_residentes.isEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(48),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEEF2FF),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: const Color(0xFFE0E7FF),
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.people_outline,
+                                    color: Color(0xFF4F46E5),
+                                    size: 32,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'No hay residentes registrados',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'Comienza a construir la comunidad de Haven dando de alta al primer residente.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 24),
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    final bool? added = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ResidentesFormScreen(
+                                          controller: widget.controller,
+                                        ),
+                                      ),
+                                    );
+                                    if (added == true) _fetchResidentes();
+                                  },
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: Color(0xFF34D399),
+                                    size: 18,
+                                  ),
+                                  label: const Text('Agregar primer residente'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF0F172A),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: DataTable(
+                                headingRowColor: MaterialStateProperty.all(
+                                  const Color(0xFFF8FAFC),
+                                ),
+                                dividerThickness: 1,
+                                columns: const [
+                                  DataColumn(
+                                    label: Text(
+                                      'RESIDENTE',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'CONTACTO',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'TELÉFONO',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                rows: _residentes.map((r) {
+                                  final n = (r['nombre'] ?? '').toString();
+                                  final a = (r['apellidos'] ?? '').toString();
+                                  final initial =
+                                      '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}'
+                                          .toUpperCase();
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 40,
+                                              height: 40,
+                                              alignment: Alignment.center,
+                                              decoration: const BoxDecoration(
+                                                color: Color(0xFF0F172A),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Text(
+                                                initial.isEmpty ? 'R' : initial,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 14),
+                                            Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  '$n $a',
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF0F172A),
+                                                  ),
+                                                ),
+                                                const Text(
+                                                  'Residente Haven',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Color(0xFF94A3B8),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.email_outlined,
+                                              size: 16,
+                                              color: Color(0xFF94A3B8),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              r['email'] ?? '',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: Color(0xFF475569),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.phone_outlined,
+                                              size: 16,
+                                              color: Color(0xFF94A3B8),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              r['telefono'] ?? '—',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Color(0xFF475569),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ResidentesFormScreen extends StatefulWidget {
+  const ResidentesFormScreen({super.key, required this.controller});
+  final AppController controller;
+
+  @override
+  State<ResidentesFormScreen> createState() => _ResidentesFormScreenState();
+}
+
+class _ResidentesFormScreenState extends State<ResidentesFormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nombreCtrl = TextEditingController();
+  final _apellidosCtrl = TextEditingController();
+  final _telefonoCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+
+  bool _isSubmitting = false;
+  String? _errorMessage;
+  bool _showPassword = false;
+
+  void _generatePassword() {
+    _passwordCtrl.text =
+        'Hav${DateTime.now().millisecondsSinceEpoch % 10000}!a';
+    setState(() => _showPassword = true);
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final payload = {
+        'nombre': _nombreCtrl.text,
+        'apellidos': _apellidosCtrl.text,
+        'telefono': _telefonoCtrl.text,
+        'email': _emailCtrl.text,
+        'password': _passwordCtrl.text,
+        'rol': 'residente',
+      };
+
+      final response = await widget.controller._httpClient.post(
+        Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/register'),
+        headers: {
+          'Authorization': 'Bearer ${widget.controller.accessToken}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        widget.controller._notifyToast(
+          'Residente registrado correctamente',
+          success: true,
+        );
+        if (mounted) Navigator.pop(context, true);
+      } else {
+        _errorMessage = 'Error al guardar (Status: ${response.statusCode})';
+        try {
+          final err = jsonDecode(response.body);
+          if (err['message'] != null) _errorMessage = err['message'];
+        } catch (_) {}
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x05000000),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Registrar Residente',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(24),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (_errorMessage != null)
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFEF2F2),
+                                        border: Border.all(
+                                          color: const Color(0xFFFECACA),
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: const TextStyle(
+                                          color: Color(0xFFB91C1C),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  const _FieldLabel(text: 'Nombre'),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _nombreCtrl,
+                                    decoration: _inputDecoration(
+                                      'Ej. Juan Carlos',
+                                    ),
+                                    validator: (v) =>
+                                        v!.isEmpty ? 'Requerido' : null,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const _FieldLabel(text: 'Apellidos'),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _apellidosCtrl,
+                                    decoration: _inputDecoration('Ej. Pérez'),
+                                    validator: (v) =>
+                                        v!.isEmpty ? 'Requerido' : null,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const _FieldLabel(text: 'Teléfono'),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _telefonoCtrl,
+                                    decoration: _inputDecoration(
+                                      'Ej. 4421234567',
+                                    ),
+                                    validator: (v) =>
+                                        v!.isEmpty ? 'Requerido' : null,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const _FieldLabel(text: 'Correo Electrónico'),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _emailCtrl,
+                                    decoration: _inputDecoration(
+                                      'residente@haven.com',
+                                    ),
+                                    validator: (v) =>
+                                        v!.isEmpty ? 'Requerido' : null,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const _FieldLabel(text: 'Contraseña'),
+                                      TextButton.icon(
+                                        onPressed: _generatePassword,
+                                        icon: const Icon(
+                                          Icons.password,
+                                          size: 16,
+                                        ),
+                                        label: const Text('Generar'),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: const Color(
+                                            0xFF4F46E5,
+                                          ),
+                                          backgroundColor: const Color(
+                                            0xFFEEF2FF,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 4,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _passwordCtrl,
+                                    obscureText: !_showPassword,
+                                    decoration: _inputDecoration(
+                                      'Mínimo 8 caracteres',
+                                    ),
+                                    validator: (v) =>
+                                        v!.isEmpty ? 'Requerido' : null,
+                                  ),
+                                  const SizedBox(height: 32),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 16,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Cancelar',
+                                            style: TextStyle(
+                                              color: Color(0xFF334155),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          onPressed: _isSubmitting
+                                              ? null
+                                              : _submit,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(
+                                              0xFF0F172A,
+                                            ),
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 16,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          child: _isSubmitting
+                                              ? const CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                )
+                                              : const Text('Guardar Residente'),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// RESIDENTE SCREEN
+// ==========================================
+
+class ResidenteDashboardScreen extends StatelessWidget {
+  const ResidenteDashboardScreen({super.key, required this.controller});
+
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _HeaderBar(
+              controller: controller,
+              title: 'Residente',
+              subtitle: 'Portal Residente',
+              avatarColor: const Color(0xFF059669),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1280),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x05000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '¡Hola, ${controller.currentUser?.nombre ?? 'Residente'}!',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Bienvenido a tu portal condominal.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// VIGILANTE SCREEN
+// ==========================================
+
+class VigilanteDashboardScreen extends StatelessWidget {
+  const VigilanteDashboardScreen({super.key, required this.controller});
+
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _HeaderBar(
+              controller: controller,
+              title: 'Vigilante',
+              subtitle: 'Control de Caseta / Vigilancia',
+              avatarColor: const Color(0xFFD97706),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1280),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x05000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Control de Caseta y Accesos',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Bienvenido al portal de vigilancia y control de accesos.',
+                            style: TextStyle(color: Color(0xFF475569)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // 2. Modifica la función para aceptar un parámetro 'suffixIcon'
 InputDecoration _inputDecoration(String hintText, {Widget? suffixIcon}) {
   return InputDecoration(
     hintText: hintText,
-    suffixIcon: suffixIcon, 
+    suffixIcon: suffixIcon,
     filled: true,
     fillColor: Colors.white,
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -797,7 +2082,11 @@ class _LoadingScreen extends StatelessWidget {
             SizedBox(height: 12),
             Text(
               'Cargando...',
-              style: TextStyle(fontSize: 14, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -824,13 +2113,23 @@ class AuthUser {
   final String? apellidos;
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
+    // Unwrap {data: {...}} if present
+    final Map<String, dynamic> j =
+        (json['data'] is Map<String, dynamic>)
+            ? json['data'] as Map<String, dynamic>
+            : json;
+    String? _nb(dynamic v) {
+      if (v == null) return null;
+      final s = v.toString().trim();
+      return s.isEmpty ? null : s;
+    }
     return AuthUser(
-      id: (json['id'] ?? '').toString(),
-      email: (json['email'] ?? '').toString(),
-      role: json['role']?.toString(),
-      rol: json['rol']?.toString(),
-      nombre: json['nombre']?.toString(),
-      apellidos: json['apellidos']?.toString(),
+      id: (j['id'] ?? '').toString(),
+      email: (j['email'] ?? '').toString(),
+      role: _nb(j['role']),
+      rol: _nb(j['rol']),
+      nombre: _nb(j['nombre']),
+      apellidos: _nb(j['apellidos']),
     );
   }
 
