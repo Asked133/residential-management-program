@@ -1,8 +1,9 @@
-import { Component, inject, signal, Input, Output, EventEmitter } from '@angular/core';
+import { Component, inject, signal, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ResidentesService } from '../../../core/services/residentes.service';
+import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -76,7 +77,7 @@ import Swal from 'sweetalert2';
           <!-- Error Banner -->
           <div
             *ngIf="errorMessage()"
-            class="mb-6 p-4 rounded-xl bg-red-50/80 border border-red-200 text-red-700 text-sm font-medium flex items-start gap-3"
+            class="mb-6 p-4 rounded-xl bg-red-50/90 border border-red-200 text-red-700 text-sm font-medium flex items-start gap-3 shadow-2xs transition-all"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 shrink-0 text-red-600 mt-0.5">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
@@ -112,6 +113,7 @@ import Swal from 'sweetalert2';
                 </div>
                 <div *ngIf="residenteForm.get('nombre')?.touched && residenteForm.get('nombre')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
                   <span *ngIf="residenteForm.get('nombre')?.errors?.['required']">El nombre es requerido.</span>
+                  <span *ngIf="residenteForm.get('nombre')?.errors?.['backend']">{{ residenteForm.get('nombre')?.errors?.['backend'] }}</span>
                 </div>
               </div>
 
@@ -136,6 +138,7 @@ import Swal from 'sweetalert2';
                 </div>
                 <div *ngIf="residenteForm.get('apellidos')?.touched && residenteForm.get('apellidos')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
                   <span *ngIf="residenteForm.get('apellidos')?.errors?.['required']">Los apellidos son requeridos.</span>
+                  <span *ngIf="residenteForm.get('apellidos')?.errors?.['backend']">{{ residenteForm.get('apellidos')?.errors?.['backend'] }}</span>
                 </div>
               </div>
             </div>
@@ -155,12 +158,14 @@ import Swal from 'sweetalert2';
                   id="telefono"
                   type="tel"
                   formControlName="telefono"
-                  placeholder="Ej. 442 123 4567"
+                  placeholder="Ej. 4421234567"
                   class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
                 />
               </div>
               <div *ngIf="residenteForm.get('telefono')?.touched && residenteForm.get('telefono')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
                 <span *ngIf="residenteForm.get('telefono')?.errors?.['required']">El teléfono es requerido.</span>
+                <span *ngIf="residenteForm.get('telefono')?.errors?.['pattern']">Ingrese un número de teléfono válido (mínimo 10 dígitos).</span>
+                <span *ngIf="residenteForm.get('telefono')?.errors?.['backend']">{{ residenteForm.get('telefono')?.errors?.['backend'] }}</span>
               </div>
             </div>
 
@@ -180,12 +185,15 @@ import Swal from 'sweetalert2';
                   type="email"
                   formControlName="email"
                   placeholder="residente@haven.com"
+                  [class.border-red-400]="residenteForm.get('email')?.touched && residenteForm.get('email')?.invalid"
                   class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
                 />
               </div>
               <div *ngIf="residenteForm.get('email')?.touched && residenteForm.get('email')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
                 <span *ngIf="residenteForm.get('email')?.errors?.['required']">El correo es requerido.</span>
                 <span *ngIf="residenteForm.get('email')?.errors?.['email']">Ingrese un correo válido.</span>
+                <span *ngIf="residenteForm.get('email')?.errors?.['duplicate']">Este correo ya está registrado en el sistema.</span>
+                <span *ngIf="residenteForm.get('email')?.errors?.['backend']">{{ residenteForm.get('email')?.errors?.['backend'] }}</span>
               </div>
             </div>
 
@@ -261,6 +269,7 @@ import Swal from 'sweetalert2';
               <div *ngIf="residenteForm.get('password')?.touched && residenteForm.get('password')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
                 <span *ngIf="residenteForm.get('password')?.errors?.['required']">La contraseña es requerida.</span>
                 <span *ngIf="residenteForm.get('password')?.errors?.['minlength']">La contraseña debe tener al menos 8 caracteres.</span>
+                <span *ngIf="residenteForm.get('password')?.errors?.['backend']">{{ residenteForm.get('password')?.errors?.['backend'] }}</span>
               </div>
             </div>
 
@@ -304,7 +313,7 @@ import Swal from 'sweetalert2';
     </div>
   `
 })
-export class ResidentesFormComponent {
+export class ResidentesFormComponent implements OnInit, OnDestroy {
   @Input() isDrawer: boolean = false;
   @Output() saved = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
@@ -318,13 +327,39 @@ export class ResidentesFormComponent {
   readonly showPassword = signal<boolean>(false);
   readonly copiedPassword = signal<boolean>(false);
 
+  private formSubscription: Subscription | null = null;
+
   residenteForm: FormGroup = this.fb.group({
     nombre: ['', [Validators.required]],
     apellidos: ['', [Validators.required]],
-    telefono: ['', [Validators.required]],
+    telefono: ['', [Validators.required, Validators.pattern(/^[0-9\s\-+()]{10,15}$/)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]]
   });
+
+  ngOnInit(): void {
+    this.setupFormErrorCleaners();
+  }
+
+  private setupFormErrorCleaners(): void {
+    this.formSubscription = this.residenteForm.valueChanges.subscribe(() => {
+      // Limpiar mensaje global si el usuario edita
+      if (this.errorMessage()) {
+        this.errorMessage.set(null);
+      }
+    });
+
+    // Limpiar errores personalizados de email al modificarlo
+    const emailControl = this.residenteForm.get('email');
+    emailControl?.valueChanges.subscribe(() => {
+      if (emailControl.hasError('duplicate') || emailControl.hasError('backend')) {
+        const errors = { ...emailControl.errors };
+        delete errors['duplicate'];
+        delete errors['backend'];
+        emailControl.setErrors(Object.keys(errors).length ? errors : null);
+      }
+    });
+  }
 
   generarPassword(): void {
     const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*';
@@ -419,20 +454,79 @@ export class ResidentesFormComponent {
       console.error('[ResidentesFormComponent] Error al registrar residente:', err);
       this.isSubmitting.set(false);
       
+      const rawErrorString = (
+        typeof err?.error === 'string'
+          ? err.error
+          : JSON.stringify(err?.error || '') + ' ' + (err?.message || '')
+      ).toLowerCase();
+
+      // 1. Detectar Correo Duplicado (409 Conflict, 400 Bad Request o mensajes de Supabase/Backend)
+      const isDuplicateEmail =
+        err?.status === 409 ||
+        rawErrorString.includes('already registered') ||
+        rawErrorString.includes('already exists') ||
+        rawErrorString.includes('email_exists') ||
+        rawErrorString.includes('user_already_exists') ||
+        rawErrorString.includes('ya está registrado') ||
+        rawErrorString.includes('ya se encuentra registrado') ||
+        rawErrorString.includes('correo duplicado') ||
+        rawErrorString.includes('correo ya existe') ||
+        rawErrorString.includes('email already in use');
+
+      if (isDuplicateEmail) {
+        this.residenteForm.get('email')?.setErrors({ duplicate: true });
+        this.residenteForm.get('email')?.markAsTouched();
+        this.errorMessage.set('El correo electrónico ya se encuentra registrado. Por favor ingresa otro correo.');
+        return;
+      }
+
+      // 2. Detectar errores de validación de campos del backend (400 / 422 ModelState)
+      if (err?.error?.errors && typeof err.error.errors === 'object') {
+        const validationMsgs: string[] = [];
+        for (const [key, val] of Object.entries(err.error.errors)) {
+          const fieldName = key.toLowerCase();
+          const fieldErrors = Array.isArray(val) ? val.join(', ') : String(val);
+
+          if (fieldName.includes('email') || fieldName.includes('correo')) {
+            this.residenteForm.get('email')?.setErrors({ backend: fieldErrors });
+            this.residenteForm.get('email')?.markAsTouched();
+          } else if (fieldName.includes('nombre')) {
+            this.residenteForm.get('nombre')?.setErrors({ backend: fieldErrors });
+            this.residenteForm.get('nombre')?.markAsTouched();
+          } else if (fieldName.includes('apellido')) {
+            this.residenteForm.get('apellidos')?.setErrors({ backend: fieldErrors });
+            this.residenteForm.get('apellidos')?.markAsTouched();
+          } else if (fieldName.includes('telefono')) {
+            this.residenteForm.get('telefono')?.setErrors({ backend: fieldErrors });
+            this.residenteForm.get('telefono')?.markAsTouched();
+          } else if (fieldName.includes('password') || fieldName.includes('contraseña')) {
+            this.residenteForm.get('password')?.setErrors({ backend: fieldErrors });
+            this.residenteForm.get('password')?.markAsTouched();
+          }
+          validationMsgs.push(fieldErrors);
+        }
+
+        if (validationMsgs.length > 0) {
+          this.errorMessage.set(`Datos inválidos: ${validationMsgs.join('. ')}`);
+          return;
+        }
+      }
+
+      // 3. Categorizar otros errores generales / conexión / permisos
       let msg = 'No fue posible registrar al residente. Intenta de nuevo.';
-      
-      if (err?.status === 405) {
+
+      if (err?.status === 0) {
+        msg = 'No fue posible conectar con el servidor. Verifica tu conexión a internet o intenta más tarde.';
+      } else if (err?.status === 405) {
         msg = 'El servidor no tiene habilitado el método POST en esta ruta (Error 405 Method Not Allowed).';
       } else if (err?.status === 404) {
-        msg = `La ruta ${err?.url || '/api/auth/register'} no existe en el backend (Error 404 Not Found).`;
+        msg = `La ruta ${err?.url || '/api/residentes'} no existe en el backend (Error 404 Not Found).`;
       } else if (err?.status === 429) {
         msg = 'Límite de peticiones o correos excedido en Supabase (Error 429 Rate Limit Exceeded). Espera unos minutos.';
       } else if (err?.status === 401 || err?.status === 403) {
         msg = 'No tienes permisos suficientes para registrar residentes (Error 401/403).';
-      } else if (err?.error?.errors?.Password?.length) {
-        msg = err.error.errors.Password.join('. ');
-      } else if (err?.error?.errors?.Email?.length) {
-        msg = err.error.errors.Email.join('. ');
+      } else if (err?.status === 500) {
+        msg = 'Ocurrió un error interno en el servidor. Por favor intenta más tarde.';
       } else if (err?.error?.message) {
         msg = err.error.message;
       } else if (err?.error?.error) {
@@ -444,8 +538,12 @@ export class ResidentesFormComponent {
       } else if (err?.message) {
         msg = err.message;
       }
-      
+
       this.errorMessage.set(msg);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.formSubscription?.unsubscribe();
   }
 }
