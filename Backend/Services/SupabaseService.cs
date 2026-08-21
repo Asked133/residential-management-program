@@ -58,11 +58,14 @@ public class SupabaseService : ISupabaseService
     public async Task<(UsuarioDto? usuario, string? error)> RegisterUsuarioAsync(RegisterRequestDto datos)
     {
         // Paso 1: Crear usuario en Supabase Auth
-        var signupUrl = $"{_supabaseUrl}/auth/v1/signup";
-        var signupPayload = new { email = datos.Email, password = datos.Password };
+        // Se usa el endpoint admin y email_confirm: true para evitar el limite de 2 correos por hora
+        // que impone Supabase en su endpoint publico (/signup) para el plan actual.
+        var signupUrl = $"{_supabaseUrl}/auth/v1/admin/users";
+        var signupPayload = new { email = datos.Email, password = datos.Password, email_confirm = true };
 
         var signupRequest = new HttpRequestMessage(HttpMethod.Post, signupUrl);
-        signupRequest.Headers.Add("apikey", _anonKey);
+        signupRequest.Headers.Add("apikey", _serviceRoleKey);
+        signupRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
         signupRequest.Content = JsonContent.Create(signupPayload);
 
         var signupResponse = await _httpClient.SendAsync(signupRequest);
@@ -70,7 +73,7 @@ public class SupabaseService : ISupabaseService
 
         if (!signupResponse.IsSuccessStatusCode)
         {
-            if ((int)signupResponse.StatusCode == 422)
+            if ((int)signupResponse.StatusCode == 422 || signupBody.Contains("already been registered"))
                 return (null, "El email ya esta registrado");
 
             return (null, $"Error al crear cuenta en Auth: {signupBody}");
@@ -80,12 +83,8 @@ public class SupabaseService : ISupabaseService
         var signupJson = JsonDocument.Parse(signupBody);
 
         Guid userId;
-        if (signupJson.RootElement.TryGetProperty("user", out var userElement)
-            && userElement.TryGetProperty("id", out var idElement))
-        {
-            userId = Guid.Parse(idElement.GetString()!);
-        }
-        else if (signupJson.RootElement.TryGetProperty("id", out var directId))
+        // El endpoint admin devuelve el usuario en la raiz del JSON
+        if (signupJson.RootElement.TryGetProperty("id", out var directId))
         {
             userId = Guid.Parse(directId.GetString()!);
         }
