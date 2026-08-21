@@ -86,4 +86,40 @@ public class AuthController : ControllerBase
             creadoEn = usuario.CreadoEn
         });
     }
+
+    [Authorize]
+    [HttpGet("residentes")]
+    public async Task<IActionResult> GetResidentes()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                          ?? User.FindFirst("sub")?.Value;
+
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { error = "Token invalido: no contiene ID de usuario" });
+
+        var accessToken = HttpContext.Request.Headers["Authorization"]
+            .ToString().Replace("Bearer ", "");
+
+        var usuario = await _supabaseService.GetUsuarioByIdAsync(userId, accessToken);
+
+        if (usuario == null)
+            return NotFound(new { error = "Usuario no encontrado en la tabla 'usuarios'" });
+
+        if (!string.Equals(usuario.EffectiveRol, "Administrador", StringComparison.OrdinalIgnoreCase))
+            return StatusCode(403, new { error = "Se requiere rol de administrador" });
+
+        var residentes = await _supabaseService.GetResidentesAsync();
+
+        var result = residentes.Select(r => new
+        {
+            id = r.Id,
+            nombre = r.Nombre,
+            apellidos = r.Apellidos,
+            telefono = r.Telefono,
+            email = r.Email,
+            creadoEn = r.CreadoEn
+        });
+
+        return Ok(result);
+    }
 }

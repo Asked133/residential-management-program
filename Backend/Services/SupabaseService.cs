@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using HavenApi.DTOs;
 
@@ -127,5 +127,23 @@ public class SupabaseService : ISupabaseService
 
         var created = await insertResponse.Content.ReadFromJsonAsync<List<UsuarioDto>>();
         return (created?.FirstOrDefault(), null);
+    }
+
+    public async Task<List<UsuarioDto>> GetResidentesAsync()
+    {
+        // rol_id = 2 corresponde a "Residente"
+        var requestUrl = $"{_supabaseUrl}/rest/v1/usuarios?rol_id=eq.2&select=*";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+        request.Headers.Add("apikey", _serviceRoleKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+
+        var response = await _httpClient.SendAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+            return new List<UsuarioDto>();
+
+        var residentes = await response.Content.ReadFromJsonAsync<List<UsuarioDto>>();
+        return residentes ?? new List<UsuarioDto>();
     }
 }
