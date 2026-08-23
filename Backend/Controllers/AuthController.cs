@@ -17,6 +17,7 @@ public class AuthController : ControllerBase
         _supabaseService = supabaseService;
     }
 
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [HttpGet("ping")]
     public async Task<IActionResult> Ping()
     {
@@ -30,6 +31,9 @@ public class AuthController : ControllerBase
         });
     }
 
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto datos)
     {
@@ -55,6 +59,9 @@ public class AuthController : ControllerBase
         });
     }
 
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Authorize]
     [HttpGet("me")]
     public async Task<IActionResult> Me()
@@ -87,6 +94,10 @@ public class AuthController : ControllerBase
         });
     }
 
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Authorize]
     [HttpGet("residentes")]
     public async Task<IActionResult> GetResidentes()

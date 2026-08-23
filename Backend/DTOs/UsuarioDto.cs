@@ -4,21 +4,27 @@ namespace HavenApi.DTOs;
 
 public class UsuarioDto
 {
+    //Identificador único del usuario (UUID de Supabase).
     [JsonPropertyName("id")]
     public Guid Id { get; set; }
 
+    //Correo electrónico.
     [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 
+    //Nombre del usuario.
     [JsonPropertyName("nombre")]
     public string Nombre { get; set; } = string.Empty;
 
+    //Apellidos del usuario.
     [JsonPropertyName("apellidos")]
     public string Apellidos { get; set; } = string.Empty;
 
+    //Teléfono de contacto.
     [JsonPropertyName("telefono")]
     public string Telefono { get; set; } = string.Empty;
 
+    //Rol base (texto).
     [JsonPropertyName("rol")]
     public string Rol { get; set; } = string.Empty;
 
@@ -31,6 +37,7 @@ public class UsuarioDto
     [JsonPropertyName("rol_id")]
     public object? RolId { get; set; }
 
+    //Rol efectivo derivado de los campos de rol disponibles.
     [JsonIgnore]
     public string EffectiveRol
     {
@@ -46,6 +53,7 @@ public class UsuarioDto
         }
     }
 
+    //Fecha y hora de creación del registro.
     [JsonPropertyName("creado_en")]
     public DateTime CreadoEn { get; set; }
 }
