@@ -5,19 +5,16 @@ namespace HavenApi.DTOs;
 
 public class RegisterRequestDto
 {
-    //Nombre del usuario. Maximo 100 caracteres.
     [Required(ErrorMessage = "El nombre es obligatorio")]
     [MaxLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres")]
     [JsonPropertyName("nombre")]
     public string Nombre { get; set; } = string.Empty;
 
-    //Apellidos del usuario. Maximo 100 caracteres.
     [Required(ErrorMessage = "Los apellidos son obligatorios")]
     [MaxLength(100, ErrorMessage = "Los apellidos no pueden exceder 100 caracteres")]
     [JsonPropertyName("apellidos")]
     public string Apellidos { get; set; } = string.Empty;
 
-    //Teléfono de contacto. Formato válido requerido, maximo 20 caracteres.
     [Required(ErrorMessage = "El teléfono es obligatorio")]
     [Phone(ErrorMessage = "El formato del teléfono no es valido")]
     [MaxLength(20, ErrorMessage = "El teléfono no puede exceder 20 caracteres")]
@@ -25,7 +22,6 @@ public class RegisterRequestDto
     public string Telefono { get; set; } = string.Empty;
 
     
-    //Correo electrónico (será usado como identificador de login). Formato válido requerido.
     [Required(ErrorMessage = "El email es obligatorio")]
     [EmailAddress(ErrorMessage = "El formato del email no es valido")]
     [MaxLength(256, ErrorMessage = "El email no puede exceder 256 caracteres")]
@@ -33,7 +29,6 @@ public class RegisterRequestDto
     public string Email { get; set; } = string.Empty;
 
     
-    //Contraseña para la cuenta. Mínimo 8 caracteres.
     [Required(ErrorMessage = "La contraseña es obligatoria")]
     [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres")]
     [MaxLength(100, ErrorMessage = "La contraseña no puede exceder 100 caracteres")]

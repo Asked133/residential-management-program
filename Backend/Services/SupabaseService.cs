@@ -57,9 +57,6 @@ public class SupabaseService : ISupabaseService
 
     public async Task<(UsuarioDto? usuario, string? error)> RegisterUsuarioAsync(RegisterRequestDto datos)
     {
-        // Paso 1: Crear usuario en Supabase Auth
-        // Se usa el endpoint admin y email_confirm: true para evitar el limite de 2 correos por hora
-        // que impone Supabase en su endpoint publico (/signup) para el plan actual.
         var signupUrl = $"{_supabaseUrl}/auth/v1/admin/users";
         var signupPayload = new { email = datos.Email, password = datos.Password, email_confirm = true };
 
@@ -79,11 +76,9 @@ public class SupabaseService : ISupabaseService
             return (null, $"Error al crear cuenta en Auth: {signupBody}");
         }
 
-        // Extraer el ID del usuario creado
         var signupJson = JsonDocument.Parse(signupBody);
 
         Guid userId;
-        // El endpoint admin devuelve el usuario en la raiz del JSON
         if (signupJson.RootElement.TryGetProperty("id", out var directId))
         {
             userId = Guid.Parse(directId.GetString()!);
@@ -93,8 +88,6 @@ public class SupabaseService : ISupabaseService
             return (null, "No se pudo obtener el ID del usuario creado");
         }
 
-        // Paso 2: Crear registro en la tabla 'usuarios'
-        // rol_id = 2 corresponde a "Residente" en la tabla roles (#34)
         var insertUrl = $"{_supabaseUrl}/rest/v1/usuarios";
         var insertPayload = new
         {
@@ -118,7 +111,6 @@ public class SupabaseService : ISupabaseService
         {
             var insertError = await insertResponse.Content.ReadAsStringAsync();
 
-            // Codigo 23505 = unique constraint violation (email o id duplicado)
             if (insertError.Contains("23505"))
                 return (null, "El email ya esta registrado");
 
@@ -131,7 +123,6 @@ public class SupabaseService : ISupabaseService
 
     public async Task<List<UsuarioDto>> GetResidentesAsync()
     {
-        // rol_id = 2 corresponde a "Residente"
         var requestUrl = $"{_supabaseUrl}/rest/v1/usuarios?rol_id=eq.2&select=*";
 
         var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);

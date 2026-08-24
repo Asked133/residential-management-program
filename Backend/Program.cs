@@ -7,11 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Base de datos - Proveedor InMemory (temporal)
 builder.Services.AddDbContext<HavenDbContext>(options =>
     options.UseInMemoryDatabase("HavenDb"));
 
-// 2. Autenticacion - Supabase JWT (via OIDC Discovery)
 var supabaseUrl = builder.Configuration["Supabase:Url"]!;
 var supabaseIssuer = $"{supabaseUrl}/auth/v1";
 
@@ -33,13 +31,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// 3. Supabase Service
 builder.Services.AddHttpClient<ISupabaseService, SupabaseService>();
 
-// 4. Controllers
 builder.Services.AddControllers();
 
-// 5. OpenAPI / Swagger
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
@@ -59,7 +54,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Introduce el token JWT (access_token de la sesin de Supabase) en el formato: Bearer {tu_token_aqui}"
+        Description = "Introduce el token JWT (access_token de la sesión de Supabase) en el formato: Bearer {tu_token_aqui}"
     });
 
     options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
@@ -78,7 +73,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// 6. CORS - Permisivo por ahora (temporal)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClients", policy =>
