@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace HavenApi.DTOs;
@@ -21,12 +21,14 @@ public class RegisterRequestDto
     [JsonPropertyName("telefono")]
     public string Telefono { get; set; } = string.Empty;
 
+    
     [Required(ErrorMessage = "El email es obligatorio")]
     [EmailAddress(ErrorMessage = "El formato del email no es valido")]
     [MaxLength(256, ErrorMessage = "El email no puede exceder 256 caracteres")]
     [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 
+    
     [Required(ErrorMessage = "La contraseña es obligatoria")]
     [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres")]
     [MaxLength(100, ErrorMessage = "La contraseña no puede exceder 100 caracteres")]
