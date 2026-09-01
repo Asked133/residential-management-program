@@ -20,7 +20,7 @@ export class PingService {
   private readonly http = inject(HttpClient);
 
   checkBackendConnection(): void {
-    const pingUrl = `${environment.apiUrl}/api/auth/ping`;
+    const pingUrl = `${environment.services.usuarios}/api/auth/ping`;
 
     const Toast = Swal.mixin({
       toast: true,

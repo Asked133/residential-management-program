@@ -59,7 +59,7 @@ export class AuthService implements OnDestroy {
   normalizeRole(role?: string | number | null): 'administrador' | 'residente' | 'vigilante' {
     const raw = (role ?? '').toString().trim().toLowerCase();
     if (raw === 'administrador' || raw === 'admin' || raw === 'administrator' || raw === '1') return 'administrador';
-    if (raw === 'vigilante' || raw === 'guardia' || raw === 'guard' || raw === '3') return 'vigilante';
+    if (raw === 'vigilante' || raw === 'guardia' || raw === 'guard' || raw === 'vigilancia' || raw === '3') return 'vigilante';
     if (raw === 'residente' || raw === 'resident' || raw === '2') return 'residente';
     return 'residente';
   }
@@ -104,6 +104,23 @@ export class AuthService implements OnDestroy {
       this.setAuthenticatedUser(session.user, profile);
     } catch (err) {
       console.warn('[AuthService] Fallback activado (error o demora en /api/auth/me):', err);
+      // Respaldo resiliente: Si el backend en Render falla (401/404/demora),
+      // consultamos la vista vw_usuarios directamente en Supabase para obtener el rol real
+      try {
+        const { data: dbUser, error: dbErr } = await this.supabase
+          .from('vw_usuarios')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (dbUser && !dbErr) {
+          console.log('[AuthService] Perfil obtenido directamente de Supabase (vw_usuarios):', dbUser);
+          this.setAuthenticatedUser(session.user, dbUser);
+          return;
+        }
+      } catch (dbError) {
+        console.error('[AuthService] Error al consultar vw_usuarios en Supabase:', dbError);
+      }
       this.setAuthenticatedUser(session.user);
     } finally {
       this.isLoading.set(false);
@@ -157,6 +174,8 @@ export class AuthService implements OnDestroy {
     const rawRole = (
       profile?.rol ??
       profile?.role ??
+      profile?.rol_nombre ??
+      profile?.rolNombre ??
       profile?.rol_id ??
       profile?.role_id ??
       profile?.rolId ??
