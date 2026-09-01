@@ -24,3 +24,4 @@ export class ResidentesService {
     return firstValueFrom(this.apiService.post<Residente>('/api/auth/register', payload));
   }
 }
+
