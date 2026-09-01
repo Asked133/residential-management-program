@@ -19,11 +19,13 @@ class AppController extends ChangeNotifier {
   Session? _session;
   AuthUser? _currentUser;
   bool _isLoading = true;
+  bool _isInitializing = true;
   String? _errorMessage;
   bool _pingShown = false;
 
 
   bool get isLoading => _isLoading;
+  bool get isInitializing => _isInitializing;
   bool get isAuthenticated => _session != null && _currentUser != null;
   String? get errorMessage => _errorMessage;
   AuthUser? get currentUser => _currentUser;
@@ -52,12 +54,18 @@ class AppController extends ChangeNotifier {
     final existing = _supabaseClient.auth.currentSession;
     _session = existing;
 
+    // Minimum delay to show the splash screen
+    final splashDelay = Future.delayed(const Duration(seconds: 2));
+
     if (existing != null) {
-      await _refreshProfile();
+      await Future.wait([_refreshProfile(), splashDelay]);
     } else {
+      await splashDelay;
       _isLoading = false;
-      notifyListeners();
     }
+    
+    _isInitializing = false;
+    notifyListeners();
   }
 
   Future<void> checkBackendConnection() async {
@@ -223,7 +231,8 @@ class AppController extends ChangeNotifier {
       debugPrint('mapped.apellidos: "${mapped.apellidos}"');
       
       final rawRole =
-          (_nb(p['rol']) ??
+          (_nb(mapped.rolNombre) ??
+                  _nb(p['rol']) ??
                   _nb(p['role']) ??
                   _nb(session.user.appMetadata['rol']) ??
                   _nb(session.user.appMetadata['role']) ??
@@ -390,6 +399,53 @@ class AppController extends ChangeNotifier {
             : const Color(0xFFFEE2E2),
       ),
     );
+  }
+
+  Future<void> completarPerfil(String nombre, String apellidos, String telefono) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final payload = {
+        'nombre': nombre,
+        'apellidos': apellidos,
+        'telefono': telefono,
+      };
+
+      final response = await httpClient.patch(
+        Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/completar-perfil'),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        final Map<String, dynamic> p =
+            (decoded['data'] is Map<String, dynamic>)
+                ? decoded['data'] as Map<String, dynamic>
+                : decoded;
+        
+        final mapped = AuthUser.fromJson(p);
+        
+        final rawRole = _nb(mapped.rolNombre) ?? _nb(p['rol']) ?? _nb(p['role']) ?? _currentUser?.role ?? 'residente';
+        final normalized = normalizeRole(rawRole);
+
+        _currentUser = mapped.copyWith(
+          role: normalized,
+          rol: normalized,
+        );
+        notifyToast('Perfil actualizado correctamente.', success: true);
+      } else {
+        notifyToast('No se pudo actualizar el perfil.', success: false);
+      }
+    } catch (e) {
+      notifyToast('Error al conectar con el servidor.', success: false);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   @override
