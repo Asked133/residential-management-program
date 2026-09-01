@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const seed = Color(0xFF0F172A);
+  static const seed = Color(0xFF111C99);
   
   static ThemeData get lightTheme {
     return ThemeData(
@@ -10,8 +11,8 @@ class AppTheme {
         seedColor: seed,
         brightness: Brightness.light,
       ),
-      scaffoldBackgroundColor: const Color(0xFFF1F3F7),
-      fontFamily: 'Roboto',
+      scaffoldBackgroundColor: const Color(0xFFF7F7F7),
+      fontFamily: GoogleFonts.openSans().fontFamily,
     );
   }
 

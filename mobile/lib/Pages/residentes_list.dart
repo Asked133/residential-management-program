@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../Services/app_controller.dart';
-import 'residentes_form.dart';
 import '../Models/api_exceptions.dart';
 import '../Widgets/header_bar.dart';
 import '../main.dart';
@@ -194,38 +193,6 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  ElevatedButton.icon(
-                                    onPressed: () async {
-                                      final bool? added = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => ResidentesFormScreen(
-                                            controller: widget.controller,
-                                          ),
-                                        ),
-                                      );
-                                      if (added == true) _fetchResidentes();
-                                    },
-                                    icon: const Icon(
-                                      Icons.add,
-                                      color: Color(0xFF34D399),
-                                      size: 18,
-                                    ),
-                                    label: const Text('Agregar residente'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF0F172A),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                        vertical: 14,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      elevation: 0,
-                                    ),
-                                  ),
                                 ],
                               ),
                             ],
@@ -333,43 +300,12 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 const Text(
-                                  'Comienza a construir la comunidad de Haven dando de alta al primer residente.',
+                                  'Los residentes que se registren en la plataforma aparecerán aquí.',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Color(0xFF64748B),
                                   ),
                                   textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 24),
-                                ElevatedButton.icon(
-                                  onPressed: () async {
-                                    final bool? added = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => ResidentesFormScreen(
-                                          controller: widget.controller,
-                                        ),
-                                      ),
-                                    );
-                                    if (added == true) _fetchResidentes();
-                                  },
-                                  icon: const Icon(
-                                    Icons.add,
-                                    color: Color(0xFF34D399),
-                                    size: 18,
-                                  ),
-                                  label: const Text('Agregar primer residente'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF0F172A),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 14,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
                                 ),
                               ],
                             ),
