@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-auth-callback',
@@ -20,19 +21,20 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class AuthCallbackComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   async ngOnInit(): Promise<void> {
     const params = new URLSearchParams(window.location.search);
     const errorDescription = params.get('error_description');
     if (errorDescription) {
-      await this.showErrorToastAndRedirect(errorDescription);
+      this.showErrorToastAndRedirect(errorDescription);
       return;
     }
 
     try {
       const result = await this.authService.handleCallback();
       if (!result.success) {
-        await this.showErrorToastAndRedirect(result.error || 'No se pudo completar el inicio de sesión.');
+        this.showErrorToastAndRedirect(result.error || 'No se pudo completar el inicio de sesión.');
         return;
       }
 
@@ -49,24 +51,21 @@ export class AuthCallbackComponent implements OnInit {
       // Residente OK — redirigir a su dashboard correspondiente.
       await this.authService.navigateToDashboard();
     } catch (err: any) {
-      await this.showErrorToastAndRedirect(err?.message || 'Error inesperado al verificar la cuenta.');
+      this.showErrorToastAndRedirect(err?.message || 'Error inesperado al verificar la cuenta.');
     }
   }
 
-  private readonly router = inject(Router);
-
-  private async showErrorToastAndRedirect(message: string): Promise<void> {
-    const Swal = (await import('sweetalert2')).default;
-    await Swal.fire({
+  private showErrorToastAndRedirect(message: string): void {
+    Swal.fire({
       icon: 'error',
       title: 'Error de autenticación',
       text: message,
       toast: true,
       position: 'top-end',
       showConfirmButton: false,
-      timer: 5000,
+      timer: 3500,
       timerProgressBar: true
     });
-    await this.router.navigate(['/login']);
+    this.router.navigate(['/login']);
   }
 }
