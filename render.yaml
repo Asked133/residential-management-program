@@ -13,18 +13,18 @@ services:
         sync: false
     # Mantenemos el contexto en la raíz (.) para poder copiar HavenApi.Shared
 
-  # - type: web
-  #   name: viviendas-api
-  #   env: docker
-  #   dockerContext: .
-  #   dockerfilePath: services/Viviendas.Api/Dockerfile
-  #   envVars:
-  #     - key: Supabase__Url
-  #       sync: false
-  #     - key: Supabase__AnonKey
-  #       sync: false
-  #     - key: Supabase__ServiceRoleKey
-  #       sync: false
+  - type: web
+    name: viviendas-api
+    env: docker
+    dockerContext: .
+    dockerfilePath: services/Viviendas.Api/Dockerfile
+    envVars:
+      - key: Supabase__Url
+        sync: false
+      - key: Supabase__AnonKey
+        sync: false
+      - key: Supabase__ServiceRoleKey
+        sync: false
 
   # - type: web
   #   name: condominios-api

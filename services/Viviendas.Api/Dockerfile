@@ -4,12 +4,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copiar solo el .csproj primero (aprovecha el cache de capas de Docker)
-COPY HavenApi.csproj ./
-RUN dotnet restore
+# Copiar proyectos y restaurar (Asumiendo contexto de build en la raíz del monorepo)
+COPY ["services/Viviendas.Api/Viviendas.Api.csproj", "services/Viviendas.Api/"]
+COPY ["services/HavenApi.Shared/HavenApi.Shared.csproj", "services/HavenApi.Shared/"]
+RUN dotnet restore "services/Viviendas.Api/Viviendas.Api.csproj"
 
 # Copiar el resto del código y publicar en modo Release
-COPY . ./
+COPY . .
+WORKDIR "/src/services/Viviendas.Api"
 RUN dotnet publish -c Release -o /app/publish --no-restore
 
 # ─────────────────────────────────────────────────────────────
@@ -27,4 +29,4 @@ ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
 
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "HavenApi.dll"]
+ENTRYPOINT ["dotnet", "Viviendas.Api.dll"]
