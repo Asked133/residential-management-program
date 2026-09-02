@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../Models/auth_user.dart';
 import '../Models/api_exceptions.dart';
 import '../Widgets/banner_widget.dart';
@@ -86,7 +87,7 @@ class AppController extends ChangeNotifier {
 
     try {
       final response = await httpClient
-          .get(Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/ping'))
+          .get(Uri.parse('${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/ping'))
           .timeout(const Duration(seconds: 45));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -161,6 +162,25 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  Future<void> loginWithGoogle() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _supabaseClient.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: kIsWeb ? Uri.base.origin : 'io.supabase.haven://login-callback/',
+      );
+    } on AuthException catch (error) {
+      _errorMessage = error.message;
+    } catch (error) {
+      _errorMessage = error.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> logout() async {
     await _supabaseClient.auth.signOut();
     _session = null;
@@ -217,8 +237,8 @@ class AppController extends ChangeNotifier {
     debugPrint('appMetadata: ${session.user.appMetadata}');
 
     try {
-      final profile = await _getJson('/api/auth/me');
-      debugPrint('RAW /api/auth/me response: $profile');
+      final profile = await _getJson('/api/Auth/me');
+      debugPrint('RAW /api/Auth/me response: $profile');
       // Unwrap {data: {...}} if the backend wraps it
       final Map<String, dynamic> p =
           (profile['data'] is Map<String, dynamic>)
@@ -232,6 +252,7 @@ class AppController extends ChangeNotifier {
       
       final rawRole =
           (_nb(mapped.rolNombre) ??
+                  _nb(mapped.rolId?.toString()) ??
                   _nb(p['rol']) ??
                   _nb(p['role']) ??
                   _nb(session.user.appMetadata['rol']) ??
@@ -297,7 +318,8 @@ class AppController extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>> _getJson(String endpoint) async {
-    final uri = Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}$endpoint');
+    final baseUrl = dotenv.env['API_BASE_URL_USUARIOS'] ?? '';
+    final uri = Uri.parse('$baseUrl$endpoint');
     final headers = <String, String>{};
     final token = accessToken;
     if (token != null && token.isNotEmpty) {
@@ -412,7 +434,7 @@ class AppController extends ChangeNotifier {
       };
 
       final response = await httpClient.patch(
-        Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/completar-perfil'),
+        Uri.parse('${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/completar-perfil'),
         headers: {
           'Authorization': 'Bearer $accessToken',
           'Content-Type': 'application/json',
