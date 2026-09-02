@@ -1,6 +1,0 @@
-@HavenApi_HostAddress = http://localhost:5210
-
-GET {{HavenApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

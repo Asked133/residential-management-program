@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace HavenApi.DTOs;
+namespace Viviendas.Api.DTOs;
 
 public class CreateViviendaRequestDto
 {

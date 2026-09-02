@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace HavenApi.DTOs;
+namespace Viviendas.Api.DTOs;
 
 public class ViviendaDto
 {
@@ -12,6 +12,9 @@ public class ViviendaDto
 
     [JsonPropertyName("tipo")]
     public string? Tipo { get; set; }
+
+    [JsonPropertyName("activo")]
+    public bool Activo { get; set; }
 
     [JsonPropertyName("creado_en")]
     public DateTime CreadoEn { get; set; }

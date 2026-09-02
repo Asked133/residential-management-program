@@ -1,10 +1,10 @@
-using HavenApi.DTOs;
-using HavenApi.Services;
+using Viviendas.Api.DTOs;
+using Viviendas.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace HavenApi.Controllers;
+namespace Viviendas.Api.Controllers;
 
 [Authorize]
 [ApiController]
@@ -29,12 +29,12 @@ public class ViviendasController : ControllerBase
         var accessToken = HttpContext.Request.Headers["Authorization"]
             .ToString().Replace("Bearer ", "");
 
-        var usuario = await _supabaseService.GetUsuarioByIdAsync(userId, accessToken);
+        var rol = await _supabaseService.GetUsuarioRolAsync(userId, accessToken);
 
-        if (usuario == null)
+        if (rol == null)
             return NotFound(new { error = "Usuario no encontrado en la tabla 'usuarios'" });
 
-        if (!string.Equals(usuario.EffectiveRol, "Administrador", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(rol, "Administrador", StringComparison.OrdinalIgnoreCase))
             return StatusCode(403, new { error = "Se requiere rol de administrador" });
 
         return null;

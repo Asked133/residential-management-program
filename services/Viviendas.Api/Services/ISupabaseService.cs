@@ -1,13 +1,10 @@
-using HavenApi.DTOs;
+using Viviendas.Api.DTOs;
 
-namespace HavenApi.Services;
+namespace Viviendas.Api.Services;
 
 public interface ISupabaseService
 {
-    Task<UsuarioDto?> GetUsuarioByIdAsync(Guid userId, string accessToken);
-    Task<string?> GetDbVersionAsync();
-    Task<(UsuarioDto? usuario, string? error)> RegisterUsuarioAsync(RegisterRequestDto datos);
-    Task<List<UsuarioDto>> GetResidentesAsync();
+    Task<string?> GetUsuarioRolAsync(Guid userId, string accessToken);
     Task<List<ViviendaDto>> GetViviendasAsync();
     Task<ViviendaDto?> GetViviendaByIdAsync(int id);
     Task<(ViviendaDto? vivienda, string? error)> CreateViviendaAsync(CreateViviendaRequestDto dto);
