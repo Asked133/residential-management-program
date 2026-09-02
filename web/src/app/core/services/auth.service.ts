@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { ApiService } from './api.service';
 import { AuthUser } from '../models/auth-user.model';
 import { environment } from '../../../environments/environment';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +15,8 @@ export class AuthService implements OnDestroy {
 
   private readonly supabase: SupabaseClient = createClient(
     environment.supabaseUrl,
-    environment.supabaseKey
+    environment.supabaseKey,
+    { auth: { flowType: 'pkce', detectSessionInUrl: true } }
   );
 
   private authSubscription: Subscription | null = null;
@@ -45,7 +46,7 @@ export class AuthService implements OnDestroy {
       this.currentSession.set(session);
 
       if (session) {
-        if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           await this.refreshProfile();
         }
       } else {
@@ -60,7 +61,7 @@ export class AuthService implements OnDestroy {
     const raw = (role ?? '').toString().trim().toLowerCase();
     if (raw === 'administrador' || raw === 'admin' || raw === 'administrator' || raw === '1') return 'administrador';
     if (raw === 'vigilante' || raw === 'guardia' || raw === 'guard' || raw === 'vigilancia' || raw === '3') return 'vigilante';
-    if (raw === 'residente' || raw === 'resident' || raw === '2') return 'residente';
+    if (raw === 'residente' || raw === 'resident' || raw === 'propietario' || raw === '2') return 'residente';
     return 'residente';
   }
 
@@ -76,6 +77,10 @@ export class AuthService implements OnDestroy {
       default:
         return '/dashboard';
     }
+  }
+
+  navigateToDashboard(): Promise<boolean> {
+    return this.router.navigate([this.getDashboardRoute()]);
   }
 
   async refreshProfile(): Promise<void> {
@@ -97,14 +102,67 @@ export class AuthService implements OnDestroy {
     }
   }
 
+  async handleCallback(): Promise<{ success: boolean; error?: string }> {
+    this.isLoading.set(true);
+    try {
+      // 1. Primero verificamos si Supabase (detectSessionInUrl) ya intercambió el código y creó la sesión
+      let { data: { session } } = await this.supabase.auth.getSession();
+
+      // 2. Si no hay sesión activa aún pero hay un ?code= en la URL, lo intercambiamos manualmente
+      if (!session) {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+
+        if (code) {
+          console.log('[AuthService] Intercambiando PKCE code por sesión manualmente...');
+          const { data, error } = await this.supabase.auth.exchangeCodeForSession(code);
+          if (!error && data?.session) {
+            session = data.session;
+          } else {
+            console.warn('[AuthService] Aviso en exchangeCodeForSession (posible auto-intercambio previo):', error?.message);
+            // Reintentar lectura de sesión por si el cliente interno de Supabase lo resolvió en paralelo
+            const retry = await this.supabase.auth.getSession();
+            session = retry.data.session;
+          }
+        }
+      }
+
+      if (!session) {
+        this.isLoading.set(false);
+        return { success: false, error: 'No se encontró sesión activa.' };
+      }
+
+      this.currentSession.set(session);
+
+      // Limpiar parámetros de la URL (?code=...) para mantener la barra limpia
+      if (window.location.search.includes('code=')) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+
+      await this.refreshProfile();
+
+      if (this.authStatus() === 'authenticated') {
+        this.isLoading.set(false);
+        return { success: true };
+      }
+
+      this.isLoading.set(false);
+      return { success: false, error: 'No se pudo verificar el perfil.' };
+    } catch (err: any) {
+      this.isLoading.set(false);
+      return { success: false, error: err?.message || 'Error inesperado durante la verificación.' };
+    }
+  }
+
   private async doRefreshProfile(session: Session): Promise<void> {
     try {
-      const profile = await firstValueFrom(this.apiService.get<AuthUser>('/api/auth/me'));
+      // Timeout defensivo de 5s: si Render está dormido, activamos el fallback a Supabase de inmediato
+      const profile = await firstValueFrom(this.apiService.get<AuthUser>('/api/auth/me').pipe(timeout(5000)));
       console.log('[AuthService] Respuesta exitosa de /api/auth/me:', profile);
       this.setAuthenticatedUser(session.user, profile);
     } catch (err) {
       console.warn('[AuthService] Fallback activado (error o demora en /api/auth/me):', err);
-      // Respaldo resiliente: Si el backend en Render falla (401/404/demora),
+      // Respaldo resiliente: Si el backend en Render falla o demora,
       // consultamos la vista vw_usuarios directamente en Supabase para obtener el rol real
       try {
         const { data: dbUser, error: dbErr } = await this.supabase
@@ -162,6 +220,33 @@ export class AuthService implements OnDestroy {
     await this.supabase.auth.signOut();
     this.clearState();
     this.router.navigate(['/login']);
+  }
+
+  async loginWithGoogle(): Promise<{ success: boolean; error?: string }> {
+    const { error } = await this.supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` }
+    });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }
+
+  async signOutAndRedirect(mensaje: string): Promise<void> {
+    await this.supabase.auth.signOut();
+    this.clearState();
+    // Toast primero — la navegación destruye el contexto del componente caller
+    const Swal = (await import('sweetalert2')).default;
+    Swal.fire({
+      icon: 'warning',
+      title: 'Acceso no permitido',
+      text: mensaje,
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 5000,
+      timerProgressBar: true
+    });
+    await this.router.navigate(['/login']);
   }
 
   private setAuthenticatedUser(
