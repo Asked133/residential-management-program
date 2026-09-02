@@ -3,7 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../Services/app_controller.dart';
 import '../Widgets/header_bar.dart';
 import 'residentes_list.dart';
-import 'admin_form.dart';
+
+import 'viviendas_list.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key, required this.controller});
@@ -143,12 +144,13 @@ class AdminDashboardScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
+
                             InkWell(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => AdminFormScreen(
+                                    builder: (_) => ViviendasListScreen(
                                       controller: controller,
                                     ),
                                   ),
@@ -183,7 +185,7 @@ class AdminDashboardScreen extends StatelessWidget {
                                       ),
                                       alignment: Alignment.center,
                                       child: const Text(
-                                        '🛡️',
+                                        '🏠',
                                         style: TextStyle(fontSize: 24),
                                       ),
                                     ),
@@ -193,7 +195,7 @@ class AdminDashboardScreen extends StatelessWidget {
                                           CrossAxisAlignment.start,
                                       children: const [
                                         Text(
-                                          'ADMINISTRACIÓN',
+                                          'INMUEBLES',
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
@@ -202,7 +204,7 @@ class AdminDashboardScreen extends StatelessWidget {
                                           ),
                                         ),
                                         Text(
-                                          'Registrar Administrador',
+                                          'Gestión de Viviendas',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,

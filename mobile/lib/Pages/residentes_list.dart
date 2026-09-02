@@ -34,7 +34,7 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
     });
     try {
       final response = await widget.controller.httpClient.get(
-        Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/residentes'),
+        Uri.parse('${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/residentes'),
         headers: {'Authorization': 'Bearer ${widget.controller.accessToken}'},
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {

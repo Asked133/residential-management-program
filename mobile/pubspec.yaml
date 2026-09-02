@@ -1,7 +1,7 @@
 name: haven
 description: "Residential Management Program"
 publish_to: 'none'
-version: 1.1.7+7
+version: 1.1.12+12
 
 environment:
   sdk: ^3.11.1
@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_dotenv: ^6.0.1
+  flutter_svg: ^2.3.0
   google_fonts: ^6.2.1
   http: ^1.4.0
   supabase_flutter: ^2.10.0
@@ -25,6 +26,7 @@ flutter:
   assets:
     - assets/
     - assets/IMG_4803.png
+    - assets/google.svg
     - .env
 
 flutter_launcher_icons:

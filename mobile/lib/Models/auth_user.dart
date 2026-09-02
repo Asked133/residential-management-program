@@ -43,13 +43,13 @@ class AuthUser {
       email: (j['email'] ?? '').toString(),
       role: _nb(j['role']),
       rol: _nb(j['rol']),
-      rolId: j['rolId'] as int?,
+      rolId: j['rolId'] is int ? j['rolId'] : int.tryParse(j['rolId']?.toString() ?? ''),
       rolNombre: _nb(j['rolNombre']),
       nombre: _nb(j['nombre']),
       apellidos: _nb(j['apellidos']),
       telefono: _nb(j['telefono']),
-      activo: j['activo'] as bool?,
-      debeCambiarPassword: j['debeCambiarPassword'] as bool?,
+      activo: j['activo'] is bool ? j['activo'] : j['activo']?.toString() == 'true',
+      debeCambiarPassword: j['debeCambiarPassword'] is bool ? j['debeCambiarPassword'] : j['debeCambiarPassword']?.toString() == 'true',
     );
   }
 
