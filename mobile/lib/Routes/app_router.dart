@@ -5,6 +5,7 @@ import '../Pages/admin_dashboard.dart';
 import '../Pages/vigilante_dashboard.dart';
 import '../Pages/residente_dashboard.dart';
 import '../Widgets/loading_screen.dart';
+import '../Widgets/splash_screen.dart';
 
 class AppRouter extends StatelessWidget {
   final AppController controller;
@@ -16,6 +17,10 @@ class AppRouter extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
+        if (controller.isInitializing) {
+          return const SplashScreen();
+        }
+
         if (controller.isLoading) {
           return const LoadingScreen();
         }

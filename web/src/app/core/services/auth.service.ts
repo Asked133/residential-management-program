@@ -162,7 +162,7 @@ export class AuthService implements OnDestroy {
       this.setAuthenticatedUser(session.user, profile);
     } catch (err) {
       console.warn('[AuthService] Fallback activado (error o demora en /api/auth/me):', err);
-      // Respaldo resiliente: Si el backend en Render falla o demora,
+      // Respaldo resiliente: Si el backend en Render falla (401/404/demora),
       // consultamos la vista vw_usuarios directamente en Supabase para obtener el rol real
       try {
         const { data: dbUser, error: dbErr } = await this.supabase

@@ -10,19 +10,16 @@ import '../Widgets/header_bar.dart';
 import '../Models/api_exceptions.dart';
 import '../main.dart';
 
-class ResidentesFormScreen extends StatefulWidget {
-  const ResidentesFormScreen({super.key, required this.controller});
+class AdminFormScreen extends StatefulWidget {
+  const AdminFormScreen({super.key, required this.controller});
   final AppController controller;
 
   @override
-  State<ResidentesFormScreen> createState() => _ResidentesFormScreenState();
+  State<AdminFormScreen> createState() => _AdminFormScreenState();
 }
 
-class _ResidentesFormScreenState extends State<ResidentesFormScreen> {
+class _AdminFormScreenState extends State<AdminFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nombreCtrl = TextEditingController();
-  final _apellidosCtrl = TextEditingController();
-  final _telefonoCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
 
@@ -45,16 +42,12 @@ class _ResidentesFormScreenState extends State<ResidentesFormScreen> {
 
     try {
       final payload = {
-        'nombre': _nombreCtrl.text,
-        'apellidos': _apellidosCtrl.text,
-        'telefono': _telefonoCtrl.text,
         'email': _emailCtrl.text,
         'password': _passwordCtrl.text,
-        'rol': 'residente',
       };
 
       final response = await widget.controller.httpClient.post(
-        Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/register'),
+        Uri.parse('${dotenv.env['API_BASE_URL'] ?? ''}/api/auth/register-admin'),
         headers: {
           'Authorization': 'Bearer ${widget.controller.accessToken}',
           'Content-Type': 'application/json',
@@ -64,7 +57,7 @@ class _ResidentesFormScreenState extends State<ResidentesFormScreen> {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         widget.controller.notifyToast(
-          'Residente registrado correctamente',
+          'Administrador registrado correctamente',
           success: true,
         );
         if (mounted) Navigator.pop(context, true);
@@ -127,7 +120,7 @@ class _ResidentesFormScreenState extends State<ResidentesFormScreen> {
                               ),
                               const SizedBox(width: 8),
                               const Text(
-                                'Registrar Residente',
+                                'Registrar Administrador',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -163,43 +156,13 @@ class _ResidentesFormScreenState extends State<ResidentesFormScreen> {
                                         ),
                                       ),
                                     ),
-                                  const FieldLabel(text: 'Nombre'),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _nombreCtrl,
-                                    decoration: AppTheme.inputDecoration(
-                                      'Ej. Juan Carlos',
-                                    ),
-                                    validator: (v) =>
-                                        v!.isEmpty ? 'Requerido' : null,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const FieldLabel(text: 'Apellidos'),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _apellidosCtrl,
-                                    decoration: AppTheme.inputDecoration('Ej. Pérez'),
-                                    validator: (v) =>
-                                        v!.isEmpty ? 'Requerido' : null,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const FieldLabel(text: 'Teléfono'),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _telefonoCtrl,
-                                    decoration: AppTheme.inputDecoration(
-                                      'Ej. 4421234567',
-                                    ),
-                                    validator: (v) =>
-                                        v!.isEmpty ? 'Requerido' : null,
-                                  ),
                                   const SizedBox(height: 16),
                                   const FieldLabel(text: 'Correo Electrónico'),
                                   const SizedBox(height: 8),
                                   TextFormField(
                                     controller: _emailCtrl,
                                     decoration: AppTheme.inputDecoration(
-                                      'residente@haven.com',
+                                      'admin@haven.com',
                                     ),
                                     validator: (v) =>
                                         v!.isEmpty ? 'Requerido' : null,
@@ -289,7 +252,7 @@ class _ResidentesFormScreenState extends State<ResidentesFormScreen> {
                                               ? const CircularProgressIndicator(
                                                   color: Colors.white,
                                                 )
-                                              : const Text('Guardar Residente'),
+                                              : const Text('Guardar Administrador'),
                                         ),
                                       ),
                                     ],
@@ -313,6 +276,6 @@ class _ResidentesFormScreenState extends State<ResidentesFormScreen> {
 }
 
 // ==========================================
-// RESIDENTE SCREEN
+// ADMIN SCREEN
 // ==========================================
 

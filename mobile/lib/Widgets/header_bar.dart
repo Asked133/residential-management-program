@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../Services/app_controller.dart';
+import '../Pages/perfil_screen.dart';
 import '../main.dart';
 
 class HeaderBar extends StatelessWidget {
@@ -31,21 +32,13 @@ class HeaderBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: avatarColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'H',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/IMG_4803.png',
+                  width: 36,
+                  height: 36,
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(width: 12),
@@ -115,6 +108,49 @@ class HeaderBar extends StatelessWidget {
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PerfilScreen(controller: controller),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.person,
+                          size: 16,
+                          color: Color(0xFF1D4ED8),
+                        ),
+                        if (MediaQuery.sizeOf(context).width > 500) ...[
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Mi Perfil',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E3A8A),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
