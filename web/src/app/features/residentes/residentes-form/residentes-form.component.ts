@@ -17,7 +17,7 @@ import Swal from 'sweetalert2';
       <div [class]="isDrawer ? 'w-full' : 'w-full max-w-4xl bg-white border border-slate-200/80 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden grid grid-cols-1 lg:grid-cols-12'">
 
         <!-- Left Branding Panel (only shown in standalone route / non-drawer mode) -->
-        <div *ngIf="!isDrawer" class="lg:col-span-5 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-8 text-white flex flex-col justify-between relative overflow-hidden">
+        <div *ngIf="!isDrawer" class="lg:col-span-5 bg-gradient-to-br from-[#0a1160] via-[#111C99] to-[#1e2bb8] p-8 text-white flex flex-col justify-between relative overflow-hidden">
           <!-- Background glow circle -->
           <div class="absolute -top-12 -left-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
           <div class="absolute -bottom-12 -right-12 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -108,7 +108,7 @@ import Swal from 'sweetalert2';
                     type="text"
                     formControlName="nombre"
                     placeholder="Ej. Juan Carlos"
-                    class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                    class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
                   />
                 </div>
                 <div *ngIf="residenteForm.get('nombre')?.touched && residenteForm.get('nombre')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
@@ -133,7 +133,7 @@ import Swal from 'sweetalert2';
                     type="text"
                     formControlName="apellidos"
                     placeholder="Ej. Pérez García"
-                    class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                    class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
                   />
                 </div>
                 <div *ngIf="residenteForm.get('apellidos')?.touched && residenteForm.get('apellidos')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
@@ -159,7 +159,7 @@ import Swal from 'sweetalert2';
                   type="tel"
                   formControlName="telefono"
                   placeholder="Ej. 4421234567"
-                  class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
                 />
               </div>
               <div *ngIf="residenteForm.get('telefono')?.touched && residenteForm.get('telefono')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
@@ -186,7 +186,7 @@ import Swal from 'sweetalert2';
                   formControlName="email"
                   placeholder="residente@haven.com"
                   [class.border-red-400]="residenteForm.get('email')?.touched && residenteForm.get('email')?.invalid"
-                  class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
                 />
               </div>
               <div *ngIf="residenteForm.get('email')?.touched && residenteForm.get('email')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
@@ -249,7 +249,7 @@ import Swal from 'sweetalert2';
                   [type]="showPassword() ? 'text' : 'password'"
                   formControlName="password"
                   placeholder="Mínimo 8 caracteres (o pulsa Generar)"
-                  class="w-full pl-10 pr-10 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all font-mono"
+                  class="w-full pl-10 pr-10 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all font-mono"
                 />
                 <button
                   type="button"
@@ -296,7 +296,7 @@ import Swal from 'sweetalert2';
               <button
                 type="submit"
                 [disabled]="isSubmitting()"
-                class="flex-1 py-2.5 px-5 bg-slate-900 hover:bg-slate-800 active:bg-black text-white font-semibold text-sm rounded-lg disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-md shadow-slate-900/10 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                class="flex-1 py-2.5 px-5 bg-[#111C99] hover:bg-[#0c146e] active:bg-[#0a1160] text-white font-semibold text-sm rounded-lg disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-md shadow-[#111C99]/10 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
               >
                 <svg *ngIf="isSubmitting()" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

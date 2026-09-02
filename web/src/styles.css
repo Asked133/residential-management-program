@@ -8,6 +8,14 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
+  
+  body {
+    @apply bg-haven-bg text-gray-900;
+  }
+
+  ::selection {
+    @apply bg-haven text-white;
+  }
 }
 
 @keyframes fadeIn {
