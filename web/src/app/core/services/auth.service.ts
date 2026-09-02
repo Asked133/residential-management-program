@@ -5,6 +5,7 @@ import { ApiService } from './api.service';
 import { AuthUser } from '../models/auth-user.model';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom, timeout } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root'
@@ -156,8 +157,8 @@ export class AuthService implements OnDestroy {
 
   private async doRefreshProfile(session: Session): Promise<void> {
     try {
-      // Timeout defensivo de 5s: si Render está dormido, activamos el fallback a Supabase de inmediato
-      const profile = await firstValueFrom(this.apiService.get<AuthUser>('/api/auth/me').pipe(timeout(5000)));
+      // Timeout defensivo de 2.5s: si Render demora, activamos el fallback a Supabase de inmediato
+      const profile = await firstValueFrom(this.apiService.get<AuthUser>('/api/auth/me').pipe(timeout(2500)));
       console.log('[AuthService] Respuesta exitosa de /api/auth/me:', profile);
       this.setAuthenticatedUser(session.user, profile);
     } catch (err) {
@@ -234,8 +235,6 @@ export class AuthService implements OnDestroy {
   async signOutAndRedirect(mensaje: string): Promise<void> {
     await this.supabase.auth.signOut();
     this.clearState();
-    // Toast primero — la navegación destruye el contexto del componente caller
-    const Swal = (await import('sweetalert2')).default;
     Swal.fire({
       icon: 'warning',
       title: 'Acceso no permitido',
@@ -243,10 +242,10 @@ export class AuthService implements OnDestroy {
       toast: true,
       position: 'top-end',
       showConfirmButton: false,
-      timer: 5000,
+      timer: 3500,
       timerProgressBar: true
     });
-    await this.router.navigate(['/login']);
+    this.router.navigate(['/login']);
   }
 
   private setAuthenticatedUser(
