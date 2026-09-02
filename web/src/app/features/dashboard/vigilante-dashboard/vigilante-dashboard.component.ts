@@ -7,14 +7,12 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-[#f8fafc] text-[#0f172a] font-sans antialiased">
+    <div class="min-h-screen bg-[#F7F7F7] text-[#0f172a] font-sans antialiased">
       <!-- Navbar -->
       <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-lg">
-              H
-            </div>
+            <img src="/haven-logo.png" alt="Haven" class="w-9 h-9 rounded-lg object-contain" />
             <div>
               <span class="font-bold text-lg tracking-tight text-slate-900">Haven</span>
               <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">

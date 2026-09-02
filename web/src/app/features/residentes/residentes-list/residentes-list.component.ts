@@ -10,7 +10,7 @@ import { ResidentesFormComponent } from '../residentes-form/residentes-form.comp
   standalone: true,
   imports: [CommonModule, RouterLink, DatePipe, ResidentesFormComponent],
   template: `
-    <div class="min-h-screen bg-[#f8fafc] text-slate-900 font-sans antialiased relative selection:bg-slate-900 selection:text-white">
+    <div class="min-h-screen bg-[#F7F7F7] text-slate-900 font-sans antialiased relative selection:bg-[#111C99] selection:text-white">
 
       <!-- Main Container -->
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -69,7 +69,7 @@ import { ResidentesFormComponent } from '../residentes-form/residentes-form.comp
               <!-- Agregar Residente Trigger Button -->
               <button
                 (click)="abrirDrawer()"
-                class="inline-flex items-center gap-2 py-2.5 px-4 sm:px-5 bg-slate-900 hover:bg-slate-800 active:bg-black text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-slate-900/10 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                class="inline-flex items-center gap-2 py-2.5 px-4 sm:px-5 bg-[#111C99] hover:bg-[#0c146e] active:bg-[#0a1160] text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-[#111C99]/10 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
@@ -82,7 +82,7 @@ import { ResidentesFormComponent } from '../residentes-form/residentes-form.comp
 
         <!-- Loading State -->
         <div *ngIf="isLoading() && residentes().length === 0" class="flex flex-col items-center justify-center py-24 gap-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
-          <div class="w-10 h-10 border-3 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+          <div class="w-10 h-10 border-3 border-slate-200 border-t-[#111C99] rounded-full animate-spin"></div>
           <p class="text-sm font-semibold text-slate-600">Sincronizando residentes...</p>
         </div>
 
@@ -124,7 +124,7 @@ import { ResidentesFormComponent } from '../residentes-form/residentes-form.comp
           </p>
           <button
             (click)="abrirDrawer()"
-            class="inline-flex items-center gap-2 py-2.5 px-5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm rounded-xl transition-all shadow-sm cursor-pointer"
+            class="inline-flex items-center gap-2 py-2.5 px-5 bg-[#111C99] hover:bg-[#0c146e] text-white font-semibold text-sm rounded-xl transition-all shadow-sm cursor-pointer"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
@@ -164,7 +164,7 @@ import { ResidentesFormComponent } from '../residentes-form/residentes-form.comp
                   <!-- Name & Avatar Initials -->
                   <td class="px-6 py-4.5 whitespace-nowrap">
                     <div class="flex items-center gap-3.5">
-                      <div class="w-10 h-10 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-2xs ring-2 ring-slate-100 group-hover:scale-105 transition-transform">
+                      <div class="w-10 h-10 rounded-full bg-[#111C99] text-white font-bold text-xs flex items-center justify-center shadow-2xs ring-2 ring-slate-100 group-hover:scale-105 transition-transform">
                         {{ getInitials(r.nombre, r.apellidos) }}
                       </div>
                       <div>
@@ -234,7 +234,7 @@ import { ResidentesFormComponent } from '../residentes-form/residentes-form.comp
         <!-- Sticky Drawer Top Bar -->
         <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+            <div class="w-8 h-8 rounded-lg bg-[#111C99] text-white flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
               </svg>

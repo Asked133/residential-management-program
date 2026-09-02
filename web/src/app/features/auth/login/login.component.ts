@@ -9,8 +9,13 @@ import Swal from 'sweetalert2';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="min-h-screen bg-[#f1f3f7] flex items-center justify-center p-6 font-sans antialiased text-[#0f172a] selection:bg-[#0f172a] selection:text-white">
+    <div class="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-6 font-sans antialiased text-[#0f172a] selection:bg-[#111C99] selection:text-white">
       <div class="w-full max-w-[480px] bg-white border border-[#e2e8f0] rounded-xl p-10 shadow-sm">
+
+        <!-- Brand Logo -->
+        <div class="flex justify-center mb-8">
+          <img src="/haven-logo.png" alt="Haven" class="w-12 h-12 object-contain" />
+        </div>
 
         <!-- Mode Toggle -->
         <div class="flex border border-[#e2e8f0] rounded-lg overflow-hidden mb-8">
@@ -19,7 +24,7 @@ import Swal from 'sweetalert2';
             id="toggle-residente"
             (click)="setModo('residente')"
             class="flex-1 py-2.5 text-sm font-semibold transition-all"
-            [class.bg-[#0f172a]]="modo() === 'residente'"
+            [class.bg-[#111C99]]="modo() === 'residente'"
             [class.text-white]="modo() === 'residente'"
             [class.text-[#64748b]]="modo() !== 'residente'"
             [class.bg-white]="modo() !== 'residente'"
@@ -31,7 +36,7 @@ import Swal from 'sweetalert2';
             id="toggle-staff"
             (click)="setModo('staff')"
             class="flex-1 py-2.5 text-sm font-semibold transition-all"
-            [class.bg-[#0f172a]]="modo() === 'staff'"
+            [class.bg-[#111C99]]="modo() === 'staff'"
             [class.text-white]="modo() === 'staff'"
             [class.text-[#64748b]]="modo() !== 'staff'"
             [class.bg-white]="modo() !== 'staff'"
@@ -68,7 +73,7 @@ import Swal from 'sweetalert2';
               type="email"
               formControlName="email"
               placeholder="usuario@haven.com"
-              class="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-base placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0f172a] focus:border-transparent transition-all"
+              class="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-base placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#111C99]/20 focus:border-[#111C99] transition-all"
             />
             <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="mt-1.5 text-xs text-red-500 font-medium">
               <span *ngIf="loginForm.get('email')?.errors?.['required']">El correo es requerido.</span>
@@ -86,7 +91,7 @@ import Swal from 'sweetalert2';
               type="password"
               formControlName="password"
               placeholder="••••••••"
-              class="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-base placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0f172a] focus:border-transparent transition-all"
+              class="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-lg text-[#0f172a] text-base placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#111C99]/20 focus:border-[#111C99] transition-all"
             />
             <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="mt-1.5 text-xs text-red-500 font-medium">
               <span *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida.</span>
@@ -100,7 +105,7 @@ import Swal from 'sweetalert2';
               type="submit"
               id="btn-submit"
               [disabled]="isSubmitting()"
-              class="w-full py-3.5 px-4 bg-[#0f172a] hover:bg-[#1e293b] active:bg-[#020617] text-white font-semibold text-base rounded-lg disabled:opacity-75 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              class="w-full py-3.5 px-4 bg-[#111C99] hover:bg-[#0c146e] active:bg-[#0a1160] text-white font-semibold text-base rounded-lg disabled:opacity-75 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
             >
               <svg *ngIf="isSubmitting()" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
