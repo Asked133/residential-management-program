@@ -160,3 +160,13 @@ BEGIN
     RETURN v_filas_afectadas > 0;
 END;
 $$;
+
+-- ==============================================================================
+-- 6. PERMISOS Y SEGURIDAD
+-- ==============================================================================
+REVOKE SELECT, INSERT, UPDATE, DELETE ON public.usuarios FROM authenticated, anon, service_role;
+GRANT SELECT ON public.vw_usuarios TO service_role, authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.alta_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, VARCHAR) TO service_role;
+GRANT EXECUTE ON FUNCTION public.baja_usuario(UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN) TO service_role;
+GRANT EXECUTE ON FUNCTION public.eliminar_usuario_definitivo(UUID) TO service_role;
