@@ -29,7 +29,13 @@ void main() async {
     );
   }
 
-  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+    authOptions: FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce,
+    ),
+  );
 
   runApp(const havenApp());
 }
