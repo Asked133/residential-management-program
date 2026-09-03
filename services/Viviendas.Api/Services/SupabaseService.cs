@@ -165,4 +165,65 @@ public class SupabaseService : ISupabaseService
         var success = await response.Content.ReadFromJsonAsync<bool>();
         return success;
     }
+
+    public async Task<(JsonElement? data, string? error)> AssignResidenteAsync(int viviendaId, AsignarResidenteRequestDto dto)
+    {
+        var requestUrl = $"{_supabaseUrl}/rest/v1/rpc/asignar_residente_vivienda";
+        var payload = new
+        {
+            p_vivienda_id = viviendaId,
+            p_usuario_id = dto.UsuarioId
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+        request.Headers.Add("apikey", _serviceRoleKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+        request.Content = JsonContent.Create(payload);
+
+        var response = await _httpClient.SendAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync();
+            if (errorBody.Contains("23505") || errorBody.Contains("vivienda_residente_pkey"))
+                return (null, "El residente ya está asignado a esta vivienda");
+
+            if (errorBody.Contains("P0001"))
+                return (null, "Vivienda no encontrada");
+
+            if (errorBody.Contains("P0002"))
+                return (null, "Usuario no encontrado");
+
+            if (errorBody.Contains("P0003"))
+                return (null, "El usuario no tiene el rol de Residente");
+
+            return (null, $"Error al asignar residente: {errorBody}");
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return (result, null);
+    }
+
+    public async Task<bool> RemoveResidenteAsync(int viviendaId, Guid usuarioId)
+    {
+        var requestUrl = $"{_supabaseUrl}/rest/v1/rpc/quitar_residente_vivienda";
+        var payload = new
+        {
+            p_vivienda_id = viviendaId,
+            p_usuario_id = usuarioId
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+        request.Headers.Add("apikey", _serviceRoleKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+        request.Content = JsonContent.Create(payload);
+
+        var response = await _httpClient.SendAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+            return false;
+
+        var success = await response.Content.ReadFromJsonAsync<bool>();
+        return success;
+    }
 }
