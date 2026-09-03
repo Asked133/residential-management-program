@@ -232,6 +232,47 @@ export class AuthService implements OnDestroy {
     return { success: true };
   }
 
+  async register(datos: {
+    email: string;
+    password: string;
+    nombre: string;
+    apellidos: string;
+    telefono: string;
+  }): Promise<{ success: boolean; error?: string; requiresEmailConfirmation?: boolean }> {
+    this.isLoading.set(true);
+    try {
+      const { data, error } = await this.supabase.auth.signUp({
+        email: datos.email.trim(),
+        password: datos.password,
+        options: {
+          data: {
+            nombre: datos.nombre.trim(),
+            apellidos: datos.apellidos.trim(),
+            telefono: datos.telefono.trim()
+          }
+        }
+      });
+
+      if (error) {
+        this.isLoading.set(false);
+        return { success: false, error: error.message };
+      }
+
+      if (data.session) {
+        this.currentSession.set(data.session);
+        await this.refreshProfile();
+        this.isLoading.set(false);
+        return { success: true, requiresEmailConfirmation: false };
+      }
+
+      this.isLoading.set(false);
+      return { success: true, requiresEmailConfirmation: true };
+    } catch (err: any) {
+      this.isLoading.set(false);
+      return { success: false, error: err?.message || 'Error inesperado al registrar el usuario.' };
+    }
+  }
+
   async signOutAndRedirect(mensaje: string): Promise<void> {
     await this.supabase.auth.signOut();
     this.clearState();

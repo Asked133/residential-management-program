@@ -10,6 +10,12 @@ export const routes: Routes = [
     component: LoginComponent
   },
   {
+    path: 'registro',
+    loadComponent: () =>
+      import('./features/auth/registro/registro.component')
+        .then(m => m.RegistroComponent)
+  },
+  {
     path: 'auth/callback',
     loadComponent: () =>
       import('./features/auth/callback/auth-callback.component')
