@@ -72,9 +72,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
   }
 
   Widget _buildViviendasAsignadas() {
-    final count = _misViviendas.length;
-    final badgeText = count == 1 ? 'Vivienda Asignada' : '$count Viviendas Asignadas';
-
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -131,29 +128,6 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                     ],
                   ),
                 ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFA7F3D0)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.check_circle, size: 13, color: Color(0xFF10B981)),
-                    const SizedBox(width: 4),
-                    Text(
-                      badgeText,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF047857),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
