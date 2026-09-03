@@ -243,4 +243,37 @@ public class SupabaseService : ISupabaseService
         var viviendas = await response.Content.ReadFromJsonAsync<List<MiViviendaDto>>();
         return viviendas ?? new List<MiViviendaDto>();
     }
+
+    public async Task<JsonElement> GetResidentesByViviendaIdAsync(int viviendaId)
+    {
+        // Se cambió el uso del RPC por la Vista (vw_viviendas_residentes) ya que el RPC no existe
+        var requestUrl = $"{_supabaseUrl}/rest/v1/vw_viviendas_residentes?vivienda_id=eq.{viviendaId}&select=residentes";
+        var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+        request.Headers.Add("apikey", _serviceRoleKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+        
+        var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Supabase Error: {response.StatusCode} - {errorBody}");
+        }
+
+        using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+        
+        if (doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0)
+        {
+            var firstItem = doc.RootElement[0];
+            if (firstItem.TryGetProperty("residentes", out var residentes))
+            {
+                // Si la vista devuelve null en residentes, regresamos []
+                if (residentes.ValueKind == JsonValueKind.Null)
+                    return JsonDocument.Parse("[]").RootElement;
+                    
+                return residentes.Clone();
+            }
+        }
+
+        return JsonDocument.Parse("[]").RootElement;
+    }
 }
