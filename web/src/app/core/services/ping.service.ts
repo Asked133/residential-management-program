@@ -22,6 +22,14 @@ export class PingService {
   private readonly maxRetries = 2;
 
   checkBackendConnection(): void {
+    // 1. Despertar microservicio de Viviendas en segundo plano (para que este listo al entrar a gestion de viviendas)
+    const pingViviendasUrl = `${environment.services.viviendas}/swagger/v1/swagger.json`;
+    this.http.get(pingViviendasUrl, { responseType: 'text' }).pipe(
+      timeout(PING_TIMEOUT),
+      catchError(() => of(null))
+    ).subscribe();
+
+    // 2. Despertar microservicio de Usuarios y validar conexion
     const pingUrl = `${environment.services.usuarios}/api/auth/ping`;
 
     const Toast = Swal.mixin({

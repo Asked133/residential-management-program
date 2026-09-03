@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { PingService } from '../../../core/services/ping.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -196,6 +197,7 @@ import Swal from 'sweetalert2';
 export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly pingService = inject(PingService);
 
   readonly isSubmitting = signal<boolean>(false);
   readonly isSubmittingGoogle = signal<boolean>(false);
@@ -215,14 +217,17 @@ export class LoginComponent implements OnInit {
 
   constructor() {
     effect(() => {
-      if (this.authService.authStatus() === 'authenticated') {
+      // Solo redirige automaticamente si el usuario ya venia autenticado (ej. OAuth o sesion previa)
+      // y no esta enviando el formulario manualmente en este momento para evitar colisiones
+      if (this.authService.authStatus() === 'authenticated' && !this.isSubmitting()) {
         this.authService.navigateToDashboard();
       }
     });
   }
 
   ngOnInit(): void {
-    // Si ya está autenticado al cargar /login, el effect() se encarga de redirigir
+    // Despierta el servidor en Render en segundo plano mientras el usuario llena el formulario
+    this.pingService.checkBackendConnection();
   }
 
   setModo(modo: 'residente' | 'staff'): void {
@@ -255,37 +260,60 @@ export class LoginComponent implements OnInit {
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
 
-    const { email, password } = this.loginForm.value;
-    const result = await this.authService.login(email, password);
-
-    if (result.success) {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
-      });
-
-      const rolReal = result.role || '';
-      const coincideConModo = this.MODO_ROLES[this.modo()].includes(rolReal);
-
-      if (coincideConModo) {
-        Toast.fire({ icon: 'success', title: '¡Inicio de sesión correcto!' });
-      } else {
-        const etiqueta = rolReal === 'vigilante' ? 'vigilancia' : rolReal;
+    // Si tarda más de 3.5s (backend en frío en Render), mostrar feedback transparente
+    const wakingTimer = setTimeout(() => {
+      if (this.isSubmitting()) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top',
+          showConfirmButton: false,
+          timer: 5000,
+          timerProgressBar: true
+        });
         Toast.fire({
           icon: 'info',
-          title: `Detectamos que tu cuenta es de ${etiqueta}, te llevamos a tu panel.`
+          title: 'Conectando con el servidor en la nube, un momento por favor...',
+          background: '#fef3c7',
+          color: '#92400e'
         });
       }
-    } else {
-      this.isSubmitting.set(false);
-      let errText = result.error || 'Ocurrió un error al iniciar sesión.';
-      if (errText.includes('Invalid login credentials')) {
-        errText = 'Correo o contraseña incorrectos.';
+    }, 3500);
+
+    try {
+      const { email, password } = this.loginForm.value;
+      const result = await this.authService.login(email, password);
+
+      if (result.success) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+
+        const rolReal = result.role || '';
+        const coincideConModo = this.MODO_ROLES[this.modo()].includes(rolReal);
+
+        if (coincideConModo) {
+          Toast.fire({ icon: 'success', title: '¡Inicio de sesión correcto!' });
+        } else {
+          const etiqueta = rolReal === 'vigilante' ? 'vigilancia' : rolReal;
+          Toast.fire({
+            icon: 'info',
+            title: `Detectamos que tu cuenta es de ${etiqueta}, te llevamos a tu panel.`
+          });
+        }
+      } else {
+        let errText = result.error || 'Ocurrió un error al iniciar sesión.';
+        if (errText.includes('Invalid login credentials')) {
+          errText = 'Correo o contraseña incorrectos.';
+        }
+        this.errorMessage.set(errText);
       }
-      this.errorMessage.set(errText);
+    } finally {
+      clearTimeout(wakingTimer);
+      this.isSubmitting.set(false);
     }
   }
 }
