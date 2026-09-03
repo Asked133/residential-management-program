@@ -25,3 +25,20 @@ ALTER TABLE public.viviendas ADD CONSTRAINT uq_viviendas_numero_casa UNIQUE (num
 -- Limpieza de políticas RLS heredadas
 DROP POLICY IF EXISTS "Permitir lectura de viviendas a usuarios autenticados" ON public.viviendas;
 DROP POLICY IF EXISTS "Administradores pueden gestionar viviendas" ON public.viviendas;
+
+-- ==============================================================================
+-- 2. TABLA DE BITÁCORA (AUDITORÍA)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.viviendas_bitacora (
+    id BIGSERIAL PRIMARY KEY,
+    registro_id TEXT NOT NULL,
+    operacion VARCHAR(10) NOT NULL CHECK (operacion IN ('INSERT','UPDATE','DELETE')),
+    datos_anteriores JSONB,
+    datos_nuevos JSONB,
+    modificado_por TEXT,
+    modificado_en TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_viviendas_bitacora_registro ON public.viviendas_bitacora(registro_id);
+CREATE INDEX IF NOT EXISTS idx_viviendas_bitacora_fecha ON public.viviendas_bitacora(modificado_en);
+REVOKE ALL ON public.viviendas_bitacora FROM authenticated, anon, service_role;
