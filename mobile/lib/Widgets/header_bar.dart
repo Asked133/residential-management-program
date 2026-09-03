@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../Services/app_controller.dart';
+import '../Pages/perfil_screen.dart';
 
 class HeaderBar extends StatelessWidget {
   const HeaderBar({super.key, 
@@ -109,8 +110,6 @@ class HeaderBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                /*
-                // Funcionalidad de editar residente / perfil comentada temporalmente
                 InkWell(
                   onTap: () {
                     Navigator.push(
@@ -154,7 +153,6 @@ class HeaderBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                */
                 InkWell(
                   onTap: controller.logout,
                   borderRadius: BorderRadius.circular(8),

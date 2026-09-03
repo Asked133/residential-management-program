@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../Services/app_controller.dart';
+import 'vivienda_detalle_screen.dart';
 
 class ViviendasListScreen extends StatefulWidget {
   const ViviendasListScreen({super.key, required this.controller});
@@ -192,23 +193,46 @@ class _ViviendasListScreenState extends State<ViviendasListScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ViviendaDetalleScreen(
+                                controller: widget.controller,
+                                vivienda: v,
+                                onChanged: _fetchViviendas,
+                              ),
+                            ),
+                          );
+                        },
                         leading: const CircleAvatar(
-                          backgroundColor: Color(0xFFEFF6FF),
-                          child: Icon(Icons.home, color: Color(0xFF3B82F6)),
+                          backgroundColor: Color(0xFFEEF2FF),
+                          child: Icon(Icons.home_rounded, color: Color(0xFF111C99)),
                         ),
-                        title: Text(v['numeroCasa'] ?? 'S/N', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(v['tipo'] ?? 'N/A'),
+                        title: Text(
+                          v['numeroCasa'] ?? 'S/N',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                        ),
+                        subtitle: Text(
+                          v['tipo'] != null && (v['tipo'] as String).isNotEmpty
+                              ? v['tipo']
+                              : 'Vivienda Residencial',
+                          style: const TextStyle(color: Color(0xFF64748B)),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blueGrey),
+                              icon: const Icon(Icons.edit_outlined, color: Color(0xFF111C99), size: 20),
+                              tooltip: 'Editar',
                               onPressed: () => _showFormDialog(vivienda: v),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.redAccent),
+                              icon: const Icon(Icons.delete_outline, color: Color(0xFFDC2626), size: 20),
+                              tooltip: 'Eliminar',
                               onPressed: () => _deleteVivienda(v['id']),
                             ),
+                            const Icon(Icons.chevron_right, color: Color(0xFF94A3B8), size: 20),
                           ],
                         ),
                       ),

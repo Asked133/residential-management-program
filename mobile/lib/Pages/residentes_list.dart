@@ -49,6 +49,249 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
     }
   }
 
+  void _mostrarDetalleResidente(Map<String, dynamic> r) {
+    final n = (r['nombre'] ?? '').toString();
+    final a = (r['apellidos'] ?? '').toString();
+    final email = (r['email'] ?? '—').toString();
+    final telefono = (r['telefono'] ?? '—').toString();
+    final id = (r['id'] ?? '—').toString();
+    final initial = '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}'.toUpperCase();
+
+    String fechaAlta = '—';
+    final rawFecha = r['creadoEn'] ?? r['creado_en'];
+    if (rawFecha != null) {
+      try {
+        final dt = DateTime.parse(rawFecha.toString()).toLocal();
+        fechaAlta = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+      } catch (_) {
+        fechaAlta = rawFecha.toString();
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+            maxWidth: 520,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF111C99),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            initial.isEmpty ? 'R' : initial,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Detalle del Residente',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Color(0xFF94A3B8)),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundColor: const Color(0xFF111C99),
+                        child: Text(
+                          initial.isEmpty ? 'R' : initial,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        '$n $a'.trim().isNotEmpty ? '$n $a'.trim() : 'Sin Nombre',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFECFDF5),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFA7F3D0)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.circle, size: 6, color: Color(0xFF10B981)),
+                            SizedBox(width: 6),
+                            Text(
+                              'Residente Haven',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF047857),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildDetalleRow(
+                              label: 'CORREO ELECTRÓNICO',
+                              value: email,
+                              icon: Icons.email_outlined,
+                            ),
+                            const Divider(height: 24, color: Color(0xFFE2E8F0)),
+                            _buildDetalleRow(
+                              label: 'TELÉFONO',
+                              value: telefono,
+                              icon: Icons.phone_outlined,
+                            ),
+                            const Divider(height: 24, color: Color(0xFFE2E8F0)),
+                            _buildDetalleRow(
+                              label: 'FECHA DE ALTA',
+                              value: fechaAlta,
+                              icon: Icons.calendar_today_outlined,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text(
+                              'ID de referencia:',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                id,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontFamily: 'monospace',
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF334155),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  static Widget _buildDetalleRow({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF111C99)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF94A3B8),
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -353,6 +596,16 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                                       ),
                                     ),
                                   ),
+                                  DataColumn(
+                                    label: Text(
+                                      'ACCIONES',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                                 rows: _residentes.map((r) {
                                   final n = (r['nombre'] ?? '').toString();
@@ -361,6 +614,7 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                                       '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}'
                                           .toUpperCase();
                                   return DataRow(
+                                    onSelectChanged: (_) => _mostrarDetalleResidente(r),
                                     cells: [
                                       DataCell(
                                         Row(
@@ -446,6 +700,17 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                                               ),
                                             ),
                                           ],
+                                        ),
+                                      ),
+                                      DataCell(
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.visibility_outlined,
+                                            size: 18,
+                                            color: Color(0xFF111C99),
+                                          ),
+                                          tooltip: 'Ver detalle',
+                                          onPressed: () => _mostrarDetalleResidente(r),
                                         ),
                                       ),
                                     ],
