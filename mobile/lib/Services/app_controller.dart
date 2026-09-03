@@ -575,6 +575,48 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  Future<List<Map<String, dynamic>>> obtenerMisViviendas() async {
+    final token = accessToken;
+    if (token == null || token.isEmpty) return [];
+
+    final baseUrl = dotenv.env['API_BASE_URL_VIVIENDAS'] ?? '';
+    final url = '$baseUrl/api/Viviendas/mis-viviendas';
+
+    try {
+      final response = await httpClient.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          return List<Map<String, dynamic>>.from(
+            decoded.map((item) {
+              if (item is Map) {
+                return {
+                  'id': item['viviendaId'] ?? item['id'],
+                  'numeroCasa': item['numeroCasa']?.toString() ?? '',
+                  'tipo': item['tipo']?.toString(),
+                  'activo': item['activo'] ?? true,
+                  'creadoEn': item['creadoEn'],
+                };
+              }
+              return <String, dynamic>{};
+            }),
+          );
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('[AppController] Error al obtener mis-viviendas: $e');
+      return [];
+    }
+  }
+
   @override
   void dispose() {
     _authSubscription?.cancel();
