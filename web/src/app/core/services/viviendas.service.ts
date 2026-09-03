@@ -43,12 +43,25 @@ export class ViviendasService {
     return firstValueFrom(this.apiService.delete<void>(`/api/viviendas/${viviendaId}/residentes/${usuarioId}`));
   }
 
-  async obtenerMiVivienda(): Promise<Vivienda | null> {
+  async obtenerMisViviendas(): Promise<Vivienda[]> {
     try {
-      return await firstValueFrom(this.apiService.get<Vivienda>('/api/viviendas/mi-vivienda'));
-    } catch {
-      // Fallback seguro: mientras el backend prepara el endpoint de consulta del residente
-      return null;
+      const resp = await firstValueFrom(this.apiService.get<any[]>('/api/viviendas/mis-viviendas'));
+      if (!resp || !Array.isArray(resp)) return [];
+      return resp.map(item => ({
+        id: item.viviendaId ?? item.id,
+        numeroCasa: item.numeroCasa,
+        tipo: item.tipo,
+        activo: item.activo,
+        creadoEn: item.creadoEn
+      }));
+    } catch (err) {
+      console.warn('[ViviendasService] Error al obtener mis-viviendas:', err);
+      return [];
     }
+  }
+
+  async obtenerMiVivienda(): Promise<Vivienda | null> {
+    const viviendas = await this.obtenerMisViviendas();
+    return viviendas.length > 0 ? viviendas[0] : null;
   }
 }
