@@ -52,6 +52,17 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
               <p class="text-lg font-bold text-slate-900">Directorio de Residentes</p>
             </div>
           </div>
+          <div [routerLink]="['/dashboard/admin/viviendas']" class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 hover:border-slate-300 transition-all cursor-pointer">
+            <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Gestión</p>
+              <p class="text-lg font-bold text-slate-900">Directorio de Viviendas</p>
+            </div>
+          </div>
         </div>
       </main>
     </div>
