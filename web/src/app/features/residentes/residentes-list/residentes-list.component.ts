@@ -4,11 +4,13 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { ResidentesService } from '../../../core/services/residentes.service';
 import { Residente } from '../../../core/models/residente.model';
 import { ResidentesFormComponent } from '../residentes-form/residentes-form.component';
+import { ResidentesDetalleComponent } from '../residentes-detalle/residentes-detalle.component';
+import { getInitials } from '../../../core/utils/iniciales.util';
 
 @Component({
   selector: 'app-residentes-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe, ResidentesFormComponent],
+  imports: [CommonModule, RouterLink, DatePipe, ResidentesFormComponent, ResidentesDetalleComponent],
   template: `
     <div class="min-h-screen bg-[#F7F7F7] text-slate-900 font-sans antialiased relative selection:bg-[#111C99] selection:text-white">
 
@@ -159,7 +161,10 @@ import { ResidentesFormComponent } from '../residentes-form/residentes-form.comp
               <tbody class="divide-y divide-slate-100 bg-white">
                 <tr
                   *ngFor="let r of residentes()"
-                  class="hover:bg-slate-50/70 transition-colors group"
+                  (click)="verDetalle(r)"
+                  (keydown.enter)="verDetalle(r)"
+                  tabindex="0"
+                  class="hover:bg-slate-50/70 transition-colors group cursor-pointer focus:outline-none focus:bg-slate-50/90 focus:ring-1 focus:ring-inset focus:ring-[#111C99]/30"
                 >
                   <!-- Name & Avatar Initials -->
                   <td class="px-6 py-4.5 whitespace-nowrap">
@@ -262,6 +267,32 @@ import { ResidentesFormComponent } from '../residentes-form/residentes-form.comp
         ></app-residentes-form>
       </aside>
 
+      <!-- ========================================================= -->
+      <!-- SLIDE-OVER DRAWER (MEDIA PÁGINA) PARA DETALLE RESIDENTE   -->
+      <!-- ========================================================= -->
+
+      <!-- Backdrop overlay with smooth fade -->
+      <div
+        *ngIf="isDetalleOpen()"
+        (click)="cerrarDetalle()"
+        aria-hidden="true"
+        class="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+      ></div>
+
+      <!-- Slide-Over Container (Half page on desktop: w-full md:w-1/2 lg:w-[520px]) -->
+      <aside
+        *ngIf="isDetalleOpen()"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Detalle del residente"
+        class="fixed inset-y-0 right-0 z-50 w-full sm:max-w-md md:max-w-lg lg:max-w-xl bg-white shadow-2xl flex flex-col border-l border-slate-200 overflow-y-auto transform transition-transform duration-300 ease-out animate-slide-left"
+      >
+        <app-residentes-detalle
+          [residente]="residenteSeleccionado()"
+          (cerrado)="cerrarDetalle()"
+        ></app-residentes-detalle>
+      </aside>
+
     </div>
   `
 })
@@ -273,6 +304,10 @@ export class ResidentesListComponent implements OnInit {
   readonly isLoading = signal<boolean>(true);
   readonly errorMessage = signal<string | null>(null);
   readonly isDrawerOpen = signal<boolean>(false);
+  readonly residenteSeleccionado = signal<Residente | null>(null);
+  readonly isDetalleOpen = signal<boolean>(false);
+
+  readonly getInitials = getInitials;
 
   async ngOnInit(): Promise<void> {
     // Si viene con query param ?nuevo=true, abre el drawer automáticamente
@@ -306,16 +341,18 @@ export class ResidentesListComponent implements OnInit {
     this.isDrawerOpen.set(false);
   }
 
+  verDetalle(r: Residente): void {
+    this.residenteSeleccionado.set(r);
+    this.isDetalleOpen.set(true);
+  }
+
+  cerrarDetalle(): void {
+    this.isDetalleOpen.set(false);
+  }
+
   async onResidenteGuardado(): Promise<void> {
     this.cerrarDrawer();
     // Refrescar automáticamente la lista de residentes para ver los cambios de inmediato
     await this.cargarResidentes();
-  }
-
-  getInitials(nombre?: string, apellidos?: string): string {
-    const n = (nombre || '').trim().charAt(0);
-    const a = (apellidos || '').trim().charAt(0);
-    const res = `${n}${a}`.toUpperCase();
-    return res || 'R';
   }
 }
