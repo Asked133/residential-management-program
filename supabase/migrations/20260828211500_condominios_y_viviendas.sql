@@ -163,3 +163,22 @@ GRANT EXECUTE ON FUNCTION public.baja_vivienda(INTEGER) TO service_role;
 GRANT EXECUTE ON FUNCTION public.cambio_vivienda(INTEGER, VARCHAR, VARCHAR) TO service_role;
 
 NOTIFY pgrst, 'reload schema';
+
+-- ==============================================================================
+-- 7. INCREMENTO DE VERSIÓN
+-- ==============================================================================
+UPDATE public.version 
+SET 
+    numero_version = CASE 
+        WHEN numero_version ~ '^[0-9]+\.[0-9]+(\.[0-9]+)?$' THEN
+            split_part(numero_version, '.', 1) || '.' || 
+            ((split_part(numero_version, '.', 2)::integer) + 1)::text || 
+            CASE 
+                WHEN split_part(numero_version, '.', 3) <> '' THEN '.' || split_part(numero_version, '.', 3) 
+                ELSE '' 
+            END
+        WHEN numero_version ~ '^[0-9]+$' THEN
+            ((numero_version::integer) + 1)::text
+        ELSE numero_version || '.1'
+    END,
+    updated_at = now();
