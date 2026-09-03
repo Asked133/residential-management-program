@@ -10,6 +10,7 @@
 -- ==============================================================================
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS debe_cambiar_password BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.usuarios ALTER COLUMN apellidos DROP NOT NULL;
 
 -- ==============================================================================
 -- 2. TABLA DE BITÁCORA PARA USUARIOS
@@ -49,11 +50,15 @@ CREATE TRIGGER trg_usuarios_auditoria_delete
     -- ==============================================================================
 -- 4. VISTA DE CONSULTA 
 -- ==============================================================================
+-- ==============================================================================
+-- 4. VISTA DE CONSULTA 
+-- ==============================================================================
 DROP VIEW IF EXISTS public.vw_usuarios CASCADE;
 CREATE VIEW public.vw_usuarios AS
 SELECT 
     u.id, 
     u.rol_id, 
+    r.nombre AS rol_nombre,
     u.email, 
     u.nombre,
     u.apellidos, 
@@ -61,8 +66,8 @@ SELECT
     u.activo, 
     u.debe_cambiar_password, 
     u.creado_en
-FROM public.usuarios u;
-
+FROM public.usuarios u
+JOIN public.roles r ON u.rol_id = r.id;
 -- ==============================================================================
 -- 5. FUNCIONES CRUD Y ADMINISTRATIVAS (ENCAPSULAMIENTO)
 -- ==============================================================================
@@ -168,7 +173,7 @@ REVOKE SELECT, INSERT, UPDATE, DELETE ON public.usuarios FROM authenticated, ano
 GRANT SELECT ON public.vw_usuarios TO service_role, authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.alta_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, VARCHAR) TO service_role;
 GRANT EXECUTE ON FUNCTION public.baja_usuario(UUID) TO service_role;
-GRANT EXECUTE ON FUNCTION public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN) TO service_role;
+GRANT EXECUTE ON FUNCTION public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.eliminar_usuario_definitivo(UUID) TO service_role;
 
 -- ==============================================================================
@@ -181,27 +186,57 @@ SECURITY DEFINER
 SET search_path = public
 LANGUAGE plpgsql 
 AS $$
+DECLARE
+    v_es_google BOOLEAN;
+    v_nombre VARCHAR(50);
+    v_apellidos VARCHAR(50);
 BEGIN
-    INSERT INTO public.usuarios (id, rol_id, email, nombre, apellidos, telefono, debe_cambiar_password)
+    -- Detectar si viene de Google OAuth
+    v_es_google := (
+        COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google' OR 
+        COALESCE(NEW.app_metadata->>'provider', '') = 'google'
+    );
+
+    v_nombre := COALESCE(
+        NEW.raw_user_meta_data->>'nombre',
+        NEW.raw_user_meta_data->>'given_name',
+        split_part(NEW.raw_user_meta_data->>'full_name', ' ', 1),
+        NEW.raw_user_meta_data->>'name', 
+        'Usuario'
+    );
+
+    v_apellidos := COALESCE(
+        NEW.raw_user_meta_data->>'apellidos',
+        NEW.raw_user_meta_data->>'family_name',
+        NULLIF(trim(substr(COALESCE(NEW.raw_user_meta_data->>'full_name', ''), length(v_nombre) + 1)), ''),
+        ''
+    );
+
+    INSERT INTO public.usuarios (
+        id, 
+        rol_id, 
+        email, 
+        nombre, 
+        apellidos, 
+        telefono, 
+        activo,
+        debe_cambiar_password
+    )
     VALUES (
         NEW.id,
         2, -- Residente
         NEW.email,
-        COALESCE(
-            NEW.raw_user_meta_data->>'nombre',
-            NEW.raw_user_meta_data->>'given_name',
-            NEW.raw_user_meta_data->>'name', 
-            'Sin nombre'
-        ),
-        COALESCE(
-            NEW.raw_user_meta_data->>'apellidos',
-            NEW.raw_user_meta_data->>'family_name', 
-            ''
-        ),
+        v_nombre,
+        v_apellidos,
         NEW.raw_user_meta_data->>'telefono',
-        false
+        true,
+        CASE WHEN v_es_google THEN false ELSE true END
     )
-    ON CONFLICT (id) DO NOTHING;
+    ON CONFLICT (id) DO UPDATE SET
+        email = EXCLUDED.email,
+        nombre = EXCLUDED.nombre,
+        apellidos = COALESCE(NULLIF(EXCLUDED.apellidos, ''), public.usuarios.apellidos);
+
     RETURN NEW;
 END;
 $$;
@@ -210,6 +245,8 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+NOTIFY pgrst, 'reload schema';
 
     -- ==============================================================================
 -- 8. TRIGGER DE RESINCRONIZACIÓN POR GOOGLE OAUTH
