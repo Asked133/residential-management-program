@@ -126,27 +126,30 @@ public class SupabaseService : ISupabaseService
     public async Task<(UsuarioDto? usuario, string? error)> CompletarPerfilAsync(Guid userId, CompletarPerfilRequestDto datos, string accessToken, Guid actorId)
     {
         var url = $"{_supabaseUrl}/rest/v1/rpc/cambio_usuario";
+        
+        // 1. Enviar los parámetros completos de la función
         var payload = new
         {
             p_id = userId,
+            p_rol_id = (int?)null,
             p_nombre = datos.Nombre,
             p_apellidos = datos.Apellidos,
-            p_telefono = datos.Telefono
+            p_telefono = datos.Telefono,
+            p_debe_cambiar_password = (bool?)null
         };
-
         var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Headers.Add("apikey", _anonKey);
+        
+        // 2. Usar service_role (es quien tiene el GRANT EXECUTE del DBA)
+        request.Headers.Add("apikey", _serviceRoleKey);
         request.Headers.Add("x-actor-id", actorId.ToString());
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
         request.Content = JsonContent.Create(payload);
-
         var response = await _httpClient.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync();
             return (null, $"Error al completar perfil: {errorBody}");
         }
-
         var updated = await response.Content.ReadFromJsonAsync<UsuarioDto>();
         return (updated, null);
     }
