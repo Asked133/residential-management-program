@@ -28,3 +28,21 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_bitacora_registro ON public.usuarios_bit
 CREATE INDEX IF NOT EXISTS idx_usuarios_bitacora_fecha ON public.usuarios_bitacora(modificado_en);
 
 REVOKE ALL ON public.usuarios_bitacora FROM authenticated, anon, service_role;
+
+-- ==============================================================================
+-- 3. TRIGGERS DE AUDITORÍA
+-- ==============================================================================
+DROP TRIGGER IF EXISTS trg_usuarios_auditoria_insert ON public.usuarios;
+CREATE TRIGGER trg_usuarios_auditoria_insert
+    AFTER INSERT ON public.usuarios
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_usuarios_auditoria_update ON public.usuarios;
+CREATE TRIGGER trg_usuarios_auditoria_update
+    BEFORE UPDATE ON public.usuarios
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_usuarios_auditoria_delete ON public.usuarios;
+CREATE TRIGGER trg_usuarios_auditoria_delete
+    BEFORE DELETE ON public.usuarios
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
