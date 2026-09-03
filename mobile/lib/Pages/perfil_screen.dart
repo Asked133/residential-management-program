@@ -34,6 +34,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<void> _save() async {
+    // Funcionalidad de editar residente comentada temporalmente
+    /*
     if (!_formKey.currentState!.validate()) return;
     
     await widget.controller.completarPerfil(
@@ -41,6 +43,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       _apellidosCtrl.text,
       _telefonoCtrl.text,
     );
+    */
   }
 
   @override
