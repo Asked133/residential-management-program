@@ -1,16 +1,15 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ResidentesService } from '../../../core/services/residentes.service';
 import { Residente } from '../../../core/models/residente.model';
-import { ResidentesFormComponent } from '../residentes-form/residentes-form.component';
 import { ResidentesDetalleComponent } from '../residentes-detalle/residentes-detalle.component';
 import { getInitials } from '../../../core/utils/iniciales.util';
 
 @Component({
   selector: 'app-residentes-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe, ResidentesFormComponent, ResidentesDetalleComponent],
+  imports: [CommonModule, RouterLink, DatePipe, ResidentesDetalleComponent],
   template: `
     <div class="min-h-screen bg-[#F7F7F7] text-slate-900 font-sans antialiased relative selection:bg-[#111C99] selection:text-white">
 
@@ -67,17 +66,6 @@ import { getInitials } from '../../../core/utils/iniciales.util';
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
-
-              <!-- Agregar Residente Trigger Button -->
-              <button
-                (click)="abrirDrawer()"
-                class="inline-flex items-center gap-2 py-2.5 px-4 sm:px-5 bg-[#111C99] hover:bg-[#0c146e] active:bg-[#0a1160] text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-[#111C99]/10 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Agregar residente</span>
-              </button>
             </div>
           </div>
         </div>
@@ -121,18 +109,9 @@ import { getInitials } from '../../../core/utils/iniciales.util';
             </svg>
           </div>
           <h3 class="text-lg font-bold text-slate-900">No hay residentes registrados</h3>
-          <p class="text-sm text-slate-500 max-w-sm mt-1 mb-6">
-            Comienza a construir la comunidad de Haven dando de alta al primer residente.
+          <p class="text-sm text-slate-500 max-w-sm mt-1">
+            Los residentes que se registren en la plataforma aparecerán aquí para su gestión y asignación de vivienda.
           </p>
-          <button
-            (click)="abrirDrawer()"
-            class="inline-flex items-center gap-2 py-2.5 px-5 bg-[#111C99] hover:bg-[#0c146e] text-white font-semibold text-sm rounded-xl transition-all shadow-sm cursor-pointer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-            </svg>
-            Agregar primer residente
-          </button>
         </div>
 
         <!-- Modern Residents Table -->
@@ -221,53 +200,6 @@ import { getInitials } from '../../../core/utils/iniciales.util';
       </div>
 
       <!-- ========================================================= -->
-      <!-- SLIDE-OVER DRAWER (MEDIA PÁGINA) PARA AGREGAR RESIDENTE   -->
-      <!-- ========================================================= -->
-
-      <!-- Backdrop overlay with smooth fade -->
-      <div
-        *ngIf="isDrawerOpen()"
-        (click)="cerrarDrawer()"
-        class="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
-      ></div>
-
-      <!-- Slide-Over Container (Half page on desktop: w-full md:w-1/2 lg:w-[520px]) -->
-      <aside
-        *ngIf="isDrawerOpen()"
-        class="fixed inset-y-0 right-0 z-50 w-full sm:max-w-md md:max-w-lg lg:max-w-xl bg-white shadow-2xl flex flex-col border-l border-slate-200 overflow-y-auto transform transition-transform duration-300 ease-out animate-slide-left"
-      >
-        <!-- Sticky Drawer Top Bar -->
-        <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-[#111C99] text-white flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-            <span class="text-sm font-bold text-slate-900 tracking-tight">Haven Residents</span>
-          </div>
-
-          <!-- Close Button -->
-          <button
-            (click)="cerrarDrawer()"
-            class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
-            title="Cerrar panel (Esc)"
-          >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Embedded Modern Form (Media página) -->
-        <app-residentes-form
-          [isDrawer]="true"
-          (saved)="onResidenteGuardado()"
-          (cancelled)="cerrarDrawer()"
-        ></app-residentes-form>
-      </aside>
-
-      <!-- ========================================================= -->
       <!-- SLIDE-OVER DRAWER (MEDIA PÁGINA) PARA DETALLE RESIDENTE   -->
       <!-- ========================================================= -->
 
@@ -298,25 +230,16 @@ import { getInitials } from '../../../core/utils/iniciales.util';
 })
 export class ResidentesListComponent implements OnInit {
   private readonly residentesService = inject(ResidentesService);
-  private readonly route = inject(ActivatedRoute);
 
   readonly residentes = signal<Residente[]>([]);
   readonly isLoading = signal<boolean>(true);
   readonly errorMessage = signal<string | null>(null);
-  readonly isDrawerOpen = signal<boolean>(false);
   readonly residenteSeleccionado = signal<Residente | null>(null);
   readonly isDetalleOpen = signal<boolean>(false);
 
   readonly getInitials = getInitials;
 
   async ngOnInit(): Promise<void> {
-    // Si viene con query param ?nuevo=true, abre el drawer automáticamente
-    this.route.queryParams.subscribe(params => {
-      if (params['nuevo'] === 'true' || params['nuevo'] === '1') {
-        this.isDrawerOpen.set(true);
-      }
-    });
-
     await this.cargarResidentes();
   }
 
@@ -333,14 +256,6 @@ export class ResidentesListComponent implements OnInit {
     }
   }
 
-  abrirDrawer(): void {
-    this.isDrawerOpen.set(true);
-  }
-
-  cerrarDrawer(): void {
-    this.isDrawerOpen.set(false);
-  }
-
   verDetalle(r: Residente): void {
     this.residenteSeleccionado.set(r);
     this.isDetalleOpen.set(true);
@@ -348,11 +263,5 @@ export class ResidentesListComponent implements OnInit {
 
   cerrarDetalle(): void {
     this.isDetalleOpen.set(false);
-  }
-
-  async onResidenteGuardado(): Promise<void> {
-    this.cerrarDrawer();
-    // Refrescar automáticamente la lista de residentes para ver los cambios de inmediato
-    await this.cargarResidentes();
   }
 }
