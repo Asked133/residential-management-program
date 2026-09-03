@@ -62,3 +62,33 @@ SELECT
     u.debe_cambiar_password, 
     u.creado_en
 FROM public.usuarios u;
+
+-- ==============================================================================
+-- 5. FUNCIONES CRUD Y ADMINISTRATIVAS (ENCAPSULAMIENTO)
+-- ==============================================================================
+
+-- a) alta_usuario
+DROP FUNCTION IF EXISTS public.alta_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, VARCHAR);
+CREATE OR REPLACE FUNCTION public.alta_usuario(
+    p_id UUID, 
+    p_rol_id INTEGER, 
+    p_email VARCHAR(255),
+    p_nombre VARCHAR(50), 
+    p_apellidos VARCHAR(50), 
+    p_telefono VARCHAR(20) DEFAULT NULL
+) 
+RETURNS public.vw_usuarios
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_usuario public.vw_usuarios;
+BEGIN
+    INSERT INTO public.usuarios (id, rol_id, email, nombre, apellidos, telefono)
+    VALUES (p_id, p_rol_id, p_email, p_nombre, p_apellidos, p_telefono);
+    
+    SELECT * INTO v_usuario FROM public.vw_usuarios WHERE id = p_id;
+    RETURN v_usuario;
+END;
+$$;
