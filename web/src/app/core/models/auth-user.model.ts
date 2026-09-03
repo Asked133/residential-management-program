@@ -6,4 +6,5 @@ export interface AuthUser {
   nombre?: string;
   apellidos?: string;
   telefono?: string;
+  creadoEn?: string;
 }

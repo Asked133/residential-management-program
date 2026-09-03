@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.component';
 
 @Component({
   selector: 'app-vigilante-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, UserMenuComponent],
   template: `
     <div class="min-h-screen bg-[#F7F7F7] text-[#0f172a] font-sans antialiased">
       <!-- Navbar -->
@@ -21,23 +22,7 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <div class="hidden sm:flex flex-col text-right">
-              <span class="text-sm font-semibold text-slate-800">
-                {{ currentUser()?.nombre || 'Vigilante' }} {{ currentUser()?.apellidos || '' }}
-              </span>
-              <span class="text-xs text-slate-500">{{ currentUser()?.email }}</span>
-            </div>
-            <button
-              (click)="onLogout()"
-              class="py-2 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-colors border border-slate-300 shadow-xs cursor-pointer flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span>Cerrar sesión</span>
-            </button>
-          </div>
+          <app-user-menu [user]="currentUser()" (logout)="onLogout()" />
         </div>
       </header>
 
