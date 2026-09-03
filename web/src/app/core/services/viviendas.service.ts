@@ -42,4 +42,13 @@ export class ViviendasService {
   desvincularResidente(viviendaId: number, usuarioId: string): Promise<void> {
     return firstValueFrom(this.apiService.delete<void>(`/api/viviendas/${viviendaId}/residentes/${usuarioId}`));
   }
+
+  async obtenerMiVivienda(): Promise<Vivienda | null> {
+    try {
+      return await firstValueFrom(this.apiService.get<Vivienda>('/api/viviendas/mi-vivienda'));
+    } catch {
+      // Fallback seguro: mientras el backend prepara el endpoint de consulta del residente
+      return null;
+    }
+  }
 }
