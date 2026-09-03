@@ -10,6 +10,7 @@
 -- ==============================================================================
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS debe_cambiar_password BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.usuarios ALTER COLUMN apellidos DROP NOT NULL;
 
 -- ==============================================================================
 -- 2. TABLA DE BITÁCORA PARA USUARIOS
@@ -46,7 +47,8 @@ DROP TRIGGER IF EXISTS trg_usuarios_auditoria_delete ON public.usuarios;
 CREATE TRIGGER trg_usuarios_auditoria_delete
     BEFORE DELETE ON public.usuarios
     FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
-    -- ==============================================================================
+
+-- ==============================================================================
 -- 4. VISTA DE CONSULTA 
 -- ==============================================================================
 DROP VIEW IF EXISTS public.vw_usuarios CASCADE;
@@ -54,14 +56,16 @@ CREATE VIEW public.vw_usuarios AS
 SELECT 
     u.id, 
     u.rol_id, 
+    r.nombre AS rol_nombre,
     u.email, 
-    u.nombre,
+    u.nombre, 
     u.apellidos, 
     u.telefono, 
     u.activo, 
     u.debe_cambiar_password, 
     u.creado_en
-FROM public.usuarios u;
+FROM public.usuarios u
+JOIN public.roles r ON u.rol_id = r.id;
 
 -- ==============================================================================
 -- 5. FUNCIONES CRUD Y ADMINISTRATIVAS (ENCAPSULAMIENTO)
@@ -92,6 +96,7 @@ BEGIN
     RETURN v_usuario;
 END;
 $$;
+
 -- b) baja_usuario
 DROP FUNCTION IF EXISTS public.baja_usuario(UUID);
 CREATE OR REPLACE FUNCTION public.baja_usuario(p_id UUID) 
@@ -111,13 +116,14 @@ BEGIN
     RETURN v_filas_afectadas > 0;
 END;
 $$;
+
 -- c) cambio_usuario
 DROP FUNCTION IF EXISTS public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN);
 CREATE OR REPLACE FUNCTION public.cambio_usuario(
     p_id UUID, 
-    p_rol_id INTEGER DEFAULT NULL,
+    p_rol_id INTEGER DEFAULT NULL, 
     p_nombre VARCHAR(50) DEFAULT NULL, 
-    p_apellidos VARCHAR(50) DEFAULT NULL,
+    p_apellidos VARCHAR(50) DEFAULT NULL, 
     p_telefono VARCHAR(20) DEFAULT NULL, 
     p_debe_cambiar_password BOOLEAN DEFAULT NULL
 ) 
@@ -137,6 +143,10 @@ BEGIN
         telefono = COALESCE(p_telefono, telefono),
         debe_cambiar_password = COALESCE(p_debe_cambiar_password, debe_cambiar_password)
     WHERE id = p_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Usuario con ID % no encontrado', p_id;
+    END IF;
     
     SELECT * INTO v_usuario FROM public.vw_usuarios WHERE id = p_id;
     RETURN v_usuario;
@@ -168,7 +178,7 @@ REVOKE SELECT, INSERT, UPDATE, DELETE ON public.usuarios FROM authenticated, ano
 GRANT SELECT ON public.vw_usuarios TO service_role, authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.alta_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, VARCHAR) TO service_role;
 GRANT EXECUTE ON FUNCTION public.baja_usuario(UUID) TO service_role;
-GRANT EXECUTE ON FUNCTION public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN) TO service_role;
+GRANT EXECUTE ON FUNCTION public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.eliminar_usuario_definitivo(UUID) TO service_role;
 
 -- ==============================================================================
@@ -181,27 +191,56 @@ SECURITY DEFINER
 SET search_path = public
 LANGUAGE plpgsql 
 AS $$
+DECLARE
+    v_es_google BOOLEAN;
+    v_nombre VARCHAR(50);
+    v_apellidos VARCHAR(50);
 BEGIN
-    INSERT INTO public.usuarios (id, rol_id, email, nombre, apellidos, telefono, debe_cambiar_password)
+    v_es_google := (
+        COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google' OR 
+        COALESCE(NEW.app_metadata->>'provider', '') = 'google'
+    );
+
+    v_nombre := COALESCE(
+        NEW.raw_user_meta_data->>'nombre',
+        NEW.raw_user_meta_data->>'given_name',
+        split_part(NEW.raw_user_meta_data->>'full_name', ' ', 1),
+        NEW.raw_user_meta_data->>'name', 
+        'Usuario'
+    );
+
+    v_apellidos := COALESCE(
+        NEW.raw_user_meta_data->>'apellidos',
+        NEW.raw_user_meta_data->>'family_name',
+        NULLIF(trim(substr(COALESCE(NEW.raw_user_meta_data->>'full_name', ''), length(v_nombre) + 1)), ''),
+        ''
+    );
+
+    INSERT INTO public.usuarios (
+        id, 
+        rol_id, 
+        email, 
+        nombre, 
+        apellidos, 
+        telefono, 
+        activo,
+        debe_cambiar_password
+    )
     VALUES (
         NEW.id,
         2, -- Residente
         NEW.email,
-        COALESCE(
-            NEW.raw_user_meta_data->>'nombre',
-            NEW.raw_user_meta_data->>'given_name',
-            NEW.raw_user_meta_data->>'name', 
-            'Sin nombre'
-        ),
-        COALESCE(
-            NEW.raw_user_meta_data->>'apellidos',
-            NEW.raw_user_meta_data->>'family_name', 
-            ''
-        ),
+        v_nombre,
+        v_apellidos,
         NEW.raw_user_meta_data->>'telefono',
-        false
+        true,
+        CASE WHEN v_es_google THEN false ELSE true END
     )
-    ON CONFLICT (id) DO NOTHING;
+    ON CONFLICT (id) DO UPDATE SET
+        email = EXCLUDED.email,
+        nombre = EXCLUDED.nombre,
+        apellidos = COALESCE(NULLIF(EXCLUDED.apellidos, ''), public.usuarios.apellidos);
+
     RETURN NEW;
 END;
 $$;
@@ -211,7 +250,7 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
-    -- ==============================================================================
+-- ==============================================================================
 -- 8. TRIGGER DE RESINCRONIZACIÓN POR GOOGLE OAUTH
 -- ==============================================================================
 DROP FUNCTION IF EXISTS public.handle_user_metadata_sync() CASCADE;
@@ -247,7 +286,7 @@ CREATE TRIGGER on_auth_user_metadata_updated
     AFTER UPDATE ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_user_metadata_sync();
 
-    -- ==============================================================================
+-- ==============================================================================
 -- 9. JOB DE LIMPIEZA POR INACTIVIDAD
 -- ==============================================================================
 CREATE EXTENSION IF NOT EXISTS pg_cron;
@@ -279,7 +318,6 @@ BEGIN
 END;
 $$;
 
--- Desprogramar de forma segura solo si ya existe
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'borrar_residentes_inactivos_diario') THEN
@@ -289,13 +327,15 @@ END;
 $$;
 
 SELECT cron.schedule('borrar_residentes_inactivos_diario', '0 3 * * *', 'SELECT public.borrar_residentes_inactivos();');
+
+NOTIFY pgrst, 'reload schema';
+
 -- ==============================================================================
--- INCREMENTO DE VERSIÓN (MINOR)
+-- 10. INCREMENTO DE VERSIÓN
 -- ==============================================================================
 UPDATE public.version 
 SET 
     numero_version = CASE 
-        -- Formato SemVer: 'X.Y.Z' o 'X.Y' -> Incrementa el minor (Y)
         WHEN numero_version ~ '^[0-9]+\.[0-9]+(\.[0-9]+)?$' THEN
             split_part(numero_version, '.', 1) || '.' || 
             ((split_part(numero_version, '.', 2)::integer) + 1)::text || 
@@ -303,10 +343,8 @@ SET
                 WHEN split_part(numero_version, '.', 3) <> '' THEN '.' || split_part(numero_version, '.', 3) 
                 ELSE '' 
             END
-        -- Formato numérico simple en texto: '1' -> '2'
         WHEN numero_version ~ '^[0-9]+$' THEN
             ((numero_version::integer) + 1)::text
-        -- Fallback
         ELSE numero_version || '.1'
     END,
     updated_at = now();
