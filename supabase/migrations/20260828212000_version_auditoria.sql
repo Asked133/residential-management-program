@@ -25,3 +25,20 @@ CREATE INDEX IF NOT EXISTS idx_version_bitacora_fecha ON public.version_bitacora
 -- Revocar accesos directos por seguridad
 REVOKE ALL ON public.version_bitacora FROM authenticated, anon, service_role;
 
+-- ==============================================================================
+-- 2. TRIGGERS DE AUDITORÍA
+-- ==============================================================================
+DROP TRIGGER IF EXISTS trg_version_auditoria_insert ON public.version;
+CREATE TRIGGER trg_version_auditoria_insert
+    AFTER INSERT ON public.version
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_version_auditoria_update ON public.version;
+CREATE TRIGGER trg_version_auditoria_update
+    BEFORE UPDATE ON public.version
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_version_auditoria_delete ON public.version;
+CREATE TRIGGER trg_version_auditoria_delete
+    BEFORE DELETE ON public.version
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
