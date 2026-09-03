@@ -289,3 +289,24 @@ END;
 $$;
 
 SELECT cron.schedule('borrar_residentes_inactivos_diario', '0 3 * * *', 'SELECT public.borrar_residentes_inactivos();');
+-- ==============================================================================
+-- INCREMENTO DE VERSIÓN (MINOR)
+-- ==============================================================================
+UPDATE public.version 
+SET 
+    numero_version = CASE 
+        -- Formato SemVer: 'X.Y.Z' o 'X.Y' -> Incrementa el minor (Y)
+        WHEN numero_version ~ '^[0-9]+\.[0-9]+(\.[0-9]+)?$' THEN
+            split_part(numero_version, '.', 1) || '.' || 
+            ((split_part(numero_version, '.', 2)::integer) + 1)::text || 
+            CASE 
+                WHEN split_part(numero_version, '.', 3) <> '' THEN '.' || split_part(numero_version, '.', 3) 
+                ELSE '' 
+            END
+        -- Formato numérico simple en texto: '1' -> '2'
+        WHEN numero_version ~ '^[0-9]+$' THEN
+            ((numero_version::integer) + 1)::text
+        -- Fallback
+        ELSE numero_version || '.1'
+    END,
+    updated_at = now();
