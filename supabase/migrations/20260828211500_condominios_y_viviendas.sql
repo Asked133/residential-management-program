@@ -150,3 +150,16 @@ BEGIN
     RETURN v_resultado;
 END;
 $$;
+
+-- ==============================================================================
+-- 6. PERMISOS Y SEGURIDAD POSTGREST
+-- ==============================================================================
+REVOKE SELECT, INSERT, UPDATE, DELETE ON public.viviendas FROM authenticated, anon, service_role;
+
+GRANT SELECT ON public.vw_viviendas TO anon, authenticated, service_role;
+
+GRANT EXECUTE ON FUNCTION public.alta_vivienda(VARCHAR, VARCHAR) TO service_role;
+GRANT EXECUTE ON FUNCTION public.baja_vivienda(INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION public.cambio_vivienda(INTEGER, VARCHAR, VARCHAR) TO service_role;
+
+NOTIFY pgrst, 'reload schema';
