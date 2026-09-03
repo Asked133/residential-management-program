@@ -170,3 +170,43 @@ GRANT EXECUTE ON FUNCTION public.alta_usuario(UUID, INTEGER, VARCHAR, VARCHAR, V
 GRANT EXECUTE ON FUNCTION public.baja_usuario(UUID) TO service_role;
 GRANT EXECUTE ON FUNCTION public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN) TO service_role;
 GRANT EXECUTE ON FUNCTION public.eliminar_usuario_definitivo(UUID) TO service_role;
+
+-- ==============================================================================
+-- 7. TRIGGER DE AUTOREGISTRO (AUTH.USERS)
+-- ==============================================================================
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql 
+AS $$
+BEGIN
+    INSERT INTO public.usuarios (id, rol_id, email, nombre, apellidos, telefono, debe_cambiar_password)
+    VALUES (
+        NEW.id,
+        2, -- Residente
+        NEW.email,
+        COALESCE(
+            NEW.raw_user_meta_data->>'nombre',
+            NEW.raw_user_meta_data->>'given_name',
+            NEW.raw_user_meta_data->>'name', 
+            'Sin nombre'
+        ),
+        COALESCE(
+            NEW.raw_user_meta_data->>'apellidos',
+            NEW.raw_user_meta_data->>'family_name', 
+            ''
+        ),
+        NEW.raw_user_meta_data->>'telefono',
+        false
+    )
+    ON CONFLICT (id) DO NOTHING;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
