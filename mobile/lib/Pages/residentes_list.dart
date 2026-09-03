@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 import '../Services/app_controller.dart';
-import '../Models/api_exceptions.dart';
-import '../Widgets/header_bar.dart';
-import '../main.dart';
 
 class ResidentesListScreen extends StatefulWidget {
   const ResidentesListScreen({super.key, required this.controller});
@@ -323,7 +318,7 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: DataTable(
-                                headingRowColor: MaterialStateProperty.all(
+                                headingRowColor: WidgetStateProperty.all(
                                   const Color(0xFFF8FAFC),
                                 ),
                                 dividerThickness: 1,

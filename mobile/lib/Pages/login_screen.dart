@@ -1,16 +1,10 @@
 import '../Themes/app_theme.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../Services/app_controller.dart';
-import '../Widgets/loading_screen.dart';
 import '../Widgets/field_label.dart';
 import '../Widgets/banner_widget.dart';
-import '../Widgets/header_bar.dart';
-import '../Models/api_exceptions.dart';
-import '../main.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.controller});
@@ -221,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     )
                   : const Text(
                       'Entrar',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),

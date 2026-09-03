@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 
 class AuthUser {
   const AuthUser({
@@ -33,7 +32,7 @@ class AuthUser {
         (json['data'] is Map<String, dynamic>)
             ? json['data'] as Map<String, dynamic>
             : json;
-    String? _nb(dynamic v) {
+    String? nb(dynamic v) {
       if (v == null) return null;
       final s = v.toString().trim();
       return s.isEmpty ? null : s;
@@ -41,13 +40,13 @@ class AuthUser {
     return AuthUser(
       id: (j['id'] ?? '').toString(),
       email: (j['email'] ?? '').toString(),
-      role: _nb(j['role']),
-      rol: _nb(j['rol']),
+      role: nb(j['role']),
+      rol: nb(j['rol']),
       rolId: j['rolId'] is int ? j['rolId'] : int.tryParse(j['rolId']?.toString() ?? ''),
-      rolNombre: _nb(j['rolNombre']),
-      nombre: _nb(j['nombre']),
-      apellidos: _nb(j['apellidos']),
-      telefono: _nb(j['telefono']),
+      rolNombre: nb(j['rolNombre']),
+      nombre: nb(j['nombre']),
+      apellidos: nb(j['apellidos']),
+      telefono: nb(j['telefono']),
       activo: j['activo'] is bool ? j['activo'] : j['activo']?.toString() == 'true',
       debeCambiarPassword: j['debeCambiarPassword'] is bool ? j['debeCambiarPassword'] : j['debeCambiarPassword']?.toString() == 'true',
     );

@@ -3,12 +3,8 @@ import 'Services/app_controller.dart';
 import 'Routes/app_router.dart';
 
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -31,23 +27,23 @@ void main() async {
 
   await Supabase.initialize(
     url: supabaseUrl,
-    anonKey: supabaseAnonKey,
+    publishableKey: supabaseAnonKey,
     authOptions: FlutterAuthClientOptions(
       authFlowType: AuthFlowType.pkce,
     ),
   );
 
-  runApp(const havenApp());
+  runApp(const HavenApp());
 }
 
-class havenApp extends StatefulWidget {
-  const havenApp({super.key});
+class HavenApp extends StatefulWidget {
+  const HavenApp({super.key});
 
   @override
-  State<havenApp> createState() => _havenAppState();
+  State<HavenApp> createState() => _HavenAppState();
 }
 
-class _havenAppState extends State<havenApp> {
+class _HavenAppState extends State<HavenApp> {
   late final AppController controller;
 
   @override

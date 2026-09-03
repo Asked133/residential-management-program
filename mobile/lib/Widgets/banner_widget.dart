@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class BannerWidget extends StatelessWidget {
-  const BannerWidget({required this.message});
+  const BannerWidget({super.key, required this.message});
 
   final String message;
 

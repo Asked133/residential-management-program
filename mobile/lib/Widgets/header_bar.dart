@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../Services/app_controller.dart';
-import '../Pages/perfil_screen.dart';
-import '../main.dart';
 
 class HeaderBar extends StatelessWidget {
-  const HeaderBar({
+  const HeaderBar({super.key, 
     required this.controller,
     required this.title,
     required this.subtitle,
@@ -61,8 +58,8 @@ class HeaderBar extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: avatarColor.withOpacity(0.1),
-                      border: Border.all(color: avatarColor.withOpacity(0.2)),
+                      color: avatarColor.withValues(alpha: 0.1),
+                      border: Border.all(color: avatarColor.withValues(alpha: 0.2)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
