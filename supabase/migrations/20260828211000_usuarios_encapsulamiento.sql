@@ -111,3 +111,34 @@ BEGIN
     RETURN v_filas_afectadas > 0;
 END;
 $$;
+-- c) cambio_usuario
+DROP FUNCTION IF EXISTS public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN);
+CREATE OR REPLACE FUNCTION public.cambio_usuario(
+    p_id UUID, 
+    p_rol_id INTEGER DEFAULT NULL,
+    p_nombre VARCHAR(50) DEFAULT NULL, 
+    p_apellidos VARCHAR(50) DEFAULT NULL,
+    p_telefono VARCHAR(20) DEFAULT NULL, 
+    p_debe_cambiar_password BOOLEAN DEFAULT NULL
+) 
+RETURNS public.vw_usuarios
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_usuario public.vw_usuarios;
+BEGIN
+    UPDATE public.usuarios
+    SET 
+        rol_id = COALESCE(p_rol_id, rol_id),
+        nombre = COALESCE(p_nombre, nombre),
+        apellidos = COALESCE(p_apellidos, apellidos),
+        telefono = COALESCE(p_telefono, telefono),
+        debe_cambiar_password = COALESCE(p_debe_cambiar_password, debe_cambiar_password)
+    WHERE id = p_id;
+    
+    SELECT * INTO v_usuario FROM public.vw_usuarios WHERE id = p_id;
+    RETURN v_usuario;
+END;
+$$;
