@@ -142,3 +142,21 @@ BEGIN
     RETURN v_usuario;
 END;
 $$;
+
+-- d) eliminar_usuario_definitivo
+DROP FUNCTION IF EXISTS public.eliminar_usuario_definitivo(UUID);
+CREATE OR REPLACE FUNCTION public.eliminar_usuario_definitivo(p_id UUID) 
+RETURNS BOOLEAN
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_filas_afectadas INTEGER;
+BEGIN
+    DELETE FROM auth.users WHERE id = p_id;
+    
+    GET DIAGNOSTICS v_filas_afectadas = ROW_COUNT;
+    RETURN v_filas_afectadas > 0;
+END;
+$$;
