@@ -162,4 +162,52 @@ public class ViviendasController : ControllerBase
 
         return NoContent();
     }
+
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [HttpPost("{id}/residentes")]
+    public async Task<IActionResult> AssignResidente(int id, [FromBody] AsignarResidenteRequestDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var adminValidation = await ValidateAdminAsync();
+        if (adminValidation != null)
+            return adminValidation;
+
+        var (data, error) = await _supabaseService.AssignResidenteAsync(id, dto);
+        if (data == null)
+        {
+            if (error != null && error.Contains("El residente ya está asignado"))
+                return Conflict(new { error });
+            if (error != null && error.Contains("no encontrad"))
+                return NotFound(new { error });
+            
+            return BadRequest(new { error });
+        }
+
+        return StatusCode(201, data);
+    }
+
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HttpDelete("{id}/residentes/{usuarioId}")]
+    public async Task<IActionResult> RemoveResidente(int id, Guid usuarioId)
+    {
+        var adminValidation = await ValidateAdminAsync();
+        if (adminValidation != null)
+            return adminValidation;
+
+        var success = await _supabaseService.RemoveResidenteAsync(id, usuarioId);
+        if (!success)
+            return NotFound(new { error = "Asignación no encontrada" });
+
+        return NoContent();
+    }
 }
