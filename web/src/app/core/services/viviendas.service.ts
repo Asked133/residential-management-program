@@ -12,4 +12,16 @@ export class ViviendasService {
   listar(): Promise<Vivienda[]> {
     return firstValueFrom(this.apiService.get<Vivienda[]>('/api/viviendas'));
   }
+
+  crear(payload: { numeroCasa: string; tipo?: string | null }): Promise<Vivienda> {
+    return firstValueFrom(this.apiService.post<Vivienda>('/api/viviendas', payload));
+  }
+
+  actualizar(id: number, payload: { numeroCasa: string; tipo?: string | null }): Promise<Vivienda> {
+    return firstValueFrom(this.apiService.put<Vivienda>(`/api/viviendas/${id}`, payload));
+  }
+
+  eliminar(id: number): Promise<void> {
+    return firstValueFrom(this.apiService.delete<void>(`/api/viviendas/${id}`));
+  }
 }
