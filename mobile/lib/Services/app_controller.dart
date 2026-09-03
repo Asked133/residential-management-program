@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart' show LaunchMode;
 import '../Models/auth_user.dart';
 import '../Models/api_exceptions.dart';
 import '../Widgets/banner_widget.dart';
