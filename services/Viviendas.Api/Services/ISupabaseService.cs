@@ -14,4 +14,5 @@ public interface ISupabaseService
     Task<(JsonElement? data, string? error)> AssignResidenteAsync(int viviendaId, AsignarResidenteRequestDto dto);
     Task<bool> RemoveResidenteAsync(int viviendaId, Guid usuarioId);
     Task<List<MiViviendaDto>> GetMisViviendasAsync(string accessToken);
+    Task<JsonElement> GetResidentesByViviendaIdAsync(int viviendaId);
 }

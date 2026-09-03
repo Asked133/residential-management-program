@@ -235,4 +235,17 @@ public class ViviendasController : ControllerBase
 
         return Ok(result);
     }
+
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [HttpGet("{id}/residentes")]
+    public async Task<IActionResult> GetResidentes(int id)
+    {
+        var adminValidation = await ValidateAdminAsync();
+        if (adminValidation != null)
+            return adminValidation;
+        var residentes = await _supabaseService.GetResidentesByViviendaIdAsync(id);
+        return Ok(residentes);
+    }
 }
