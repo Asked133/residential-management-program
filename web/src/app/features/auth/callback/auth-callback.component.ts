@@ -48,7 +48,12 @@ export class AuthCallbackComponent implements OnInit {
         return;
       }
 
-      // Residente OK — redirigir a su dashboard correspondiente.
+      // Residente OK — si el perfil está incompleto (sin teléfono o apellidos), redirigir a completar perfil
+      if (this.authService.isProfileIncomplete()) {
+        await this.router.navigate(['/perfil'], { queryParams: { onboarding: 'true' } });
+        return;
+      }
+
       await this.authService.navigateToDashboard();
     } catch (err: any) {
       this.showErrorToastAndRedirect(err?.message || 'Error inesperado al verificar la cuenta.');
