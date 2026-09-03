@@ -26,6 +26,7 @@ COPY --from=build /app/publish ./
 # Render inyecta la variable PORT dinámicamente
 # ASP.NET Core la lee con ASPNETCORE_URLS
 ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
+ENV DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE=false
 
 EXPOSE 8080
 

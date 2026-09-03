@@ -226,4 +226,21 @@ public class SupabaseService : ISupabaseService
         var success = await response.Content.ReadFromJsonAsync<bool>();
         return success;
     }
+
+    public async Task<List<MiViviendaDto>> GetMisViviendasAsync(string accessToken)
+    {
+        var requestUrl = $"{_supabaseUrl}/rest/v1/vw_mis_viviendas?select=*";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+        request.Headers.Add("apikey", _anonKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await _httpClient.SendAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+            return new List<MiViviendaDto>();
+
+        var viviendas = await response.Content.ReadFromJsonAsync<List<MiViviendaDto>>();
+        return viviendas ?? new List<MiViviendaDto>();
+    }
 }

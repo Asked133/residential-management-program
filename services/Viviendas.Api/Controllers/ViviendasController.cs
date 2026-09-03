@@ -210,4 +210,29 @@ public class ViviendasController : ControllerBase
 
         return NoContent();
     }
+
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [HttpGet("mis-viviendas")]
+    public async Task<IActionResult> GetMisViviendas()
+    {
+        var accessToken = HttpContext.Request.Headers["Authorization"]
+            .ToString().Replace("Bearer ", "");
+
+        if (string.IsNullOrEmpty(accessToken))
+            return Unauthorized(new { error = "Token invalido o ausente" });
+
+        var viviendas = await _supabaseService.GetMisViviendasAsync(accessToken);
+        
+        var result = viviendas.Select(v => new
+        {
+            viviendaId = v.ViviendaId,
+            numeroCasa = v.NumeroCasa,
+            tipo = v.Tipo,
+            activo = v.Activo,
+            creadoEn = v.CreadoEn
+        });
+
+        return Ok(result);
+    }
 }
