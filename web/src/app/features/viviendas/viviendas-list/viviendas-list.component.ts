@@ -5,11 +5,12 @@ import { RouterLink } from '@angular/router';
 import Swal from 'sweetalert2';
 import { ViviendasService } from '../../../core/services/viviendas.service';
 import { Vivienda } from '../../../core/models/vivienda.model';
+import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detalle.component';
 
 @Component({
   selector: 'app-viviendas-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, DatePipe, ViviendasDetalleComponent],
   template: `
     <div class="min-h-screen bg-[#f8fafc] text-slate-900 font-sans antialiased relative selection:bg-slate-900 selection:text-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -155,7 +156,8 @@ import { Vivienda } from '../../../core/models/vivienda.model';
               <tbody class="divide-y divide-slate-100 bg-white">
                 <tr
                   *ngFor="let v of viviendas()"
-                  class="group hover:bg-slate-50/60 transition-colors"
+                  (click)="abrirDetalle(v)"
+                  class="group hover:bg-blue-50/40 transition-colors cursor-pointer"
                 >
                   <!-- Numero Casa / Avatar -->
                   <td class="px-6 py-4.5 whitespace-nowrap">
@@ -191,12 +193,24 @@ import { Vivienda } from '../../../core/models/vivienda.model';
                     </div>
                   </td>
 
-                  <!-- Acciones (Editar y Eliminar) -->
+                  <!-- Acciones (Ver Detalle, Editar y Eliminar) -->
                   <td class="px-6 py-4.5 whitespace-nowrap text-right text-sm">
                     <div class="inline-flex items-center gap-1.5">
+                      <!-- Ver Detalle (Issue #50) -->
+                      <button
+                        (click)="$event.stopPropagation(); abrirDetalle(v)"
+                        title="Ver detalle de vivienda y residentes"
+                        class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
+
                       <!-- Editar (Lapicito) -->
                       <button
-                        (click)="abrirModalEditar(v)"
+                        (click)="$event.stopPropagation(); abrirModalEditar(v)"
                         title="Editar vivienda"
                         class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                       >
@@ -207,7 +221,7 @@ import { Vivienda } from '../../../core/models/vivienda.model';
 
                       <!-- Borrar (Cesto) -->
                       <button
-                        (click)="confirmarEliminar(v)"
+                        (click)="$event.stopPropagation(); confirmarEliminar(v)"
                         title="Eliminar vivienda"
                         class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                       >
@@ -347,6 +361,14 @@ import { Vivienda } from '../../../core/models/vivienda.model';
         </div>
       </div>
 
+      <!-- Slide-over Drawer Detalle Vivienda (Issue #50 & #87) -->
+      <app-viviendas-detalle
+        [vivienda]="viviendaSeleccionada()"
+        [isOpen]="isDetalleOpen()"
+        (close)="cerrarDetalle()"
+        (viviendaUpdated)="cargarViviendas()"
+      />
+
     </div>
   `
 })
@@ -363,6 +385,10 @@ export class ViviendasListComponent implements OnInit {
   readonly editingId = signal<number | null>(null);
   readonly isSaving = signal<boolean>(false);
   readonly formError = signal<string | null>(null);
+
+  // Drawer Detalle State (Issue #50 & #87)
+  readonly viviendaSeleccionada = signal<Vivienda | null>(null);
+  readonly isDetalleOpen = signal<boolean>(false);
 
   formNumeroCasa: string = '';
   formTipo: string = '';
@@ -382,6 +408,15 @@ export class ViviendasListComponent implements OnInit {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  abrirDetalle(vivienda: Vivienda): void {
+    this.viviendaSeleccionada.set(vivienda);
+    this.isDetalleOpen.set(true);
+  }
+
+  cerrarDetalle(): void {
+    this.isDetalleOpen.set(false);
   }
 
   abrirModalCrear(): void {

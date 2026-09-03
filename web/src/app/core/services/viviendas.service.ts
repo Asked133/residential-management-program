@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
 import { Vivienda } from '../models/vivienda.model';
+import { Residente } from '../models/residente.model';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable({
@@ -23,5 +24,22 @@ export class ViviendasService {
 
   eliminar(id: number): Promise<void> {
     return firstValueFrom(this.apiService.delete<void>(`/api/viviendas/${id}`));
+  }
+
+  async obtenerResidentesVivienda(viviendaId: number): Promise<Residente[]> {
+    try {
+      return await firstValueFrom(this.apiService.get<Residente[]>(`/api/viviendas/${viviendaId}/residentes`));
+    } catch {
+      // Fallback seguro si la consulta no esta habilitada en el backend
+      return [];
+    }
+  }
+
+  vincularResidente(viviendaId: number, usuarioId: string): Promise<any> {
+    return firstValueFrom(this.apiService.post<any>(`/api/viviendas/${viviendaId}/residentes`, { usuarioId }));
+  }
+
+  desvincularResidente(viviendaId: number, usuarioId: string): Promise<void> {
+    return firstValueFrom(this.apiService.delete<void>(`/api/viviendas/${viviendaId}/residentes/${usuarioId}`));
   }
 }
