@@ -42,3 +42,21 @@ CREATE TABLE IF NOT EXISTS public.viviendas_bitacora (
 CREATE INDEX IF NOT EXISTS idx_viviendas_bitacora_registro ON public.viviendas_bitacora(registro_id);
 CREATE INDEX IF NOT EXISTS idx_viviendas_bitacora_fecha ON public.viviendas_bitacora(modificado_en);
 REVOKE ALL ON public.viviendas_bitacora FROM authenticated, anon, service_role;
+
+-- ==============================================================================
+-- 3. TRIGGERS DE AUDITORÍA
+-- ==============================================================================
+DROP TRIGGER IF EXISTS trg_viviendas_auditoria_insert ON public.viviendas;
+CREATE TRIGGER trg_viviendas_auditoria_insert
+    AFTER INSERT ON public.viviendas
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_viviendas_auditoria_update ON public.viviendas;
+CREATE TRIGGER trg_viviendas_auditoria_update
+    BEFORE UPDATE ON public.viviendas
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_viviendas_auditoria_delete ON public.viviendas;
+CREATE TRIGGER trg_viviendas_auditoria_delete
+    BEFORE DELETE ON public.viviendas
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
