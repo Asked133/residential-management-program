@@ -10,7 +10,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
 
   const checkAuthentication = () => {
     if (authService.authStatus() === 'authenticated') {
-      if (!state.url.startsWith('/perfil') && authService.isProfileIncomplete()) {
+      if (state?.url && !state.url.startsWith('/perfil') && authService.isProfileIncomplete()) {
         return router.createUrlTree(['/perfil'], { queryParams: { onboarding: 'true' } });
       }
       return true;

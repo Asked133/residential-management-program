@@ -157,8 +157,8 @@ export class AuthService implements OnDestroy {
 
   private async doRefreshProfile(session: Session): Promise<void> {
     try {
-      // Timeout defensivo de 2.5s: si Render demora, activamos el fallback a Supabase de inmediato
-      const profile = await firstValueFrom(this.apiService.get<AuthUser>('/api/auth/me').pipe(timeout(2500)));
+      // Timeout de 7s: si Render esta en cold start (arranque en frío), damos tiempo suficiente para responder
+      const profile = await firstValueFrom(this.apiService.get<AuthUser>('/api/auth/me').pipe(timeout(7000)));
       console.log('[AuthService] Respuesta exitosa de /api/auth/me:', profile);
       this.setAuthenticatedUser(session.user, profile);
     } catch (err) {
@@ -327,6 +327,10 @@ export class AuthService implements OnDestroy {
     // Aplica exclusivamente al rol residente
     if (!rol.includes('residente')) return false;
 
+    // Si los datos de perfil aún no han podido cargarse desde el backend (datos en blanco por cold-start),
+    // no bloquear preventivamente al usuario en onboarding
+    if (!user.creadoEn && !user.nombre && !user.telefono) return false;
+
     const nombre = (user.nombre || '').trim();
     const apellidos = (user.apellidos || '').trim();
     const telefono = (user.telefono || '').trim();
@@ -344,7 +348,7 @@ export class AuthService implements OnDestroy {
   ): void {
     // El rol SIEMPRE debe venir del backend (/api/auth/me).
     // Soportamos 'rol', 'role', 'role_id' o 'rol_id' (1=admin, 2=residente, 3=vigilante),
-    // y app_metadata del servidor de Supabase. user_metadata de cliente NO se usa para autorizar.
+    // app_metadata del servidor de Supabase o user_metadata como respaldo durante cold start.
     const rawRole = (
       profile?.rol ??
       profile?.role ??
@@ -356,6 +360,8 @@ export class AuthService implements OnDestroy {
       profile?.roleId ??
       sessionUser.app_metadata?.['rol'] ??
       sessionUser.app_metadata?.['role'] ??
+      sessionUser.user_metadata?.['rol'] ??
+      sessionUser.user_metadata?.['role'] ??
       'Residente'
     ).toString();
 
