@@ -144,7 +144,7 @@ public class SupabaseService : ISupabaseService
         request.Headers.Add("x-actor-id", actorId.ToString());
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
         
-        var jsonString = JsonSerializer.Serialize(payload, new JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never });
+        var jsonString = JsonSerializer.Serialize(payload, new JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
         request.Content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json");
         var response = await _httpClient.SendAsync(request);
         if (!response.IsSuccessStatusCode)
