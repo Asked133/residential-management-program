@@ -21,6 +21,13 @@ export const routes: Routes = [
     component: DashboardComponent
   },
   {
+    path: 'perfil',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/perfil/perfil.component')
+        .then(m => m.PerfilComponent)
+  },
+  {
     path: 'dashboard/admin',
     canActivate: [authGuard, roleGuard(['administrador'])],
     loadComponent: () =>

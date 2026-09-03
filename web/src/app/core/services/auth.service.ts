@@ -248,6 +248,55 @@ export class AuthService implements OnDestroy {
     this.router.navigate(['/login']);
   }
 
+  async actualizarPerfil(datos: {
+    nombre: string;
+    apellidos: string;
+    telefono?: string;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const actualizado = await firstValueFrom(
+        this.apiService.patch<{ id: string; nombre: string; apellidos: string; telefono: string }>(
+          '/api/auth/completar-perfil',
+          datos
+        )
+      );
+
+      this.currentUser.update(u =>
+        u
+          ? {
+              ...u,
+              nombre: actualizado.nombre,
+              apellidos: actualizado.apellidos,
+              telefono: actualizado.telefono
+            }
+          : u
+      );
+
+      return { success: true };
+    } catch (err: any) {
+      const message = err?.error?.error || err?.message || 'No se pudo actualizar el perfil.';
+      return { success: false, error: message };
+    }
+  }
+
+  isProfileIncomplete(): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+    const rol = (user.role || user.rol || '').toLowerCase();
+    // Aplica exclusivamente al rol residente
+    if (!rol.includes('residente')) return false;
+
+    const nombre = (user.nombre || '').trim();
+    const apellidos = (user.apellidos || '').trim();
+    const telefono = (user.telefono || '').trim();
+
+    const nombreValido = nombre.length > 0 && nombre.toLowerCase() !== 'sin nombre';
+    const apellidosValidos = apellidos.length > 0;
+    const telefonoValido = telefono.length >= 10;
+
+    return !nombreValido || !apellidosValidos || !telefonoValido;
+  }
+
   private setAuthenticatedUser(
     sessionUser: { id: string; email?: string; user_metadata?: Record<string, any>; app_metadata?: Record<string, any> },
     profile?: any | null
@@ -286,7 +335,8 @@ export class AuthService implements OnDestroy {
       rol: formattedRole,
       nombre: profile?.nombre || sessionUser.user_metadata?.['nombre'],
       apellidos: profile?.apellidos || sessionUser.user_metadata?.['apellidos'],
-      telefono: profile?.telefono || sessionUser.user_metadata?.['telefono']
+      telefono: profile?.telefono || sessionUser.user_metadata?.['telefono'],
+      creadoEn: profile?.creadoEn ?? profile?.creado_en ?? undefined
     });
     this.authStatus.set('authenticated');
   }
