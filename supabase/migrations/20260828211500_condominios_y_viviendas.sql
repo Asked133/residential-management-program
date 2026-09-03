@@ -73,3 +73,31 @@ SELECT
     v.activo, 
     v.creado_en
 FROM public.viviendas v;
+
+-- ==============================================================================
+-- 5. FUNCIONES DE ENCAPSULAMIENTO (STORED PROCEDURES)
+-- ==============================================================================
+
+-- a) alta_vivienda
+DROP FUNCTION IF EXISTS public.alta_vivienda(VARCHAR, UUID, VARCHAR);
+DROP FUNCTION IF EXISTS public.alta_vivienda(VARCHAR, VARCHAR);
+CREATE OR REPLACE FUNCTION public.alta_vivienda(
+    p_numero_casa VARCHAR(50), 
+    p_tipo VARCHAR(20) DEFAULT NULL
+) 
+RETURNS public.vw_viviendas
+SECURITY DEFINER 
+SET search_path = public 
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_resultado public.vw_viviendas;
+    v_id INTEGER;
+BEGIN
+    INSERT INTO public.viviendas (numero_casa, tipo) 
+    VALUES (p_numero_casa, p_tipo) 
+    RETURNING id INTO v_id;
+    
+    SELECT * INTO v_resultado FROM public.vw_viviendas WHERE id = v_id;
+    RETURN v_resultado;
+END;
+$$;
