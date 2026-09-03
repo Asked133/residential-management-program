@@ -10,6 +10,12 @@ export const routes: Routes = [
     component: LoginComponent
   },
   {
+    path: 'registro',
+    loadComponent: () =>
+      import('./features/auth/registro/registro.component')
+        .then(m => m.RegistroComponent)
+  },
+  {
     path: 'auth/callback',
     loadComponent: () =>
       import('./features/auth/callback/auth-callback.component')
@@ -19,6 +25,13 @@ export const routes: Routes = [
     path: 'dashboard',
     canActivate: [authGuard],
     component: DashboardComponent
+  },
+  {
+    path: 'perfil',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/perfil/perfil.component')
+        .then(m => m.PerfilComponent)
   },
   {
     path: 'dashboard/admin',
@@ -40,6 +53,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/residentes/residentes-form/residentes-form.component')
         .then(m => m.ResidentesFormComponent)
+  },
+  {
+    path: 'dashboard/admin/viviendas',
+    canActivate: [authGuard, roleGuard(['administrador'])],
+    loadComponent: () =>
+      import('./features/viviendas/viviendas-list/viviendas-list.component')
+        .then(m => m.ViviendasListComponent)
   },
   {
     path: 'dashboard/residente',
