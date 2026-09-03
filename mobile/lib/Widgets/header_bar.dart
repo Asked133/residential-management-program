@@ -110,8 +110,6 @@ class HeaderBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                /*
-                // Funcionalidad de editar residente / perfil comentada temporalmente
                 InkWell(
                   onTap: () {
                     Navigator.push(
@@ -155,7 +153,6 @@ class HeaderBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                */
                 InkWell(
                   onTap: controller.logout,
                   borderRadius: BorderRadius.circular(8),
