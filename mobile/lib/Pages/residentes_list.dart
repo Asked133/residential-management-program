@@ -561,6 +561,7 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: DataTable(
+                                showCheckboxColumn: false,
                                 headingRowColor: WidgetStateProperty.all(
                                   const Color(0xFFF8FAFC),
                                 ),

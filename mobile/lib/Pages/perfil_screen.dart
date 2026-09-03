@@ -56,8 +56,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<void> _save() async {
-    // Funcionalidad de editar residente comentada temporalmente
-    /*
     if (!_formKey.currentState!.validate()) return;
 
     final success = await widget.controller.completarPerfil(
