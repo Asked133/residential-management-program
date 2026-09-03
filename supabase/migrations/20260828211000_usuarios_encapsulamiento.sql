@@ -92,3 +92,22 @@ BEGIN
     RETURN v_usuario;
 END;
 $$;
+-- b) baja_usuario
+DROP FUNCTION IF EXISTS public.baja_usuario(UUID);
+CREATE OR REPLACE FUNCTION public.baja_usuario(p_id UUID) 
+RETURNS BOOLEAN
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_filas_afectadas INTEGER;
+BEGIN
+    UPDATE public.usuarios 
+    SET activo = false 
+    WHERE id = p_id AND activo = true;
+    
+    GET DIAGNOSTICS v_filas_afectadas = ROW_COUNT;
+    RETURN v_filas_afectadas > 0;
+END;
+$$;
