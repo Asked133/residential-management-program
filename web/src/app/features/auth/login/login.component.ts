@@ -1,13 +1,14 @@
 import { Component, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-6 font-sans antialiased text-[#0f172a] selection:bg-[#111C99] selection:text-white">
       <div class="w-full max-w-[480px] bg-white border border-[#e2e8f0] rounded-xl p-10 shadow-sm">
@@ -176,6 +177,16 @@ import Swal from 'sweetalert2';
                 <span class="text-xs text-[#64748b] font-medium leading-tight">Acceso restringido con credenciales corporativas directas.</span>
               </div>
             </ng-container>
+          </div>
+
+          <!-- Enlace a Registro (solo residentes) -->
+          <div *ngIf="modo() === 'residente'" class="pt-4 text-center border-t border-slate-100">
+            <p class="text-sm text-slate-600">
+              ¿No tienes una cuenta?
+              <a routerLink="/registro" class="font-semibold text-[#111C99] hover:underline cursor-pointer ml-1">
+                Regístrate aquí
+              </a>
+            </p>
           </div>
         </form>
       </div>
