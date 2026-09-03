@@ -5,7 +5,7 @@ import { of } from 'rxjs';
 import Swal from 'sweetalert2';
 import { environment } from '../../../environments/environment';
 
-export const PING_TIMEOUT = 45000;
+export const PING_TIMEOUT = 7000;
 
 export interface PingResponse {
   message?: string;
@@ -18,15 +18,17 @@ export interface PingResponse {
 })
 export class PingService {
   private readonly http = inject(HttpClient);
+  private retryCount = 0;
+  private readonly maxRetries = 2;
 
   checkBackendConnection(): void {
-    const pingUrl = `${environment.apiUrl}/api/auth/ping`;
+    const pingUrl = `${environment.services.usuarios}/api/auth/ping`;
 
     const Toast = Swal.mixin({
       toast: true,
       position: 'bottom',
       showConfirmButton: false,
-      timer: 8000,
+      timer: 4000,
       timerProgressBar: true,
       width: '100%'
     });
@@ -35,17 +37,33 @@ export class PingService {
       timeout(PING_TIMEOUT),
       catchError(error => {
         console.warn('Backend ping error details:', error);
-        let errorMsg = 'No fue posible establecer conexión con el backend.';
-        
+
+        if (this.retryCount < this.maxRetries) {
+          this.retryCount++;
+          if (this.retryCount === 1) {
+            Toast.fire({
+              icon: 'info',
+              title: 'Despertando servidor en Render...',
+              background: '#fef3c7',
+              color: '#92400e',
+              timer: 3000
+            });
+          }
+          setTimeout(() => this.checkBackendConnection(), 4000);
+          return of(null);
+        }
+
+        let errorMsg = 'El backend no respondió a tiempo. Operando en modo seguro.';
         if (error.status === 0) {
-          errorMsg = 'No fue posible conectar con el backend (Bloqueo de CORS desde localhost o sin conexión).';
+          errorMsg = 'Servidor en Render iniciando o bloqueo de CORS.';
         }
 
         Toast.fire({
-          icon: 'error',
+          icon: 'warning',
           title: errorMsg,
           background: '#fee2e2',
-          color: '#991b1b'
+          color: '#991b1b',
+          timer: 3500
         });
         return of(null);
       })
@@ -62,7 +80,8 @@ export class PingService {
             </div>
           `,
           background: '#dcfce7',
-          color: '#166534'
+          color: '#166534',
+          timer: 4000
         });
       }
     });

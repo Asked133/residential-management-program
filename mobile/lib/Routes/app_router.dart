@@ -1,0 +1,39 @@
+import 'package:flutter/material.dart';
+import '../Services/app_controller.dart';
+import '../Pages/login_screen.dart';
+import '../Pages/admin_dashboard.dart';
+import '../Pages/vigilante_dashboard.dart';
+import '../Pages/residente_dashboard.dart';
+import '../Widgets/loading_screen.dart';
+import '../Widgets/splash_screen.dart';
+
+class AppRouter extends StatelessWidget {
+  final AppController controller;
+
+  const AppRouter({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        if (controller.isInitializing) {
+          return const SplashScreen();
+        }
+
+        if (controller.isLoading) {
+          return const LoadingScreen();
+        }
+
+        if (!controller.isAuthenticated) {
+          return LoginScreen(controller: controller);
+        }
+
+        final role = controller.currentUser?.rol;
+        if (role == 'administrador') return AdminDashboardScreen(controller: controller);
+        if (role == 'vigilante') return VigilanteDashboardScreen(controller: controller);
+        return ResidenteDashboardScreen(controller: controller);
+      },
+    );
+  }
+}

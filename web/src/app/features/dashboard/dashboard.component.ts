@@ -1,5 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -7,36 +8,20 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative font-sans selection:bg-slate-900 selection:text-white">
-      <!-- Logout Button (Top Right) -->
-      <div class="absolute top-6 right-6">
-        <button
-          (click)="onLogout()"
-          class="py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-all border border-slate-300 shadow-xs cursor-pointer"
-        >
-          Cerrar sesión
-        </button>
-      </div>
-
-      <!-- Centered Bienvenido Image Placeholder -->
-      <div class="flex flex-col items-center justify-center max-w-lg w-full text-center">
-        <img
-          src="/bienvenido.svg"
-          alt="Bienvenido"
-          class="w-full max-w-md h-auto object-contain mx-auto"
-          onerror="this.onerror=null; this.src='/bienvenido.png';"
-        />
-      </div>
+    <div class="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-6 font-sans">
+      <div class="w-8 h-8 rounded-full border-2 border-slate-300 border-t-slate-800 animate-spin mb-3"></div>
+      <p class="text-sm font-medium text-slate-600">Redirigiendo a tu panel...</p>
     </div>
   `
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
-  readonly currentUser = this.authService.currentUser;
-
-  onLogout(): void {
-    this.authService.logout();
+  ngOnInit(): void {
+    const route = this.authService.getDashboardRoute();
+    this.router.navigate([route]);
   }
 }
+
 

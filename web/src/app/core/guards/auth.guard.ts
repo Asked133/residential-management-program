@@ -8,14 +8,22 @@ export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  if (!authService.isLoading()) {
+    if (authService.authStatus() === 'authenticated') {
+      return true;
+    }
+    return router.createUrlTree(['/login']);
+  }
+
   return toObservable(authService.isLoading).pipe(
     filter(loading => !loading),
     take(1),
     map(() => {
-      if (authService.authStatus() === 'authenticated' && authService.isAdmin()) {
+      if (authService.authStatus() === 'authenticated') {
         return true;
       }
       return router.createUrlTree(['/login']);
     })
   );
 };
+
