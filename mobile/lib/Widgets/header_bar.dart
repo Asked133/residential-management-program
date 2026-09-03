@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../Services/app_controller.dart';
+import '../Pages/perfil_screen.dart';
 
 class HeaderBar extends StatelessWidget {
   const HeaderBar({super.key, 

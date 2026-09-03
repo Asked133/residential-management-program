@@ -31,6 +31,22 @@ class AppController extends ChangeNotifier {
   AuthUser? get currentUser => _currentUser;
   String? get accessToken => _session?.accessToken;
 
+  bool get isProfileIncomplete {
+    if (_currentUser == null) return false;
+    final rol = (_currentUser!.role ?? _currentUser!.rol ?? '').toLowerCase();
+    if (!rol.contains('residente')) return false;
+
+    final nombre = (_currentUser!.nombre ?? '').trim();
+    final apellidos = (_currentUser!.apellidos ?? '').trim();
+    final telefono = (_currentUser!.telefono ?? '').trim();
+
+    final nombreValido = nombre.isNotEmpty && nombre.toLowerCase() != 'sin nombre';
+    final apellidosValidos = apellidos.isNotEmpty;
+    final telefonoValido = telefono.length >= 10;
+
+    return !nombreValido || !apellidosValidos || !telefonoValido;
+  }
+
   Future<void> bootstrap() async {
     _authSubscription = _supabaseClient.auth.onAuthStateChange.listen((
       event,
@@ -174,6 +190,56 @@ class AppController extends ChangeNotifier {
       _errorMessage = error.message;
     } catch (error) {
       _errorMessage = error.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> registerResidente({
+    required String nombre,
+    required String apellidos,
+    required String telefono,
+    required String email,
+    required String password,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final response = await _supabaseClient.auth.signUp(
+        email: email.trim(),
+        password: password,
+        data: {
+          'nombre': nombre.trim(),
+          'apellidos': apellidos.trim(),
+          'telefono': telefono.trim(),
+          'rol': 'residente',
+        },
+      );
+
+      _session = response.session;
+      if (_session != null) {
+        await completarPerfil(nombre, apellidos, telefono);
+        await _refreshProfile();
+        notifyToast('Cuenta creada exitosamente.', success: true);
+        return true;
+      } else {
+        notifyToast(
+          'Cuenta registrada correctamente.',
+          subtitle: 'Por favor inicia sesión o revisa tu correo para confirmar.',
+          success: true,
+        );
+        return true;
+      }
+    } on AuthException catch (error) {
+      _errorMessage = _mapAuthError(error);
+      notifyToast(_errorMessage!, success: false);
+      return false;
+    } catch (error) {
+      _errorMessage = error.toString();
+      notifyToast(_errorMessage!, success: false);
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -367,6 +433,14 @@ class AppController extends ChangeNotifier {
         message.contains('contraseña')) {
       return 'Correo o contraseña incorrectos.';
     }
+    if (message.contains('user already registered') ||
+        message.contains('already been registered') ||
+        message.contains('email address is already registered')) {
+      return 'El correo electrónico ya está registrado.';
+    }
+    if (message.contains('password should be at least')) {
+      return 'La contraseña debe tener al menos 6 caracteres.';
+    }
     if (message.contains('email') || message.contains('password')) {
       return 'Revisa el correo y la contraseña.';
     }
@@ -425,14 +499,15 @@ class AppController extends ChangeNotifier {
     );
   }
 
-  Future<void> completarPerfil(String nombre, String apellidos, String telefono) async {
+  Future<bool> completarPerfil(String nombre, String apellidos, String telefono) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
     try {
       final payload = {
-        'nombre': nombre,
-        'apellidos': apellidos,
-        'telefono': telefono,
+        'nombre': nombre.trim(),
+        'apellidos': apellidos.trim(),
+        'telefono': telefono.trim(),
       };
 
       final response = await httpClient.patch(
@@ -447,25 +522,53 @@ class AppController extends ChangeNotifier {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final decoded = jsonDecode(response.body);
         final Map<String, dynamic> p =
-            (decoded['data'] is Map<String, dynamic>)
+            (decoded is Map && decoded['data'] is Map<String, dynamic>)
                 ? decoded['data'] as Map<String, dynamic>
-                : decoded;
+                : (decoded is Map<String, dynamic> ? decoded : {});
         
         final mapped = AuthUser.fromJson(p);
         
         final rawRole = _nb(mapped.rolNombre) ?? _nb(p['rol']) ?? _nb(p['role']) ?? _currentUser?.role ?? 'residente';
         final normalized = normalizeRole(rawRole);
 
-        _currentUser = mapped.copyWith(
+        final updatedNombre = (mapped.nombre != null && mapped.nombre!.isNotEmpty)
+            ? mapped.nombre!
+            : nombre.trim();
+        final updatedApellidos = (mapped.apellidos != null && mapped.apellidos!.isNotEmpty)
+            ? mapped.apellidos!
+            : apellidos.trim();
+        final updatedTelefono = (mapped.telefono != null && mapped.telefono!.isNotEmpty)
+            ? mapped.telefono!
+            : telefono.trim();
+
+        _currentUser = _currentUser?.copyWith(
+          nombre: updatedNombre,
+          apellidos: updatedApellidos,
+          telefono: updatedTelefono,
+          role: normalized,
+          rol: normalized,
+        ) ?? mapped.copyWith(
           role: normalized,
           rol: normalized,
         );
-        notifyToast('Perfil actualizado correctamente.', success: true);
+        notifyToast('Perfil guardado correctamente.', success: true);
+        return true;
       } else {
-        notifyToast('No se pudo actualizar el perfil.', success: false);
+        String msg = 'No se pudo actualizar el perfil.';
+        try {
+          final errBody = jsonDecode(response.body);
+          if (errBody is Map && errBody['error'] != null) {
+            msg = errBody['error'].toString();
+          }
+        } catch (_) {}
+        _errorMessage = msg;
+        notifyToast(msg, success: false);
+        return false;
       }
     } catch (e) {
+      _errorMessage = e.toString();
       notifyToast('Error al conectar con el servidor.', success: false);
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

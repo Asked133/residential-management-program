@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Services/app_controller.dart';
 import '../Widgets/header_bar.dart';
+import 'perfil_screen.dart';
 
 class ResidenteDashboardScreen extends StatelessWidget {
   const ResidenteDashboardScreen({super.key, required this.controller});
@@ -9,6 +10,10 @@ class ResidenteDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = controller.currentUser;
+    final nombre = user?.nombre ?? 'Residente';
+    final telefono = user?.telefono ?? 'No registrado';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
@@ -25,44 +30,203 @@ class ResidenteDashboardScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1280),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x05000000),
-                            blurRadius: 4,
-                            offset: Offset(0, 1),
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Hero de Bienvenida
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x05000000),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '¡Hola, ${controller.currentUser?.nombre ?? 'Residente'}!',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: -0.5,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '¡Hola, $nombre!',
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF0F172A),
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Bienvenido a tu portal condominal.',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Bienvenido a tu portal condominal.',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF475569),
-                            ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Módulo "Mi Vivienda" (Preparado en Frontend para Residente)
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x05000000),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEEF2FF),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.home_work_outlined,
+                                          color: Color(0xFF111C99),
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      const Text(
+                                        'Mi Vivienda',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFFBEB),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: const Color(0xFFFDE68A)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: const [
+                                        Icon(Icons.schedule, size: 12, color: Color(0xFFB45309)),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Pendiente de Asignación',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFB45309),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Asignación de unidad física en proceso',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1E293B),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    const Text(
+                                      'La administración de Haven verificará tu número de teléfono registrado y asociará tu vivienda correspondiente. Una vez completado, verás aquí el número de casa, visitas programadas y accesos.',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Color(0xFF64748B),
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                                    const SizedBox(height: 14),
+                                    _buildStatusItem(
+                                      title: 'Cuenta de Residente Haven',
+                                      subtitle: user?.email ?? 'Activo',
+                                      isDone: true,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    _buildStatusItem(
+                                      title: 'Teléfono de Contacto',
+                                      subtitle: telefono,
+                                      isDone: telefono != 'No registrado' && telefono.isNotEmpty,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    _buildStatusItem(
+                                      title: 'Vivienda Condominal',
+                                      subtitle: 'En espera de vinculación por el administrador',
+                                      isDone: false,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => PerfilScreen(controller: controller),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.person_outline, size: 18),
+                                  label: const Text(
+                                    'Ver y actualizar mi perfil de contacto',
+                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFF111C99),
+                                    side: const BorderSide(color: Color(0xFF111C99)),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -71,6 +235,45 @@ class ResidenteDashboardScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  static Widget _buildStatusItem({
+    required String title,
+    required String subtitle,
+    required bool isDone,
+  }) {
+    return Row(
+      children: [
+        Icon(
+          isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+          size: 18,
+          color: isDone ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDone ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

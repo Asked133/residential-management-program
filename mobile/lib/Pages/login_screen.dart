@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../Services/app_controller.dart';
 import '../Widgets/field_label.dart';
 import '../Widgets/banner_widget.dart';
+import 'registro_residente_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.controller});
@@ -130,17 +131,16 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
   Widget _buildForm() {
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           const FieldLabel(text: 'Correo'),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
@@ -157,9 +157,9 @@ class _LoginScreenState extends State<LoginScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
           const FieldLabel(text: 'Contraseña'),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
@@ -172,6 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
                   color: const Color(0xFF94A3B8),
+                  size: 20,
                 ),
                 onPressed: () {
                   setState(() {
@@ -181,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             validator: (value) {
-              final text = value?.trim() ?? '';
+              final text = value ?? '';
               if (text.isEmpty) {
                 return 'La contraseña es requerida.';
               }
@@ -191,78 +192,114 @@ class _LoginScreenState extends State<LoginScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
           SizedBox(
             width: double.infinity,
-            height: 52,
+            height: 48,
             child: FilledButton(
               onPressed: _isSubmitting ? null : _submit,
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF111C99),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               child: _isSubmitting
                   ? const SizedBox(
-                      width: 22,
-                      height: 22,
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2.4,
+                        strokeWidth: 2,
                         color: Colors.white,
                       ),
                     )
                   : const Text(
                       'Entrar',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
             ),
           ),
           if (!_isStaffMode) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             const Row(
               children: [
                 Expanded(child: Divider(color: Color(0xFFE2E8F0))),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('O', style: TextStyle(color: Color(0xFF94A3B8))),
+                  padding: EdgeInsets.symmetric(horizontal: 14),
+                  child: Text('o', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
                 ),
                 Expanded(child: Divider(color: Color(0xFFE2E8F0))),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: _isSubmittingGoogle ? null : _submitGoogle,
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 side: const BorderSide(color: Color(0xFFE2E8F0)),
                 foregroundColor: const Color(0xFF0F172A),
               ),
               icon: _isSubmittingGoogle
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2.4),
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : SvgPicture.asset('assets/google.svg', width: 24, height: 24),
+                  : SvgPicture.asset('assets/google.svg', width: 20, height: 20),
               label: Text(
                 _isSubmittingGoogle ? 'Redirigiendo...' : 'Continuar con Google',
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Center(
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RegistroResidenteScreen(controller: widget.controller),
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  child: Text.rich(
+                    TextSpan(
+                      text: '¿No tienes una cuenta? ',
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 13,
+                      ),
+                      children: const [
+                        TextSpan(
+                          text: 'Regístrate aquí',
+                          style: TextStyle(
+                            color: Color(0xFF111C99),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ),
           ],
           if (_isStaffMode) ...[
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             const Row(
               children: [
                 Expanded(child: Divider(color: Color(0xFFE2E8F0))),
@@ -272,7 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'SEGURIDAD HAVEN',
                     style: TextStyle(
                       color: Color(0xFF94A3B8),
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.2,
                     ),
@@ -281,9 +318,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 Expanded(child: Divider(color: Color(0xFFE2E8F0))),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(8),
@@ -319,23 +356,24 @@ class _LoginScreenState extends State<LoginScreen> {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F7F7),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+            padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomInset),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
+              constraints: const BoxConstraints(maxWidth: 460),
               child: Container(
-                padding: const EdgeInsets.all(28),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x0A000000),
-                      blurRadius: 24,
-                      offset: Offset(0, 12),
+                      color: Color(0x08000000),
+                      blurRadius: 16,
+                      offset: Offset(0, 6),
                     ),
                   ],
                 ),
@@ -343,47 +381,53 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        'assets/IMG_4803.png',
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
+                    // Icono Casa Haven centrado
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE0E7FF)),
+                      ),
+                      child: const Icon(
+                        Icons.home_rounded,
+                        size: 28,
+                        color: Color(0xFF111C99),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 18),
                     _buildToggle(),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 20),
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         'Iniciar sesión',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 24,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.5,
                           color: Color(0xFF0F172A),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         _isStaffMode
                             ? 'Acceso para administración y vigilancia'
-                            : 'Inicia sesión para gestionar tus accesos, pagos y reservaciones.',
+                            : 'Acceso para residentes',
                         style: const TextStyle(
                           color: Color(0xFF64748B),
-                          fontSize: 14,
+                          fontSize: 13,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
                     if (errorMessage != null) ...[
                       BannerWidget(message: errorMessage),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                     ],
                     _buildForm(),
                   ],

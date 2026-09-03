@@ -4,6 +4,7 @@ import '../Pages/login_screen.dart';
 import '../Pages/admin_dashboard.dart';
 import '../Pages/vigilante_dashboard.dart';
 import '../Pages/residente_dashboard.dart';
+import '../Pages/perfil_screen.dart';
 import '../Widgets/loading_screen.dart';
 import '../Widgets/splash_screen.dart';
 
@@ -27,6 +28,11 @@ class AppRouter extends StatelessWidget {
 
         if (!controller.isAuthenticated) {
           return LoginScreen(controller: controller);
+        }
+
+        // Onboarding para usuarios nuevos de Google (o perfil incompleto)
+        if (controller.isProfileIncomplete) {
+          return PerfilScreen(controller: controller, isOnboarding: true);
         }
 
         final role = controller.currentUser?.rol;
