@@ -10,3 +10,21 @@
 -- ==============================================================================
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS debe_cambiar_password BOOLEAN NOT NULL DEFAULT true;
+
+-- ==============================================================================
+-- 2. TABLA DE BITÁCORA PARA USUARIOS
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.usuarios_bitacora (
+    id BIGSERIAL PRIMARY KEY,
+    registro_id TEXT NOT NULL,
+    operacion VARCHAR(10) NOT NULL CHECK (operacion IN ('INSERT','UPDATE','DELETE')),
+    datos_anteriores JSONB,
+    datos_nuevos JSONB,
+    modificado_por TEXT,
+    modificado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_usuarios_bitacora_registro ON public.usuarios_bitacora(registro_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_bitacora_fecha ON public.usuarios_bitacora(modificado_en);
+
+REVOKE ALL ON public.usuarios_bitacora FROM authenticated, anon, service_role;
