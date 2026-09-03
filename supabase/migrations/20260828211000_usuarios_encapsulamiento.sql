@@ -210,3 +210,39 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+    -- ==============================================================================
+-- 8. TRIGGER DE RESINCRONIZACIÓN POR GOOGLE OAUTH
+-- ==============================================================================
+DROP FUNCTION IF EXISTS public.handle_user_metadata_sync() CASCADE;
+CREATE OR REPLACE FUNCTION public.handle_user_metadata_sync() 
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql 
+AS $$
+BEGIN
+    IF NEW.raw_user_meta_data IS DISTINCT FROM OLD.raw_user_meta_data THEN
+        UPDATE public.usuarios
+        SET 
+            nombre = COALESCE(
+                NEW.raw_user_meta_data->>'nombre',
+                NEW.raw_user_meta_data->>'given_name',
+                NEW.raw_user_meta_data->>'name', 
+                nombre
+            ),
+            apellidos = COALESCE(
+                NEW.raw_user_meta_data->>'apellidos',
+                NEW.raw_user_meta_data->>'family_name', 
+                apellidos
+            )
+        WHERE id = NEW.id;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_metadata_updated ON auth.users;
+CREATE TRIGGER on_auth_user_metadata_updated
+    AFTER UPDATE ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_user_metadata_sync();
