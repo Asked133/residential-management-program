@@ -46,3 +46,19 @@ DROP TRIGGER IF EXISTS trg_usuarios_auditoria_delete ON public.usuarios;
 CREATE TRIGGER trg_usuarios_auditoria_delete
     BEFORE DELETE ON public.usuarios
     FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
+    -- ==============================================================================
+-- 4. VISTA DE CONSULTA 
+-- ==============================================================================
+DROP VIEW IF EXISTS public.vw_usuarios CASCADE;
+CREATE VIEW public.vw_usuarios AS
+SELECT 
+    u.id, 
+    u.rol_id, 
+    u.email, 
+    u.nombre,
+    u.apellidos, 
+    u.telefono, 
+    u.activo, 
+    u.debe_cambiar_password, 
+    u.creado_en
+FROM public.usuarios u;
