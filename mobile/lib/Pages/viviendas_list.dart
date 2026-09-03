@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../Services/app_controller.dart';
-import '../Widgets/banner_widget.dart';
-import '../main.dart';
 
 class ViviendasListScreen extends StatefulWidget {
   const ViviendasListScreen({super.key, required this.controller});
@@ -138,7 +135,9 @@ class _ViviendasListScreenState extends State<ViviendasListScreen> {
 
                     if (res.statusCode >= 200 && res.statusCode < 300) {
                       widget.controller.notifyToast(isEdit ? 'Actualizado correctamente' : 'Creado correctamente', success: true);
-                      Navigator.pop(context);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
                       _fetchViviendas();
                     } else {
                       widget.controller.notifyToast('Error al guardar', success: false);

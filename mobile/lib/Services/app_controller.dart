@@ -7,7 +7,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../Models/auth_user.dart';
 import '../Models/api_exceptions.dart';
-import '../Widgets/banner_widget.dart';
 import '../main.dart';
 
 class AppController extends ChangeNotifier {
@@ -195,12 +194,15 @@ class AppController extends ChangeNotifier {
     if (raw == 'administrador' ||
         raw == 'admin' ||
         raw == 'administrator' ||
-        raw == '1')
+        raw == '1') {
       return 'administrador';
-    if (raw == 'vigilante' || raw == 'guardia' || raw == 'guard' || raw == '3')
+    }
+    if (raw == 'vigilante' || raw == 'guardia' || raw == 'guard' || raw == '3') {
       return 'vigilante';
-    if (raw == 'residente' || raw == 'resident' || raw == '2')
+    }
+    if (raw == 'residente' || raw == 'resident' || raw == '2') {
       return 'residente';
+    }
     return 'residente';
   }
 

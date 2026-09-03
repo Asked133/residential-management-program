@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class FieldLabel extends StatelessWidget {
-  const FieldLabel({required this.text});
+  const FieldLabel({super.key, required this.text});
 
   final String text;
 
