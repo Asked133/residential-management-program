@@ -49,6 +49,13 @@ export const routes: Routes = [
         .then(m => m.ResidentesFormComponent)
   },
   {
+    path: 'dashboard/admin/viviendas',
+    canActivate: [authGuard, roleGuard(['administrador'])],
+    loadComponent: () =>
+      import('./features/viviendas/viviendas-list/viviendas-list.component')
+        .then(m => m.ViviendasListComponent)
+  },
+  {
     path: 'dashboard/residente',
     canActivate: [authGuard, roleGuard(['residente'])],
     loadComponent: () =>
