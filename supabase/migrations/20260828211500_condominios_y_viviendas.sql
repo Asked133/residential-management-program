@@ -101,3 +101,22 @@ BEGIN
     RETURN v_resultado;
 END;
 $$;
+
+-- b) baja_vivienda
+DROP FUNCTION IF EXISTS public.baja_vivienda(INTEGER);
+CREATE OR REPLACE FUNCTION public.baja_vivienda(p_id INTEGER) 
+RETURNS BOOLEAN
+SECURITY DEFINER 
+SET search_path = public 
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_filas_afectadas INTEGER;
+BEGIN
+    UPDATE public.viviendas 
+    SET activo = false 
+    WHERE id = p_id AND activo = true;
+
+    GET DIAGNOSTICS v_filas_afectadas = ROW_COUNT;
+    RETURN v_filas_afectadas > 0;
+END;
+$$;
