@@ -246,3 +246,46 @@ DROP TRIGGER IF EXISTS on_auth_user_metadata_updated ON auth.users;
 CREATE TRIGGER on_auth_user_metadata_updated
     AFTER UPDATE ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_user_metadata_sync();
+
+    -- ==============================================================================
+-- 9. JOB DE LIMPIEZA POR INACTIVIDAD
+-- ==============================================================================
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+DROP FUNCTION IF EXISTS public.borrar_residentes_inactivos();
+CREATE OR REPLACE FUNCTION public.borrar_residentes_inactivos() 
+RETURNS VOID
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql 
+AS $$
+DECLARE
+    v_usuario RECORD;
+BEGIN
+    FOR v_usuario IN 
+        SELECT u.id 
+        FROM public.usuarios u
+        WHERE u.rol_id = 2 
+          AND (
+              (SELECT last_sign_in_at FROM auth.users WHERE id = u.id) < now() - interval '3 months'
+              OR (
+                  (SELECT last_sign_in_at FROM auth.users WHERE id = u.id) IS NULL 
+                  AND (SELECT created_at FROM auth.users WHERE id = u.id) < now() - interval '3 months'
+              )
+          )
+    LOOP
+        PERFORM public.eliminar_usuario_definitivo(v_usuario.id);
+    END LOOP;
+END;
+$$;
+
+-- Desprogramar de forma segura solo si ya existe
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'borrar_residentes_inactivos_diario') THEN
+        PERFORM cron.unschedule('borrar_residentes_inactivos_diario');
+    END IF;
+END;
+$$;
+
+SELECT cron.schedule('borrar_residentes_inactivos_diario', '0 3 * * *', 'SELECT public.borrar_residentes_inactivos();');
