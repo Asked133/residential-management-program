@@ -120,3 +120,33 @@ BEGIN
     RETURN v_filas_afectadas > 0;
 END;
 $$;
+
+-- c) cambio_vivienda
+DROP FUNCTION IF EXISTS public.cambio_vivienda(INTEGER, VARCHAR, VARCHAR, UUID);
+DROP FUNCTION IF EXISTS public.cambio_vivienda(INTEGER, VARCHAR, VARCHAR);
+CREATE OR REPLACE FUNCTION public.cambio_vivienda(
+    p_id INTEGER, 
+    p_numero_casa VARCHAR(50) DEFAULT NULL, 
+    p_tipo VARCHAR(20) DEFAULT NULL
+) 
+RETURNS public.vw_viviendas
+SECURITY DEFINER 
+SET search_path = public 
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_resultado public.vw_viviendas;
+BEGIN
+    UPDATE public.viviendas 
+    SET 
+        numero_casa = COALESCE(p_numero_casa, numero_casa),
+        tipo = COALESCE(p_tipo, tipo)
+    WHERE id = p_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Vivienda con ID % no encontrada', p_id;
+    END IF;
+
+    SELECT * INTO v_resultado FROM public.vw_viviendas WHERE id = p_id;
+    RETURN v_resultado;
+END;
+$$;
