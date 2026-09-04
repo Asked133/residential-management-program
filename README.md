@@ -1,58 +1,65 @@
-# 🏢 Residential Management Program (Sistema de Gestión Residencial)
+# Residential Management Program (Sistema de Gestion Residencial)
 
-![Estado del Proyecto](https://img.shields.io/badge/Estado-Fase_Inicial_--_Planificación-blue)
-![Licencia](https://img.shields.io/badge/Licencia-MIT-green)
-![Curso](https://img.shields.io/badge/Curso-Tópico_1:_Microservicios_--_7º_Semestre-purple)
+Proyecto integral para la administracion de fraccionamientos, condominios y residencias. El sistema busca centralizar y mejorar la comunicacion entre administradores y residentes, gestionar el cobro de cuotas, controlar el acceso de visitantes y facilitar la reserva de areas comunes a traves de multiples plataformas.
 
-Plataforma en fase de definición para la administración de fraccionamientos, condominios y residencias. El sistema busca mejorar la comunicación entre administradores y residentes, gestionar el cobro de cuotas, controlar el acceso de visitantes y facilitar la reserva de áreas comunes.
+El desarrollo se encuentra activo y esta dividido en tres componentes principales que conforman el ecosistema completo: una aplicacion movil, un portal web y la infraestructura backend.
 
 ---
 
-## 📌 Alcance y Módulos del Sistema (Propuesta Inicial)
+## Estructura del Repositorio
 
-El proyecto contempla la implementación de los siguientes módulos funcionales:
-
-### 1. 👥 Gestión de Residentes y Propiedades
-* Registro de viviendas (casas, departamentos, lotes).
-* Catálogo de residentes (propietarios e inquilinos) y contactos de emergencia.
-* Padrón de vehículos registrados y lugares de estacionamiento.
-
-### 2. 💳 Administración Financiera y Cuotas
-* Generación de cuotas ordinarias y extraordinarias.
-* Seguimiento de estados de cuenta individuales y del condominio.
-* Registro e historial de pagos.
-* Notificaciones de pago y morosidad.
-
-### 3. 🗓️ Control y Reserva de Amenidades
-* Calendario e interfaz de reservación para áreas comunes (salón de eventos, alberca, canchas, asadores).
-* Control de reglamentos y horarios de uso.
-
-### 4. 🔑 Control de Acceso y Visitas
-* Registro de visitas esperadas y proveedores.
-* Generación de pases de acceso temporal.
-* Historial de entradas y salidas para seguridad.
-
-### 5. 📢 Avisos e Incidencias
-* Tablón de anuncios y boletines informativos.
-* Sistema de tickets para reporte y seguimiento de fallas en áreas comunes.
-
----
-
-## 📁 Estructura del Repositorio
+El proyecto utiliza una arquitectura monorepo organizada en los siguientes directorios principales:
 
 ```text
 residential-management-program/
-├── docs/                 # Documentación del proyecto
-│   └── product/          # Especificaciones de producto y requerimientos
-└── README.md             # Documentación principal del repositorio
-├ web                     # Código de la versión web
-├ mobile                  # código de la versión móvil
-├ backend                 # infraestructura proyecto 
+├── backend/              # Infraestructura y logica de servidor (API, base de datos)
+├── mobile/               # Aplicacion movil (iOS/Android/Linux) para residentes y personal
+├── web/                  # Portal web administrativo
+├── docs/                 # Documentacion tecnica y requerimientos del proyecto
+└── README.md             # Documentacion principal del repositorio
 ```
 
 ---
 
-## 📝 Notas de Desarrollo
+## Modulos del Sistema
+
+El sistema implementa las siguientes funciones core a traves de sus distintas plataformas:
+
+### 1. Gestion de Residentes y Propiedades
+* Registro completo de viviendas (casas, departamentos, lotes).
+* Directorio de residentes, propietarios, inquilinos y contactos de emergencia.
+* Administracion de la informacion detallada de cada unidad habitacional.
+
+### 2. Administracion Financiera y Cuotas
+* Modulo de cobranza y emision de cuotas ordinarias o extraordinarias.
+* Seguimiento de los estados de cuenta, tanto individuales como del condominio.
+* Registro, conciliacion e historial de pagos realizados.
+
+### 3. Control y Reserva de Amenidades
+* Interfaz compartida para la visualizacion y apartado de areas comunes.
+* Administracion de cupos, reglamentos y restricciones de horarios.
+
+### 4. Control de Acceso y Visitas
+* Panel especializado para el personal de vigilancia.
+* Registro anticipado de visitas y proveedores por parte de los residentes.
+* Creacion y validacion de accesos temporales.
+
+### 5. Avisos e Incidencias
+* Tablon virtual de anuncios y comunicados oficiales.
+* Sistema de levantamiento de tickets para el reporte de fallas en la infraestructura comun.
+
+---
+
+## Tecnologias
+
+El stack tecnologico del proyecto abarca:
+* **Frontend Movil:** Flutter y Dart, disenado para multiples plataformas.
+* **Frontend Web:** Desarrollo del panel de administracion web.
+* **Backend y Base de Datos:** Supabase (PostgreSQL) para la persistencia de datos, autenticacion y reglas de seguridad.
+
+---
+
+## Notas de Desarrollo
 
 > [!NOTE]
-> Este documento es **provisional** y se actualizará conforme se definan los requerimientos formales, las historias de usuario y la arquitectura en la carpeta `docs/product/`.
+> La documentacion especifica de producto, historias de usuario y diagramas arquitectonicos se encuentra dentro del directorio `docs/`. Este archivo se mantendra como una referencia de alto nivel del repositorio completo.
