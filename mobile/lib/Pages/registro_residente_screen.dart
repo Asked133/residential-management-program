@@ -291,8 +291,9 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
                         validator: (v) {
                           final t = (v ?? '').trim();
                           if (t.isEmpty) return 'El teléfono es obligatorio';
-                          if (t.length != 10)
+                          if (t.length != 10) {
                             return 'Debe tener exactamente 10 dígitos';
+                          }
                           return null;
                         },
                       ),
@@ -345,8 +346,9 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
                                   ),
                                   validator: (v) {
                                     if ((v ?? '').isEmpty) return 'Requerida';
-                                    if ((v ?? '').length < 6)
+                                    if ((v ?? '').length < 6) {
                                       return 'Mín. 6 car.';
+                                    }
                                     return null;
                                   },
                                 ),
@@ -380,8 +382,9 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
                                   ),
                                   validator: (v) {
                                     if ((v ?? '').isEmpty) return 'Requerida';
-                                    if (v != _passwordController.text)
+                                    if (v != _passwordController.text) {
                                       return 'No coincide';
+                                    }
                                     return null;
                                   },
                                 ),
