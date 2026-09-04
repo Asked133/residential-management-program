@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:haven/Services/app_controller.dart';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockGoTrueClient extends Mock implements GoTrueClient {}
 
 void main() {
@@ -15,7 +16,8 @@ void main() {
     mockAuth = MockGoTrueClient();
     when(() => mockSupabaseClient.auth).thenReturn(mockAuth);
     // Mockear streams y session inicial para que AppController no falle en bootstrap
-    when(() => mockAuth.onAuthStateChange).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuth.onAuthStateChange)
+        .thenAnswer((_) => const Stream.empty());
     when(() => mockAuth.currentSession).thenReturn(null);
   });
 
@@ -32,7 +34,7 @@ void main() {
 
     test('bootstrap finaliza correctamente sin sesión', () async {
       final controller = AppController(mockSupabaseClient);
-      
+
       await controller.bootstrap();
 
       expect(controller.isLoading, false);

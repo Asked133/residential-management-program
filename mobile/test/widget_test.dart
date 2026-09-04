@@ -4,11 +4,11 @@ import 'package:haven/Widgets/loading_screen.dart';
 
 void main() {
   group('Pruebas de Widgets - LoadingScreen', () {
-    testWidgets('Debe mostrar el indicador de progreso y el texto de carga', (WidgetTester tester) async {
+    testWidgets('Debe mostrar el indicador de progreso y el texto de carga', (
+      WidgetTester tester,
+    ) async {
       // Build the widget inside a MaterialApp wrapper
-      await tester.pumpWidget(const MaterialApp(
-        home: LoadingScreen(),
-      ));
+      await tester.pumpWidget(const MaterialApp(home: LoadingScreen()));
 
       // Assert: Verify CircularProgressIndicator is present
       expect(find.byType(CircularProgressIndicator), findsOneWidget);

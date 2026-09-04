@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../Services/app_controller.dart';
 import '../Pages/login_screen.dart';
 import '../Pages/admin_dashboard.dart';
@@ -36,8 +37,10 @@ class AppRouter extends StatelessWidget {
         }
 
         final role = controller.currentUser?.rol;
-        if (role == 'administrador') return AdminDashboardScreen(controller: controller);
-        if (role == 'vigilante') return VigilanteDashboardScreen(controller: controller);
+        if (role == 'administrador')
+          return AdminDashboardScreen(controller: controller);
+        if (role == 'vigilante')
+          return VigilanteDashboardScreen(controller: controller);
         return ResidenteDashboardScreen(controller: controller);
       },
     );

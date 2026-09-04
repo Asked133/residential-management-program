@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const seed = Color(0xFF111C99);
-  
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -16,7 +16,10 @@ class AppTheme {
     );
   }
 
-  static InputDecoration inputDecoration(String hintText, {Widget? suffixIcon}) {
+  static InputDecoration inputDecoration(
+    String hintText, {
+    Widget? suffixIcon,
+  }) {
     return InputDecoration(
       hintText: hintText,
       suffixIcon: suffixIcon,

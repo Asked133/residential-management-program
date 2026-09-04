@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'dart:convert';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../Services/app_controller.dart';
 
 class ResidentesListScreen extends StatefulWidget {
@@ -29,7 +32,9 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
     });
     try {
       final response = await widget.controller.httpClient.get(
-        Uri.parse('${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/residentes'),
+        Uri.parse(
+          '${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/residentes',
+        ),
         headers: {'Authorization': 'Bearer ${widget.controller.accessToken}'},
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -55,14 +60,16 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
     final email = (r['email'] ?? '—').toString();
     final telefono = (r['telefono'] ?? '—').toString();
     final id = (r['id'] ?? '—').toString();
-    final initial = '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}'.toUpperCase();
+    final initial = '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}'
+        .toUpperCase();
 
     String fechaAlta = '—';
     final rawFecha = r['creadoEn'] ?? r['creado_en'];
     if (rawFecha != null) {
       try {
         final dt = DateTime.parse(rawFecha.toString()).toLocal();
-        fechaAlta = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+        fechaAlta =
+            '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
       } catch (_) {
         fechaAlta = rawFecha.toString();
       }
@@ -86,7 +93,10 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -147,7 +157,9 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                       ),
                       const SizedBox(height: 14),
                       Text(
-                        '$n $a'.trim().isNotEmpty ? '$n $a'.trim() : 'Sin Nombre',
+                        '$n $a'.trim().isNotEmpty
+                            ? '$n $a'.trim()
+                            : 'Sin Nombre',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -157,7 +169,10 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFECFDF5),
                           borderRadius: BorderRadius.circular(20),
@@ -166,7 +181,11 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.circle, size: 6, color: Color(0xFF10B981)),
+                            Icon(
+                              Icons.circle,
+                              size: 6,
+                              color: Color(0xFF10B981),
+                            ),
                             SizedBox(width: 6),
                             Text(
                               'Residente Haven',
@@ -211,7 +230,10 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                       ),
                       const SizedBox(height: 20),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(10),
@@ -615,7 +637,8 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                                       '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}'
                                           .toUpperCase();
                                   return DataRow(
-                                    onSelectChanged: (_) => _mostrarDetalleResidente(r),
+                                    onSelectChanged: (_) =>
+                                        _mostrarDetalleResidente(r),
                                     cells: [
                                       DataCell(
                                         Row(
@@ -711,7 +734,8 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
                                             color: Color(0xFF111C99),
                                           ),
                                           tooltip: 'Ver detalle',
-                                          onPressed: () => _mostrarDetalleResidente(r),
+                                          onPressed: () =>
+                                              _mostrarDetalleResidente(r),
                                         ),
                                       ),
                                     ],
@@ -732,4 +756,3 @@ class _ResidentesListScreenState extends State<ResidentesListScreen> {
     );
   }
 }
-

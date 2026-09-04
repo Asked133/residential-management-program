@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 import '../Services/app_controller.dart';
 import '../Widgets/banner_widget.dart';
 
@@ -10,7 +11,8 @@ class RegistroResidenteScreen extends StatefulWidget {
   final AppController controller;
 
   @override
-  State<RegistroResidenteScreen> createState() => _RegistroResidenteScreenState();
+  State<RegistroResidenteScreen> createState() =>
+      _RegistroResidenteScreenState();
 }
 
 class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
@@ -65,10 +67,7 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
   InputDecoration _inputDecoration(String hintText, {Widget? suffixIcon}) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF94A3B8),
-        fontSize: 14,
-      ),
+      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
       filled: true,
       fillColor: Colors.white,
       suffixIcon: suffixIcon,
@@ -157,7 +156,10 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -235,11 +237,14 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
                                 _buildLabel('NOMBRE'),
                                 TextFormField(
                                   controller: _nombreController,
-                                  decoration: _inputDecoration('Ej. Juan Carlos'),
+                                  decoration: _inputDecoration(
+                                    'Ej. Juan Carlos',
+                                  ),
                                   textCapitalization: TextCapitalization.words,
                                   validator: (v) {
                                     final t = (v ?? '').trim();
-                                    if (t.isEmpty || t.toLowerCase() == 'sin nombre') {
+                                    if (t.isEmpty ||
+                                        t.toLowerCase() == 'sin nombre') {
                                       return 'Requerido';
                                     }
                                     return null;
@@ -256,9 +261,13 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
                                 _buildLabel('APELLIDOS'),
                                 TextFormField(
                                   controller: _apellidosController,
-                                  decoration: _inputDecoration('Ej. Pérez Gómez'),
+                                  decoration: _inputDecoration(
+                                    'Ej. Pérez Gómez',
+                                  ),
                                   textCapitalization: TextCapitalization.words,
-                                  validator: (v) => (v ?? '').trim().isEmpty ? 'Requerido' : null,
+                                  validator: (v) => (v ?? '').trim().isEmpty
+                                      ? 'Requerido'
+                                      : null,
                                 ),
                               ],
                             ),
@@ -276,11 +285,14 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(10),
                         ],
-                        decoration: _inputDecoration('10 dígitos numéricos (ej. 4421234567)'),
+                        decoration: _inputDecoration(
+                          '10 dígitos numéricos (ej. 4421234567)',
+                        ),
                         validator: (v) {
                           final t = (v ?? '').trim();
                           if (t.isEmpty) return 'El teléfono es obligatorio';
-                          if (t.length != 10) return 'Debe tener exactamente 10 dígitos';
+                          if (t.length != 10)
+                            return 'Debe tener exactamente 10 dígitos';
                           return null;
                         },
                       ),
@@ -319,16 +331,22 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
                                     'Mínimo 6 caracteres',
                                     suffixIcon: IconButton(
                                       icon: Icon(
-                                        _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                        _obscurePassword
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
                                         size: 18,
                                         color: const Color(0xFF94A3B8),
                                       ),
-                                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                      onPressed: () => setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      ),
                                     ),
                                   ),
                                   validator: (v) {
                                     if ((v ?? '').isEmpty) return 'Requerida';
-                                    if ((v ?? '').length < 6) return 'Mín. 6 car.';
+                                    if ((v ?? '').length < 6)
+                                      return 'Mín. 6 car.';
                                     return null;
                                   },
                                 ),
@@ -348,16 +366,22 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
                                     'Repite la contraseña',
                                     suffixIcon: IconButton(
                                       icon: Icon(
-                                        _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                        _obscureConfirmPassword
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
                                         size: 18,
                                         color: const Color(0xFF94A3B8),
                                       ),
-                                      onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                                      onPressed: () => setState(
+                                        () => _obscureConfirmPassword =
+                                            !_obscureConfirmPassword,
+                                      ),
                                     ),
                                   ),
                                   validator: (v) {
                                     if ((v ?? '').isEmpty) return 'Requerida';
-                                    if (v != _passwordController.text) return 'No coincide';
+                                    if (v != _passwordController.text)
+                                      return 'No coincide';
                                     return null;
                                   },
                                 ),
@@ -370,11 +394,14 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
 
                       // Botón: Crear mi cuenta
                       ElevatedButton(
-                        onPressed: _isSubmitting || _isSubmittingGoogle ? null : _submit,
+                        onPressed: _isSubmitting || _isSubmittingGoogle
+                            ? null
+                            : _submit,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF111C99),
                           foregroundColor: Colors.white,
-                          disabledBackgroundColor: const Color(0xFF111C99).withValues(alpha: 0.6),
+                          disabledBackgroundColor: const Color(0xFF111C99)
+                              .withValues(alpha: 0.6),
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -422,7 +449,9 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
 
                       // Botón: Registrarme con Google
                       OutlinedButton.icon(
-                        onPressed: _isSubmitting || _isSubmittingGoogle ? null : _submitGoogle,
+                        onPressed: _isSubmitting || _isSubmittingGoogle
+                            ? null
+                            : _submitGoogle,
                         style: OutlinedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: const Color(0xFF0F172A),
@@ -436,11 +465,19 @@ class _RegistroResidenteScreenState extends State<RegistroResidenteScreen> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
-                            : SvgPicture.asset('assets/google.svg', width: 20, height: 20),
+                            : SvgPicture.asset(
+                                'assets/google.svg',
+                                width: 20,
+                                height: 20,
+                              ),
                         label: Text(
-                          _isSubmittingGoogle ? 'Redirigiendo...' : 'Registrarme con Google',
+                          _isSubmittingGoogle
+                              ? 'Redirigiendo...'
+                              : 'Registrarme con Google',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

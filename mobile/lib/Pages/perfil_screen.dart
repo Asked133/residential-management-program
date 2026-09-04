@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../Services/app_controller.dart';
 import '../Themes/app_theme.dart';
 
@@ -31,7 +32,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
     final user = widget.controller.currentUser;
 
     final rawNombre = (user?.nombre ?? '').trim();
-    final cleanNombre = rawNombre.toLowerCase() == 'sin nombre' ? '' : rawNombre;
+    final cleanNombre = rawNombre.toLowerCase() == 'sin nombre'
+        ? ''
+        : rawNombre;
 
     _nombreCtrl = TextEditingController(text: cleanNombre);
     _apellidosCtrl = TextEditingController(text: user?.apellidos ?? '');
@@ -49,7 +52,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
   void _resetFormValues() {
     final user = widget.controller.currentUser;
     final rawNombre = (user?.nombre ?? '').trim();
-    final cleanNombre = rawNombre.toLowerCase() == 'sin nombre' ? '' : rawNombre;
+    final cleanNombre = rawNombre.toLowerCase() == 'sin nombre'
+        ? ''
+        : rawNombre;
     _nombreCtrl.text = cleanNombre;
     _apellidosCtrl.text = user?.apellidos ?? '';
     _telefonoCtrl.text = user?.telefono ?? '';
@@ -105,7 +110,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
   @override
   Widget build(BuildContext context) {
     final user = widget.controller.currentUser;
-    final isEffectiveOnboarding = widget.isOnboarding || widget.controller.isProfileIncomplete;
+    final isEffectiveOnboarding =
+        widget.isOnboarding || widget.controller.isProfileIncomplete;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
@@ -130,10 +136,17 @@ class _PerfilScreenState extends State<PerfilScreen> {
           if (isEffectiveOnboarding)
             TextButton.icon(
               onPressed: widget.controller.logout,
-              icon: const Icon(Icons.logout, size: 18, color: Color(0xFF64748B)),
+              icon: const Icon(
+                Icons.logout,
+                size: 18,
+                color: Color(0xFF64748B),
+              ),
               label: const Text(
                 'Salir',
-                style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
         ],
@@ -250,7 +263,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '${user?.nombre ?? 'Usuario'} ${user?.apellidos ?? ''}'.trim(),
+                                    '${user?.nombre ?? 'Usuario'} ${user?.apellidos ?? ''}'
+                                        .trim(),
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -268,10 +282,13 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF1F5F9),
                                       borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                                      border: Border.all(
+                                        color: const Color(0xFFE2E8F0),
+                                      ),
                                     ),
                                     child: Text(
-                                      (user?.rol ?? user?.role ?? 'Residente').toUpperCase(),
+                                      (user?.rol ?? user?.role ?? 'Residente')
+                                          .toUpperCase(),
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
@@ -318,7 +335,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
           const SizedBox(height: 16),
           _buildInfoTile(
             label: 'TELÉFONO',
-            value: (user?.telefono != null && (user!.telefono as String).trim().isNotEmpty)
+            value:
+                (user?.telefono != null &&
+                    (user!.telefono as String).trim().isNotEmpty)
                 ? user.telefono
                 : 'No registrado',
             icon: Icons.phone_outlined,
@@ -502,8 +521,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
                               ),
                             )
                           : Text(
-                              isOnboarding ? 'Completar registro' : 'Guardar cambios',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              isOnboarding
+                                  ? 'Completar registro'
+                                  : 'Guardar cambios',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                     ),
                     if (!isOnboarding) ...[
