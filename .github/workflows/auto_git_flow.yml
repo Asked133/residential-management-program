@@ -48,26 +48,23 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
-          BRANCH_NAME="auto-format-$(date +%s)"
-          
-          # Checkout -b
-          git checkout -b $BRANCH_NAME
+          git pull --rebase origin ${{ github.ref_name }}
           
           # Add changes
           git add .
           
           # Commit
-          git commit -m "style: auto format dart code"
+          git commit -m "style: auto format dart code [skip ci]"
           
-          # Push origin
-          git push origin $BRANCH_NAME
+          # Push origin directly to the current branch
+          git push origin HEAD:${{ github.ref_name }}
           
-          # Notificación opcional de Discord sobre el nuevo branch
+          # Notificación de Discord
           curl -H "Content-Type: application/json" \
           -d '{
             "embeds": [{
-              "title": "🔄 Auto Git Flow: Branch Created",
-              "description": "Se ha creado la rama `'$BRANCH_NAME'` con correcciones automáticas de formato.",
+              "title": "🔄 Auto Git Flow: Código Formateado",
+              "description": "Se ha formateado el código y se ha hecho commit automáticamente en la rama actual (`${{ github.ref_name }}`).",
               "color": 3447003
             }]
           }' \
