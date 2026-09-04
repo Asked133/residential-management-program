@@ -28,9 +28,7 @@ void main() async {
   await Supabase.initialize(
     url: supabaseUrl,
     publishableKey: supabaseAnonKey,
-    authOptions: FlutterAuthClientOptions(
-      authFlowType: AuthFlowType.pkce,
-    ),
+    authOptions: FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
   );
 
   runApp(const HavenApp());

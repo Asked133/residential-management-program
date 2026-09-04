@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../Services/app_controller.dart';
 import '../Widgets/header_bar.dart';
 import 'perfil_screen.dart';
@@ -9,7 +10,8 @@ class ResidenteDashboardScreen extends StatefulWidget {
   final AppController controller;
 
   @override
-  State<ResidenteDashboardScreen> createState() => _ResidenteDashboardScreenState();
+  State<ResidenteDashboardScreen> createState() =>
+      _ResidenteDashboardScreenState();
 }
 
 class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
@@ -160,7 +162,10 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFECFDF5),
                           borderRadius: BorderRadius.circular(12),
@@ -276,7 +281,10 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(20),
@@ -417,7 +425,9 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: const [
                                 BoxShadow(
@@ -494,15 +504,14 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: isDone ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+                  color: isDone
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFF64748B),
                 ),
               ),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Color(0xFF94A3B8),
-                ),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
               ),
             ],
           ),
@@ -515,4 +524,3 @@ class _ResidenteDashboardScreenState extends State<ResidenteDashboardScreen> {
 // ==========================================
 // VIGILANTE SCREEN
 // ==========================================
-

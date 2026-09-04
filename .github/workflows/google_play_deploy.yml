@@ -1,0 +1,68 @@
+name: Google Play Deploy (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Google Play Track (internal, alpha, beta, production)'
+        required: true
+        default: 'internal'
+        type: choice
+        options:
+        - internal
+        - alpha
+        - beta
+        - production
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy to Google Play
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: ./mobile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Increment Version Code
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # This perl script increments the build number (the number after the +)
+          perl -i -pe 's/^(version:\s+\d+\.\d+\.\d+\+)(\d+)$/$1.($2+1)/e' pubspec.yaml
+          
+          git add pubspec.yaml
+          git commit -m "chore: bump version code for release"
+          git push origin HEAD
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android AppBundle
+        run: flutter build appbundle --release
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_CONFIG_JSON }}
+          packageName: com.haven.uaq
+          releaseFiles: mobile/build/app/outputs/bundle/release/app-release.aab
+          track: ${{ github.event.inputs.track }}
+          status: completed
