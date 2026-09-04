@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import '../Services/app_controller.dart';
 import '../Widgets/header_bar.dart';
 
@@ -71,5 +71,3 @@ class VigilanteDashboardScreen extends StatelessWidget {
     );
   }
 }
-
-// 2. Modifica la función para aceptar un parámetro 'suffixIcon'
