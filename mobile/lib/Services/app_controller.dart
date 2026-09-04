@@ -12,10 +12,11 @@ import '../Models/api_exceptions.dart';
 import '../main.dart';
 
 class AppController extends ChangeNotifier {
-  AppController(this._supabaseClient);
+  AppController(this._supabaseClient, {http.Client? client})
+      : httpClient = client ?? http.Client();
 
   final SupabaseClient _supabaseClient;
-  final http.Client httpClient = http.Client();
+  final http.Client httpClient;
   StreamSubscription<AuthState>? _authSubscription;
 
   Session? _session;

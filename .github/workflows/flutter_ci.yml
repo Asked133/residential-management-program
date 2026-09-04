@@ -41,8 +41,11 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Create dummy .env
-        run: touch .env
+      - name: Create .env
+        run: |
+          echo "SUPABASE_URL=https://qunkgbmxmxmjponyxzdu.supabase.co" > .env
+          echo "SUPABASE_ANON_KEY=sb_publishable_2an39B-QMQpwkuaCYfg1Bw_EgWoC-SF" >> .env
+          echo "API_BASE_URL=https://residential-management-program-1.onrender.com" >> .env
 
       - name: Analyze code
         run: flutter analyze
@@ -97,8 +100,11 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Create dummy .env
-        run: touch .env
+      - name: Create .env
+        run: |
+          echo "SUPABASE_URL=https://qunkgbmxmxmjponyxzdu.supabase.co" > .env
+          echo "SUPABASE_ANON_KEY=sb_publishable_2an39B-QMQpwkuaCYfg1Bw_EgWoC-SF" >> .env
+          echo "API_BASE_URL=https://residential-management-program-1.onrender.com" >> .env
 
       - name: Run Android integration tests
         uses: reactivecircus/android-emulator-runner@v2
