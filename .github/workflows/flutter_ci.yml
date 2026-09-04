@@ -3,17 +3,15 @@ name: Flutter CI
 on:
   push:
     branches:
-      - mobilepipe
+      - '**'
+    paths:
+      - 'mobile/**'
   pull_request:
     branches:
-      - mobilepipe
+      - '**'
+    paths:
+      - 'mobile/**'
   workflow_dispatch:
-    inputs:
-      run_integration_tests:
-        description: 'Run Android Integration Tests?'
-        required: true
-        default: false
-        type: boolean
 
 jobs:
   test:
@@ -24,10 +22,10 @@ jobs:
         working-directory: ./mobile
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -46,6 +44,10 @@ jobs:
           echo "SUPABASE_URL=https://qunkgbmxmxmjponyxzdu.supabase.co" > .env
           echo "SUPABASE_ANON_KEY=sb_publishable_2an39B-QMQpwkuaCYfg1Bw_EgWoC-SF" >> .env
           echo "API_BASE_URL=https://residential-management-program-1.onrender.com" >> .env
+          echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> .env
+          echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}" >> .env
+          echo "ADMIN_USER_EMAIL=${{ secrets.ADMIN_USER_EMAIL }}" >> .env
+          echo "ADMIN_USER_PASSWORD=${{ secrets.ADMIN_USER_PASSWORD }}" >> .env
 
       - name: Analyze code
         run: flutter analyze
@@ -75,18 +77,18 @@ jobs:
           }' \
           https://discord.com/api/webhooks/1545292672137302078/sRjwddHW0pXAndT-B7Wj6QFGC5CV6I52q9r1SyMiRKcMaAk1_LuGkDTVp5hnauQysobO
 
-  integration_test_android:
-    name: Android Integration Tests
-    runs-on: macos-13
+  integration_test_web:
+    name: Web Integration Tests
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./mobile
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -105,13 +107,16 @@ jobs:
           echo "SUPABASE_URL=https://qunkgbmxmxmjponyxzdu.supabase.co" > .env
           echo "SUPABASE_ANON_KEY=sb_publishable_2an39B-QMQpwkuaCYfg1Bw_EgWoC-SF" >> .env
           echo "API_BASE_URL=https://residential-management-program-1.onrender.com" >> .env
+          echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> .env
+          echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}" >> .env
+          echo "ADMIN_USER_EMAIL=${{ secrets.ADMIN_USER_EMAIL }}" >> .env
+          echo "ADMIN_USER_PASSWORD=${{ secrets.ADMIN_USER_PASSWORD }}" >> .env
 
-      - name: Run Android integration tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          working-directory: ./mobile
-          script: flutter test integration_test
+      - name: Setup Chrome for testing
+        run: sudo apt-get install google-chrome-stable
+
+      - name: Run Web integration tests
+        run: flutter test integration_test/app_test.dart -d web-server
 
       - name: Notify Discord on Integration Test
         if: always()
@@ -128,7 +133,7 @@ jobs:
           curl -H "Content-Type: application/json" \
           -d '{
             "embeds": [{
-              "title": "'$EMOJI' CI/CD: Android Integration Tests '$STATUS'",
+              "title": "'$EMOJI' CI/CD: Web Integration Tests '$STATUS'",
               "description": "Repository: ${{ github.repository }}\nBranch: ${{ github.ref_name }}",
               "color": '$COLOR'
             }]

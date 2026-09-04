@@ -2,10 +2,6 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:haven/Models/auth_user.dart';
-import 'package:haven/Models/api_exceptions.dart';
-import 'package:haven/Services/app_controller.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
   group('AuthUser Model & Role Mapping', () {
