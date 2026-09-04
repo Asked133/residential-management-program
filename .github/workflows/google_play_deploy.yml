@@ -42,17 +42,17 @@ jobs:
 
       - name: Increment Version Code
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          
-          git pull --rebase origin ${{ github.ref_name }}
-          
           # This perl script increments the build number (the number after the +)
           perl -i -pe 's/^(version:\s+\d+\.\d+\.\d+\+)(\d+)$/$1.($2+1)/e' pubspec.yaml
           
-          git add pubspec.yaml
-          git commit -m "chore: bump version code for release [skip ci]"
-          git push origin HEAD:${{ github.ref_name }}
+      - name: Create Pull Request for Version Bump
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: bump version code for release [skip ci]"
+          title: "chore: bump version code for release"
+          branch: "chore/bump-version"
+          body: "Automated version bump triggered by Google Play Deploy workflow."
+          add-paths: mobile/pubspec.yaml
 
       - name: Install dependencies
         run: flutter pub get
