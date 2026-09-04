@@ -42,6 +42,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Create dummy .env
+        run: touch .env
+
       - name: Analyze code
         run: flutter analyze
 
@@ -96,6 +99,9 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Create dummy .env
+        run: touch .env
 
       - name: Run Android integration tests
         uses: reactivecircus/android-emulator-runner@v2
