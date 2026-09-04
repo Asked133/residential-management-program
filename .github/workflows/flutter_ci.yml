@@ -1,0 +1,127 @@
+name: Flutter CI
+
+on:
+  push:
+    branches:
+      - mobilepipe
+  pull_request:
+    branches:
+      - mobilepipe
+  workflow_dispatch:
+    inputs:
+      run_integration_tests:
+        description: 'Run Android Integration Tests?'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  test:
+    name: Unit and Widget Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./mobile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0' # ajustado a una version comun de la serie 3
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run unit and widget tests
+        run: flutter test
+
+      - name: Notify Discord on Success/Failure
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅"
+            COLOR="65280"
+          else
+            EMOJI="❌"
+            COLOR="16711680"
+          fi
+          
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "embeds": [{
+              "title": "'$EMOJI' CI/CD: Unit & Widget Tests '$STATUS'",
+              "description": "Repository: ${{ github.repository }}\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.sha }}",
+              "color": '$COLOR'
+            }]
+          }' \
+          https://discord.com/api/webhooks/1545292672137302078/sRjwddHW0pXAndT-B7Wj6QFGC5CV6I52q9r1SyMiRKcMaAk1_LuGkDTVp5hnauQysobO
+
+  integration_test_android:
+    name: Android Integration Tests
+    runs-on: macos-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_integration_tests == 'true'
+    defaults:
+      run:
+        working-directory: ./mobile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Android integration tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          working-directory: ./mobile
+          script: flutter test integration_test
+
+      - name: Notify Discord on Integration Test
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅"
+            COLOR="65280"
+          else
+            EMOJI="❌"
+            COLOR="16711680"
+          fi
+          
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "embeds": [{
+              "title": "'$EMOJI' CI/CD: Android Integration Tests '$STATUS'",
+              "description": "Repository: ${{ github.repository }}\nBranch: ${{ github.ref_name }}",
+              "color": '$COLOR'
+            }]
+          }' \
+          https://discord.com/api/webhooks/1545292672137302078/sRjwddHW0pXAndT-B7Wj6QFGC5CV6I52q9r1SyMiRKcMaAk1_LuGkDTVp5hnauQysobO
