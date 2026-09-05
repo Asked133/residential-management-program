@@ -75,7 +75,7 @@ jobs:
               "color": '$COLOR'
             }]
           }' \
-          https://discord.com/api/webhooks/1545292672137302078/sRjwddHW0pXAndT-B7Wj6QFGC5CV6I52q9r1SyMiRKcMaAk1_LuGkDTVp5hnauQysobO
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
 
   integration_test_linux:
     name: Linux Integration Tests
@@ -141,4 +141,4 @@ jobs:
               "color": '$COLOR'
             }]
           }' \
-          https://discord.com/api/webhooks/1545292672137302078/sRjwddHW0pXAndT-B7Wj6QFGC5CV6I52q9r1SyMiRKcMaAk1_LuGkDTVp5hnauQysobO
+          ${{ secrets.DISCORD_WEBHOOK_URL }}

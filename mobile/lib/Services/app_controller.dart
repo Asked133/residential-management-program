@@ -50,6 +50,42 @@ class AppController extends ChangeNotifier {
     return !nombreValido || !apellidosValidos || !telefonoValido;
   }
 
+  /// Retorna un token válido, renovándolo automáticamente si ha expirado o está por expirar.
+  Future<String?> getValidAccessToken() async {
+    final session = _session;
+    if (session == null) return null;
+
+    bool needsRefresh = false;
+    try {
+      if (session.isExpired) {
+        needsRefresh = true;
+      } else if (session.expiresAt != null) {
+        final expiry =
+            DateTime.fromMillisecondsSinceEpoch(session.expiresAt! * 1000);
+        // Si falta menos de 60 segundos para expirar, renovar preventivamente
+        if (DateTime.now().isAfter(
+          expiry.subtract(const Duration(seconds: 60)),
+        )) {
+          needsRefresh = true;
+        }
+      }
+    } catch (_) {}
+
+    if (needsRefresh) {
+      try {
+        debugPrint('[AppController] Token expirado o próximo a expirar. Renovando...');
+        final res = await _supabaseClient.auth.refreshSession();
+        if (res.session != null) {
+          _session = res.session;
+        }
+      } catch (e) {
+        debugPrint('[AppController] Error al renovar sesión en getValidAccessToken: $e');
+      }
+    }
+
+    return _session?.accessToken;
+  }
+
   Future<void> bootstrap() async {
     _authSubscription = _supabaseClient.auth.onAuthStateChange.listen((
       event,
@@ -77,7 +113,12 @@ class AppController extends ChangeNotifier {
     final splashDelay = Future.delayed(const Duration(seconds: 2));
 
     if (existing != null) {
-      await Future.wait([_refreshProfile(), splashDelay]);
+      try {
+        await getValidAccessToken();
+        await Future.wait([_refreshProfile(), splashDelay]);
+      } catch (e) {
+        debugPrint('Bootstrap _refreshProfile error: $e');
+      }
     } else {
       await splashDelay;
       _isLoading = false;
@@ -400,13 +441,31 @@ class AppController extends ChangeNotifier {
   Future<Map<String, dynamic>> _getJson(String endpoint) async {
     final baseUrl = dotenv.env['API_BASE_URL_USUARIOS'] ?? '';
     final uri = Uri.parse('$baseUrl$endpoint');
+    
+    var token = await getValidAccessToken();
     final headers = <String, String>{};
-    final token = accessToken;
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final response = await httpClient.get(uri, headers: headers);
+    var response = await httpClient.get(uri, headers: headers);
+    if (response.statusCode == 401) {
+      debugPrint('[AppController] 401 recibido en $endpoint. Intentando renovar sesión...');
+      try {
+        final refreshRes = await _supabaseClient.auth.refreshSession();
+        if (refreshRes.session != null) {
+          _session = refreshRes.session;
+          token = _session?.accessToken;
+          if (token != null && token.isNotEmpty) {
+            headers['Authorization'] = 'Bearer $token';
+          }
+          response = await httpClient.get(uri, headers: headers);
+        }
+      } catch (e) {
+        debugPrint('[AppController] Error al renovar sesión tras 401: $e');
+      }
+    }
+
     if (response.statusCode == 401) {
       await _handleUnauthorized();
       throw const UnauthorizedException();
@@ -526,12 +585,13 @@ class AppController extends ChangeNotifier {
         'telefono': telefono.trim(),
       };
 
+      final token = await getValidAccessToken();
       final response = await httpClient.patch(
         Uri.parse(
           '${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/completar-perfil',
         ),
         headers: {
-          'Authorization': 'Bearer $accessToken',
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: jsonEncode(payload),
@@ -601,7 +661,7 @@ class AppController extends ChangeNotifier {
   }
 
   Future<List<Map<String, dynamic>>> obtenerMisViviendas() async {
-    final token = accessToken;
+    final token = await getValidAccessToken();
     if (token == null || token.isEmpty) return [];
 
     final baseUrl = dotenv.env['API_BASE_URL_VIVIENDAS'] ?? '';
