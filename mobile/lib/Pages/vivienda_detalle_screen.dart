@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'dart:convert';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../Services/app_controller.dart';
 
 class ViviendaDetalleScreen extends StatefulWidget {
@@ -40,7 +43,8 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
     setState(() => _isActionHabitanteLoading = true);
     final viviendaId = _vivienda['id'];
     final usuarioId = residente['id'];
-    final url = '${dotenv.env['API_BASE_URL_VIVIENDAS'] ?? ''}/api/Viviendas/$viviendaId/residentes';
+    final url =
+        '${dotenv.env['API_BASE_URL_VIVIENDAS'] ?? ''}/api/Viviendas/$viviendaId/residentes';
 
     try {
       final res = await widget.controller.httpClient.post(
@@ -53,19 +57,31 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
       );
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        widget.controller.notifyToast('Residente vinculado exitosamente', success: true);
+        widget.controller.notifyToast(
+          'Residente vinculado exitosamente',
+          success: true,
+        );
         setState(() {
           _habitanteAsignado = residente;
           _vivienda['residente'] = residente;
         });
         widget.onChanged();
       } else if (res.statusCode == 409) {
-        widget.controller.notifyToast('El residente ya está asignado a una vivienda', success: false);
+        widget.controller.notifyToast(
+          'El residente ya está asignado a una vivienda',
+          success: false,
+        );
       } else {
-        widget.controller.notifyToast('Error al vincular residente', success: false);
+        widget.controller.notifyToast(
+          'Error al vincular residente',
+          success: false,
+        );
       }
     } catch (e) {
-      widget.controller.notifyToast('Error de conexión al vincular habitante', success: false);
+      widget.controller.notifyToast(
+        'Error de conexión al vincular habitante',
+        success: false,
+      );
     } finally {
       if (mounted) setState(() => _isActionHabitanteLoading = false);
     }
@@ -73,20 +89,29 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
 
   Future<void> _desvincularResidente() async {
     if (_habitanteAsignado == null) return;
-    final nombre = '${_habitanteAsignado!['nombre'] ?? ''} ${_habitanteAsignado!['apellidos'] ?? ''}'.trim();
+    final nombre =
+        '${_habitanteAsignado!['nombre'] ?? ''} ${_habitanteAsignado!['apellidos'] ?? ''}'
+            .trim();
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Desvincular Residente', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('¿Estás seguro de que deseas desvincular a "$nombre" de esta vivienda? La vivienda pasará a estado vacante.'),
+        title: const Text(
+          'Desvincular Residente',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          '¿Estás seguro de que deseas desvincular a "$nombre" de esta vivienda? La vivienda pasará a estado vacante.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Desvincular'),
           ),
@@ -99,7 +124,8 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
     setState(() => _isActionHabitanteLoading = true);
     final viviendaId = _vivienda['id'];
     final usuarioId = _habitanteAsignado!['id'];
-    final url = '${dotenv.env['API_BASE_URL_VIVIENDAS'] ?? ''}/api/Viviendas/$viviendaId/residentes/$usuarioId';
+    final url =
+        '${dotenv.env['API_BASE_URL_VIVIENDAS'] ?? ''}/api/Viviendas/$viviendaId/residentes/$usuarioId';
 
     try {
       final res = await widget.controller.httpClient.delete(
@@ -108,17 +134,26 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
       );
 
       if (res.statusCode == 200 || res.statusCode == 204) {
-        widget.controller.notifyToast('Residente desvinculado correctamente', success: true);
+        widget.controller.notifyToast(
+          'Residente desvinculado correctamente',
+          success: true,
+        );
         setState(() {
           _habitanteAsignado = null;
           _vivienda.remove('residente');
         });
         widget.onChanged();
       } else {
-        widget.controller.notifyToast('No se pudo desvincular el residente', success: false);
+        widget.controller.notifyToast(
+          'No se pudo desvincular el residente',
+          success: false,
+        );
       }
     } catch (e) {
-      widget.controller.notifyToast('Error de conexión al desvincular', success: false);
+      widget.controller.notifyToast(
+        'Error de conexión al desvincular',
+        success: false,
+      );
     } finally {
       if (mounted) setState(() => _isActionHabitanteLoading = false);
     }
@@ -145,26 +180,40 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                   filteredResidents = List.from(allResidents);
                 } else {
                   filteredResidents = allResidents.where((r) {
-                    final nombre = '${r['nombre'] ?? ''} ${r['apellidos'] ?? ''}'.toLowerCase();
+                    final nombre =
+                        '${r['nombre'] ?? ''} ${r['apellidos'] ?? ''}'
+                            .toLowerCase();
                     final email = (r['email'] ?? '').toString().toLowerCase();
                     final tel = (r['telefono'] ?? '').toString().toLowerCase();
-                    return nombre.contains(q) || email.contains(q) || tel.contains(q);
+                    return nombre.contains(q) ||
+                        email.contains(q) ||
+                        tel.contains(q);
                   }).toList();
                 }
               });
             }
 
-            if (isLoadingResidents && allResidents.isEmpty && fetchError == null) {
+            if (isLoadingResidents &&
+                allResidents.isEmpty &&
+                fetchError == null) {
               () async {
                 try {
-                  final url = '${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/residentes';
+                  final url =
+                      '${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/residentes';
                   final res = await widget.controller.httpClient.get(
                     Uri.parse(url),
-                    headers: {'Authorization': 'Bearer ${widget.controller.accessToken}'},
+                    headers: {
+                      'Authorization':
+                          'Bearer ${widget.controller.accessToken}',
+                    },
                   );
                   if (res.statusCode >= 200 && res.statusCode < 300) {
                     final decoded = jsonDecode(res.body);
-                    final list = decoded is List ? decoded : (decoded is Map && decoded['data'] is List ? decoded['data'] : []);
+                    final list = decoded is List
+                        ? decoded
+                        : (decoded is Map && decoded['data'] is List
+                              ? decoded['data']
+                              : []);
                     setModalState(() {
                       allResidents = list;
                       filteredResidents = list;
@@ -209,7 +258,11 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                                 color: const Color(0xFFEEF2FF),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.person_add_alt_1, size: 20, color: Color(0xFF111C99)),
+                              child: const Icon(
+                                Icons.person_add_alt_1,
+                                size: 20,
+                                color: Color(0xFF111C99),
+                              ),
                             ),
                             const SizedBox(width: 12),
                             const Text(
@@ -223,7 +276,10 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                           ],
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Color(0xFF94A3B8)),
+                          icon: const Icon(
+                            Icons.close,
+                            color: Color(0xFF94A3B8),
+                          ),
                           onPressed: () => Navigator.pop(ctx),
                         ),
                       ],
@@ -237,8 +293,15 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                       onChanged: filter,
                       decoration: InputDecoration(
                         hintText: 'Buscar residente por nombre o correo...',
-                        hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                        prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B), size: 20),
+                        hintStyle: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: Color(0xFF64748B),
+                          size: 20,
+                        ),
                         suffixIcon: searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear, size: 18),
@@ -248,84 +311,146 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                                 },
                               )
                             : null,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 16,
+                        ),
                         filled: true,
                         fillColor: const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF111C99), width: 1.5),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF111C99),
+                            width: 1.5,
+                          ),
                         ),
                       ),
                     ),
                   ),
                   Expanded(
                     child: isLoadingResidents
-                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF111C99)))
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF111C99),
+                            ),
+                          )
                         : fetchError != null
-                            ? Center(
-                                child: Text(fetchError!, style: const TextStyle(color: Color(0xFFDC2626))),
-                              )
-                            : filteredResidents.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(Icons.person_off_outlined, size: 40, color: Color(0xFF94A3B8)),
-                                        SizedBox(height: 10),
-                                        Text(
-                                          'No se encontraron residentes',
-                                          style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : ListView.separated(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    itemCount: filteredResidents.length,
-                                    separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                                    itemBuilder: (context, index) {
-                                      final r = filteredResidents[index];
-                                      final nombre = '${r['nombre'] ?? ''} ${r['apellidos'] ?? ''}'.trim();
-                                      final email = r['email'] ?? '';
-                                      final initial = (nombre.isNotEmpty ? nombre[0] : 'R').toUpperCase();
-
-                                      return ListTile(
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        leading: CircleAvatar(
-                                          backgroundColor: const Color(0xFF111C99),
-                                          child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                                        ),
-                                        title: Text(
-                                          nombre.isNotEmpty ? nombre : 'Sin Nombre',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F172A)),
-                                        ),
-                                        subtitle: Text(
-                                          email,
-                                          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                                        ),
-                                        trailing: FilledButton(
-                                          style: FilledButton.styleFrom(
-                                            backgroundColor: const Color(0xFF111C99),
-                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          ),
-                                          onPressed: () async {
-                                            Navigator.pop(ctx);
-                                            await _vincularResidente(r);
-                                          },
-                                          child: const Text('Asignar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                        ),
-                                      );
-                                    },
+                        ? Center(
+                            child: Text(
+                              fetchError!,
+                              style: const TextStyle(color: Color(0xFFDC2626)),
+                            ),
+                          )
+                        : filteredResidents.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(
+                                  Icons.person_off_outlined,
+                                  size: 40,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'No se encontraron residentes',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF64748B),
                                   ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            itemCount: filteredResidents.length,
+                            separatorBuilder: (context, index) => const Divider(
+                              height: 1,
+                              color: Color(0xFFF1F5F9),
+                            ),
+                            itemBuilder: (context, index) {
+                              final r = filteredResidents[index];
+                              final nombre =
+                                  '${r['nombre'] ?? ''} ${r['apellidos'] ?? ''}'
+                                      .trim();
+                              final email = r['email'] ?? '';
+                              final initial =
+                                  (nombre.isNotEmpty ? nombre[0] : 'R')
+                                      .toUpperCase();
+
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                leading: CircleAvatar(
+                                  backgroundColor: const Color(0xFF111C99),
+                                  child: Text(
+                                    initial,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                                title: Text(
+                                  nombre.isNotEmpty ? nombre : 'Sin Nombre',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  email,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                                trailing: FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: const Color(0xFF111C99),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 8,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    Navigator.pop(ctx);
+                                    await _vincularResidente(r);
+                                  },
+                                  child: const Text(
+                                    'Asignar',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                   ),
                 ],
               ),
@@ -359,7 +484,8 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
       final a = (_habitanteAsignado!['apellidos'] ?? '').toString();
       final email = (_habitanteAsignado!['email'] ?? '—').toString();
       final tel = (_habitanteAsignado!['telefono'] ?? '—').toString();
-      final initial = '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}'.toUpperCase();
+      final initial = '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}'
+          .toUpperCase();
 
       return Container(
         padding: const EdgeInsets.all(24),
@@ -390,7 +516,10 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFECFDF5),
                     borderRadius: BorderRadius.circular(20),
@@ -415,7 +544,11 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                   backgroundColor: const Color(0xFF111C99),
                   child: Text(
                     initial.isEmpty ? 'R' : initial,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -424,7 +557,9 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$n $a'.trim().isNotEmpty ? '$n $a'.trim() : 'Sin Nombre',
+                        '$n $a'.trim().isNotEmpty
+                            ? '$n $a'.trim()
+                            : 'Sin Nombre',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -434,13 +569,19 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                       const SizedBox(height: 2),
                       Text(
                         email,
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
                       if (tel != '—') ...[
                         const SizedBox(height: 2),
                         Text(
                           'Tel: $tel',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF94A3B8),
+                          ),
                         ),
                       ],
                     ],
@@ -456,12 +597,20 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
               child: OutlinedButton.icon(
                 onPressed: _desvincularResidente,
                 icon: const Icon(Icons.person_remove_outlined, size: 16),
-                label: const Text('Desvincular Residente', style: TextStyle(fontSize: 13)),
+                label: const Text(
+                  'Desvincular Residente',
+                  style: TextStyle(fontSize: 13),
+                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFFDC2626),
                   side: const BorderSide(color: Color(0xFFFECACA)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ),
@@ -499,7 +648,10 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(20),
@@ -527,7 +679,11 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
             ),
             child: Column(
               children: [
-                const Icon(Icons.home_work_outlined, size: 36, color: Color(0xFF94A3B8)),
+                const Icon(
+                  Icons.home_work_outlined,
+                  size: 36,
+                  color: Color(0xFF94A3B8),
+                ),
                 const SizedBox(height: 8),
                 const Text(
                   'Vivienda vacante / Sin habitante asignado',
@@ -553,8 +709,13 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF111C99),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ],
@@ -569,15 +730,22 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar Vivienda', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('¿Estás seguro de que deseas eliminar la vivienda "${_vivienda['numeroCasa']}"? Esta acción no se puede deshacer.'),
+        title: const Text(
+          'Eliminar Vivienda',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          '¿Estás seguro de que deseas eliminar la vivienda "${_vivienda['numeroCasa']}"? Esta acción no se puede deshacer.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Eliminar'),
           ),
@@ -591,18 +759,26 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
     try {
       final id = _vivienda['id'];
       final response = await widget.controller.httpClient.delete(
-        Uri.parse('${dotenv.env['API_BASE_URL_VIVIENDAS'] ?? ''}/api/Viviendas/$id'),
+        Uri.parse(
+          '${dotenv.env['API_BASE_URL_VIVIENDAS'] ?? ''}/api/Viviendas/$id',
+        ),
         headers: {'Authorization': 'Bearer ${widget.controller.accessToken}'},
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        widget.controller.notifyToast('Vivienda eliminada correctamente', success: true);
+        widget.controller.notifyToast(
+          'Vivienda eliminada correctamente',
+          success: true,
+        );
         widget.onChanged();
         if (mounted) {
           Navigator.pop(context);
         }
       } else {
-        widget.controller.notifyToast('No se pudo eliminar la vivienda', success: false);
+        widget.controller.notifyToast(
+          'No se pudo eliminar la vivienda',
+          success: false,
+        );
       }
     } catch (e) {
       widget.controller.notifyToast('Error de red al eliminar', success: false);
@@ -615,14 +791,19 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
 
   void _showEditDialog() {
     final formKey = GlobalKey<FormState>();
-    final numeroCasaController = TextEditingController(text: _vivienda['numeroCasa'] ?? '');
+    final numeroCasaController = TextEditingController(
+      text: _vivienda['numeroCasa'] ?? '',
+    );
     final tipoController = TextEditingController(text: _vivienda['tipo'] ?? '');
 
     showDialog(
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Editar Vivienda', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Editar Vivienda',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: Form(
             key: formKey,
             child: Column(
@@ -630,13 +811,18 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
               children: [
                 TextFormField(
                   controller: numeroCasaController,
-                  decoration: const InputDecoration(labelText: 'Número de Casa *'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Número de Casa *',
+                  ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Requerido' : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: tipoController,
-                  decoration: const InputDecoration(labelText: 'Tipo (Ej. Casa, Depto)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo (Ej. Casa, Depto)',
+                  ),
                 ),
               ],
             ),
@@ -647,7 +833,9 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
               child: const Text('Cancelar'),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF111C99)),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF111C99),
+              ),
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   final payload = {
@@ -655,20 +843,25 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                     'tipo': tipoController.text.trim(),
                   };
                   final id = _vivienda['id'];
-                  final url = '${dotenv.env['API_BASE_URL_VIVIENDAS'] ?? ''}/api/Viviendas/$id';
+                  final url =
+                      '${dotenv.env['API_BASE_URL_VIVIENDAS'] ?? ''}/api/Viviendas/$id';
 
                   try {
                     final res = await widget.controller.httpClient.put(
                       Uri.parse(url),
                       headers: {
-                        'Authorization': 'Bearer ${widget.controller.accessToken}',
+                        'Authorization':
+                            'Bearer ${widget.controller.accessToken}',
                         'Content-Type': 'application/json',
                       },
                       body: jsonEncode(payload),
                     );
 
                     if (res.statusCode >= 200 && res.statusCode < 300) {
-                      widget.controller.notifyToast('Actualizado correctamente', success: true);
+                      widget.controller.notifyToast(
+                        'Actualizado correctamente',
+                        success: true,
+                      );
                       setState(() {
                         _vivienda['numeroCasa'] = payload['numeroCasa'];
                         _vivienda['tipo'] = payload['tipo'];
@@ -678,10 +871,16 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                         Navigator.pop(ctx);
                       }
                     } else {
-                      widget.controller.notifyToast('Error al actualizar', success: false);
+                      widget.controller.notifyToast(
+                        'Error al actualizar',
+                        success: false,
+                      );
                     }
                   } catch (e) {
-                    widget.controller.notifyToast('Error de conexión', success: false);
+                    widget.controller.notifyToast(
+                      'Error de conexión',
+                      success: false,
+                    );
                   }
                 }
               },
@@ -708,7 +907,9 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
     final numeroCasa = (_vivienda['numeroCasa'] ?? 'S/N').toString();
     final tipo = (_vivienda['tipo'] ?? 'Vivienda Residencial').toString();
     final id = _vivienda['id']?.toString() ?? '—';
-    final creadoEn = _formatFecha(_vivienda['creadoEn'] ?? _vivienda['creado_en']);
+    final creadoEn = _formatFecha(
+      _vivienda['creadoEn'] ?? _vivienda['creado_en'],
+    );
     final bool activo = _vivienda['activo'] ?? true;
 
     return Scaffold(
@@ -739,7 +940,9 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
         ],
       ),
       body: _isDeleting
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF111C99)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF111C99)),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Center(
@@ -771,7 +974,9 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFFEEF2FF),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFE0E7FF)),
+                                border: Border.all(
+                                  color: const Color(0xFFE0E7FF),
+                                ),
                               ),
                               child: const Icon(
                                 Icons.home_rounded,
@@ -795,7 +1000,9 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    tipo.isNotEmpty ? tipo : 'Inmueble Residencial',
+                                    tipo.isNotEmpty
+                                        ? tipo
+                                        : 'Inmueble Residencial',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Color(0xFF64748B),
@@ -820,7 +1027,9 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                                       ),
                                     ),
                                     child: Text(
-                                      activo ? 'DISPONIBLE / ACTIVA' : 'INACTIVA',
+                                      activo
+                                          ? 'DISPONIBLE / ACTIVA'
+                                          : 'INACTIVA',
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700,
@@ -917,8 +1126,12 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                               ),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: const Color(0xFF111C99),
-                                side: const BorderSide(color: Color(0xFF111C99)),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                side: const BorderSide(
+                                  color: Color(0xFF111C99),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -937,7 +1150,9 @@ class _ViviendaDetalleScreenState extends State<ViviendaDetalleScreen> {
                               style: FilledButton.styleFrom(
                                 backgroundColor: const Color(0xFFDC2626),
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+
 import '../Services/app_controller.dart';
 import '../Pages/perfil_screen.dart';
 
 class HeaderBar extends StatelessWidget {
-  const HeaderBar({super.key, 
+  const HeaderBar({
+    super.key,
     required this.controller,
     required this.title,
     required this.subtitle,
@@ -60,7 +62,9 @@ class HeaderBar extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: avatarColor.withValues(alpha: 0.1),
-                      border: Border.all(color: avatarColor.withValues(alpha: 0.2)),
+                      border: Border.all(
+                        color: avatarColor.withValues(alpha: 0.2),
+                      ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -200,4 +204,3 @@ class HeaderBar extends StatelessWidget {
 // ==========================================
 // ADMIN SCREENS
 // ==========================================
-

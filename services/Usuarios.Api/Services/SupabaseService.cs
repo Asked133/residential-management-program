@@ -1,22 +1,56 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Usuarios.Api.DTOs;
+using HavenApi.Shared.Exceptions;
 
 namespace Usuarios.Api.Services;
 
 public class SupabaseService : ISupabaseService
 {
     private readonly HttpClient _httpClient;
+    private readonly ILogger<SupabaseService> _logger;
     private readonly string _supabaseUrl;
     private readonly string _anonKey;
     private readonly string _serviceRoleKey;
 
-    public SupabaseService(HttpClient httpClient, IConfiguration configuration)
+    public SupabaseService(HttpClient httpClient, IConfiguration configuration, ILogger<SupabaseService> logger)
     {
         _httpClient = httpClient;
-        _supabaseUrl = configuration["Supabase:Url"]!;
-        _anonKey = configuration["Supabase:AnonKey"]!;
-        _serviceRoleKey = configuration["Supabase:ServiceRoleKey"]!;
+        _logger = logger;
+        _supabaseUrl = configuration["Supabase:Url"] ?? throw new InvalidOperationException("Supabase:Url is not configured.");
+        _anonKey = configuration["Supabase:AnonKey"] ?? throw new InvalidOperationException("Supabase:AnonKey is not configured.");
+        _serviceRoleKey = configuration["Supabase:ServiceRoleKey"] ?? throw new InvalidOperationException("Supabase:ServiceRoleKey is not configured.");
+    }
+
+    private async Task<HttpResponseMessage> SendRequestAsync(HttpRequestMessage request)
+    {
+        try
+        {
+            return await _httpClient.SendAsync(request);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Network error when calling Supabase at {Url}", request.RequestUri);
+            throw new SupabaseUnavailableException("A network error occurred while communicating with Supabase.", ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Timeout when calling Supabase at {Url}", request.RequestUri);
+            throw new SupabaseUnavailableException("The request to Supabase timed out.", ex);
+        }
+    }
+
+    private async Task<T?> ParseJsonAsync<T>(HttpContent content)
+    {
+        try
+        {
+            return await content.ReadFromJsonAsync<T>();
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse JSON response from Supabase.");
+            throw new SupabaseResponseException("Received an invalid JSON response from Supabase.", ex);
+        }
     }
 
     public async Task<UsuarioDto?> GetUsuarioByIdAsync(Guid userId, string accessToken, Guid actorId)
@@ -28,12 +62,15 @@ public class SupabaseService : ISupabaseService
         request.Headers.Add("x-actor-id", actorId.ToString());
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-        var response = await _httpClient.SendAsync(request);
+        var response = await SendRequestAsync(request);
 
         if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Failed to fetch user {UserId}. Status: {StatusCode}", userId, response.StatusCode);
             return null;
+        }
 
-        var usuarios = await response.Content.ReadFromJsonAsync<List<UsuarioDto>>();
+        var usuarios = await ParseJsonAsync<List<UsuarioDto>>(response.Content);
         return usuarios?.FirstOrDefault();
     }
 
@@ -45,12 +82,15 @@ public class SupabaseService : ISupabaseService
         request.Headers.Add("apikey", _anonKey);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _anonKey);
 
-        var response = await _httpClient.SendAsync(request);
+        var response = await SendRequestAsync(request);
 
         if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Failed to fetch DB version. Status: {StatusCode}", response.StatusCode);
             return null;
+        }
 
-        var records = await response.Content.ReadFromJsonAsync<List<Dictionary<string, object>>>();
+        var records = await ParseJsonAsync<List<Dictionary<string, object>>>(response.Content);
         var version = records?.FirstOrDefault()?["numero_version"]?.ToString();
 
         return version;
@@ -67,27 +107,41 @@ public class SupabaseService : ISupabaseService
         signupRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
         signupRequest.Content = JsonContent.Create(signupPayload);
 
-        var signupResponse = await _httpClient.SendAsync(signupRequest);
+        var signupResponse = await SendRequestAsync(signupRequest);
         var signupBody = await signupResponse.Content.ReadAsStringAsync();
 
         if (!signupResponse.IsSuccessStatusCode)
         {
             if ((int)signupResponse.StatusCode == 422 || signupBody.Contains("already been registered"))
+            {
+                _logger.LogWarning("Registration failed: Email {Email} is already registered.", datos.Email);
                 return (null, "El email ya esta registrado");
+            }
 
+            _logger.LogError("Auth signup failed. Status: {StatusCode}, Body: {Body}", signupResponse.StatusCode, signupBody);
             return (null, $"Error al crear cuenta en Auth: {signupBody}");
         }
 
-        var signupJson = JsonDocument.Parse(signupBody);
+        JsonDocument signupJson;
+        try
+        {
+            signupJson = JsonDocument.Parse(signupBody);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse Auth signup JSON response.");
+            throw new SupabaseResponseException("Received an invalid JSON response from Supabase Auth.", ex);
+        }
 
         Guid userId;
-        if (signupJson.RootElement.TryGetProperty("id", out var directId))
+        if (signupJson.RootElement.TryGetProperty("id", out var directId) && Guid.TryParse(directId.GetString(), out userId))
         {
-            userId = Guid.Parse(directId.GetString()!);
+            // Successfully parsed Guid
         }
         else
         {
-            return (null, "No se pudo obtener el ID del usuario creado");
+            _logger.LogError("Could not extract or parse user ID from Auth response: {Body}", signupBody);
+            return (null, "No se pudo obtener o parsear el ID del usuario creado");
         }
 
         var insertUrl = $"{_supabaseUrl}/rest/v1/rpc/alta_usuario";
@@ -107,19 +161,23 @@ public class SupabaseService : ISupabaseService
         insertRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
         insertRequest.Content = JsonContent.Create(insertPayload);
 
-        var insertResponse = await _httpClient.SendAsync(insertRequest);
+        var insertResponse = await SendRequestAsync(insertRequest);
 
         if (!insertResponse.IsSuccessStatusCode)
         {
             var insertError = await insertResponse.Content.ReadAsStringAsync();
 
             if (insertError.Contains("23505"))
+            {
+                _logger.LogWarning("Registration failed at database insertion: Email {Email} already registered.", datos.Email);
                 return (null, "El email ya esta registrado");
+            }
 
+            _logger.LogError("Database insertion failed for new user {UserId}. Status: {StatusCode}, Body: {Body}", userId, insertResponse.StatusCode, insertError);
             return (null, $"Usuario creado en Auth pero fallo al insertar en tabla: {insertError}");
         }
 
-        var created = await insertResponse.Content.ReadFromJsonAsync<UsuarioDto>();
+        var created = await ParseJsonAsync<UsuarioDto>(insertResponse.Content);
         return (created, null);
     }
 
@@ -127,7 +185,6 @@ public class SupabaseService : ISupabaseService
     {
         var url = $"{_supabaseUrl}/rest/v1/rpc/cambio_usuario";
         
-        // 1. Enviar los parámetros completos de la función
         var payload = new
         {
             p_id = userId,
@@ -139,20 +196,22 @@ public class SupabaseService : ISupabaseService
         };
         var request = new HttpRequestMessage(HttpMethod.Post, url);
         
-        // 2. Usar service_role (es quien tiene el GRANT EXECUTE del DBA)
         request.Headers.Add("apikey", _serviceRoleKey);
         request.Headers.Add("x-actor-id", actorId.ToString());
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
         
         var jsonString = JsonSerializer.Serialize(payload, new JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never });
         request.Content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json");
-        var response = await _httpClient.SendAsync(request);
+        var response = await SendRequestAsync(request);
+        
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Failed to complete profile for user {UserId}. Status: {StatusCode}, Body: {Body}", userId, response.StatusCode, errorBody);
             return (null, $"Error al completar perfil: {errorBody}");
         }
-        var updated = await response.Content.ReadFromJsonAsync<UsuarioDto>();
+        
+        var updated = await ParseJsonAsync<UsuarioDto>(response.Content);
         return (updated, null);
     }
 
@@ -165,12 +224,15 @@ public class SupabaseService : ISupabaseService
         request.Headers.Add("x-actor-id", actorId.ToString());
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
 
-        var response = await _httpClient.SendAsync(request);
+        var response = await SendRequestAsync(request);
 
         if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Failed to fetch residentes. Status: {StatusCode}", response.StatusCode);
             return new List<UsuarioDto>();
+        }
 
-        var residentes = await response.Content.ReadFromJsonAsync<List<UsuarioDto>>();
+        var residentes = await ParseJsonAsync<List<UsuarioDto>>(response.Content);
         return residentes ?? new List<UsuarioDto>();
     }
 }

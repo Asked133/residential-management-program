@@ -1,4 +1,3 @@
-
 class AuthUser {
   const AuthUser({
     required this.id,
@@ -28,27 +27,33 @@ class AuthUser {
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     // Unwrap {data: {...}} if present
-    final Map<String, dynamic> j =
-        (json['data'] is Map<String, dynamic>)
-            ? json['data'] as Map<String, dynamic>
-            : json;
+    final Map<String, dynamic> j = (json['data'] is Map<String, dynamic>)
+        ? json['data'] as Map<String, dynamic>
+        : json;
     String? nb(dynamic v) {
       if (v == null) return null;
       final s = v.toString().trim();
       return s.isEmpty ? null : s;
     }
+
     return AuthUser(
       id: (j['id'] ?? '').toString(),
       email: (j['email'] ?? '').toString(),
       role: nb(j['role']),
       rol: nb(j['rol']),
-      rolId: j['rolId'] is int ? j['rolId'] : int.tryParse(j['rolId']?.toString() ?? ''),
+      rolId: j['rolId'] is int
+          ? j['rolId']
+          : int.tryParse(j['rolId']?.toString() ?? ''),
       rolNombre: nb(j['rolNombre']),
       nombre: nb(j['nombre']),
       apellidos: nb(j['apellidos']),
       telefono: nb(j['telefono']),
-      activo: j['activo'] is bool ? j['activo'] : j['activo']?.toString() == 'true',
-      debeCambiarPassword: j['debeCambiarPassword'] is bool ? j['debeCambiarPassword'] : j['debeCambiarPassword']?.toString() == 'true',
+      activo: j['activo'] is bool
+          ? j['activo']
+          : j['activo']?.toString() == 'true',
+      debeCambiarPassword: j['debeCambiarPassword'] is bool
+          ? j['debeCambiarPassword']
+          : j['debeCambiarPassword']?.toString() == 'true',
     );
   }
 
@@ -80,4 +85,3 @@ class AuthUser {
     );
   }
 }
-

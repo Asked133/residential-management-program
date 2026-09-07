@@ -28,9 +28,9 @@ export class ViviendasService {
 
   async obtenerResidentesVivienda(viviendaId: number): Promise<Residente[]> {
     try {
-      return await firstValueFrom(this.apiService.get<Residente[]>(`/api/viviendas/${viviendaId}/residentes`));
+      const resp = await firstValueFrom(this.apiService.get<Residente[]>(`/api/viviendas/${viviendaId}/residentes`));
+      return Array.isArray(resp) ? resp : [];
     } catch {
-      // Fallback seguro si la consulta no esta habilitada en el backend
       return [];
     }
   }

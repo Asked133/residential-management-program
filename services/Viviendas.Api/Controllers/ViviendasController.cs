@@ -12,10 +12,12 @@ namespace Viviendas.Api.Controllers;
 public class ViviendasController : ControllerBase
 {
     private readonly ISupabaseService _supabaseService;
+    private readonly ILogger<ViviendasController> _logger;
 
-    public ViviendasController(ISupabaseService supabaseService)
+    public ViviendasController(ISupabaseService supabaseService, ILogger<ViviendasController> logger)
     {
         _supabaseService = supabaseService;
+        _logger = logger;
     }
 
     private async Task<IActionResult?> ValidateAdminAsync()
@@ -24,7 +26,10 @@ public class ViviendasController : ControllerBase
                           ?? User.FindFirst("sub")?.Value;
 
         if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            _logger.LogWarning("ValidateAdmin: Unauthorized, missing or invalid user ID.");
             return Unauthorized(new { error = "Token invalido: no contiene ID de usuario" });
+        }
 
         var accessToken = HttpContext.Request.Headers["Authorization"]
             .ToString().Replace("Bearer ", "");
@@ -32,10 +37,16 @@ public class ViviendasController : ControllerBase
         var rol = await _supabaseService.GetUsuarioRolAsync(userId, accessToken);
 
         if (rol == null)
+        {
+            _logger.LogWarning("ValidateAdmin: User {UserId} not found.", userId);
             return NotFound(new { error = "Usuario no encontrado en la tabla 'usuarios'" });
+        }
 
         if (!string.Equals(rol, "Administrador", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("ValidateAdmin: Forbidden, user {UserId} is not an Admin.", userId);
             return StatusCode(403, new { error = "Se requiere rol de administrador" });
+        }
 
         return null;
     }
@@ -63,7 +74,10 @@ public class ViviendasController : ControllerBase
     {
         var vivienda = await _supabaseService.GetViviendaByIdAsync(id);
         if (vivienda == null)
+        {
+            _logger.LogWarning("GetVivienda: Vivienda {Id} not found.", id);
             return NotFound(new { error = "Vivienda no encontrada" });
+        }
 
         return Ok(new
         {
@@ -94,8 +108,12 @@ public class ViviendasController : ControllerBase
         if (error != null)
         {
             if (error.Contains("Ya existe una vivienda registrada con ese número de casa"))
+            {
+                _logger.LogWarning("CreateVivienda: Conflict, {Error}", error);
                 return Conflict(new { error });
+            }
 
+            _logger.LogWarning("CreateVivienda: Bad request, {Error}", error);
             return BadRequest(new { error });
         }
 
@@ -128,11 +146,18 @@ public class ViviendasController : ControllerBase
         if (error != null)
         {
             if (error.Contains("Ya existe una vivienda registrada con ese número de casa"))
+            {
+                _logger.LogWarning("UpdateVivienda: Conflict, {Error}", error);
                 return Conflict(new { error });
+            }
 
             if (error == "Vivienda no encontrada o no se pudo actualizar")
+            {
+                _logger.LogWarning("UpdateVivienda: Not found, {Error}", error);
                 return NotFound(new { error });
+            }
 
+            _logger.LogWarning("UpdateVivienda: Bad request, {Error}", error);
             return BadRequest(new { error });
         }
 
@@ -158,7 +183,10 @@ public class ViviendasController : ControllerBase
 
         var success = await _supabaseService.DeleteViviendaAsync(id);
         if (!success)
+        {
+            _logger.LogWarning("DeleteVivienda: Vivienda {Id} not found.", id);
             return NotFound(new { error = "Vivienda no encontrada" });
+        }
 
         return NoContent();
     }
@@ -183,10 +211,17 @@ public class ViviendasController : ControllerBase
         if (data == null)
         {
             if (error != null && error.Contains("El residente ya está asignado"))
+            {
+                _logger.LogWarning("AssignResidente: Conflict, {Error}", error);
                 return Conflict(new { error });
+            }
             if (error != null && error.Contains("no encontrad"))
+            {
+                _logger.LogWarning("AssignResidente: Not found, {Error}", error);
                 return NotFound(new { error });
+            }
             
+            _logger.LogWarning("AssignResidente: Bad request, {Error}", error);
             return BadRequest(new { error });
         }
 
@@ -206,7 +241,10 @@ public class ViviendasController : ControllerBase
 
         var success = await _supabaseService.RemoveResidenteAsync(id, usuarioId);
         if (!success)
+        {
+            _logger.LogWarning("RemoveResidente: Asignación not found for vivienda {Id} and user {UserId}.", id, usuarioId);
             return NotFound(new { error = "Asignación no encontrada" });
+        }
 
         return NoContent();
     }
@@ -220,7 +258,10 @@ public class ViviendasController : ControllerBase
             .ToString().Replace("Bearer ", "");
 
         if (string.IsNullOrEmpty(accessToken))
+        {
+            _logger.LogWarning("GetMisViviendas: Unauthorized, missing token.");
             return Unauthorized(new { error = "Token invalido o ausente" });
+        }
 
         var viviendas = await _supabaseService.GetMisViviendasAsync(accessToken);
         
@@ -234,5 +275,19 @@ public class ViviendasController : ControllerBase
         });
 
         return Ok(result);
+    }
+
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [HttpGet("{id}/residentes")]
+    public async Task<IActionResult> GetResidentes(int id)
+    {
+        var adminValidation = await ValidateAdminAsync();
+        if (adminValidation != null)
+            return adminValidation;
+
+        var residentes = await _supabaseService.GetResidentesByViviendaIdAsync(id);
+        return Ok(residentes);
     }
 }

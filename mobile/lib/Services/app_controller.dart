@@ -1,19 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../Models/auth_user.dart';
 import '../Models/api_exceptions.dart';
 import '../main.dart';
 
 class AppController extends ChangeNotifier {
-  AppController(this._supabaseClient);
+  AppController(this._supabaseClient, {http.Client? client})
+      : httpClient = client ?? http.Client();
 
   final SupabaseClient _supabaseClient;
-  final http.Client httpClient = http.Client();
+  final http.Client httpClient;
   StreamSubscription<AuthState>? _authSubscription;
 
   Session? _session;
@@ -22,7 +25,6 @@ class AppController extends ChangeNotifier {
   bool _isInitializing = true;
   String? _errorMessage;
   bool _pingShown = false;
-
 
   bool get isLoading => _isLoading;
   bool get isInitializing => _isInitializing;
@@ -40,11 +42,48 @@ class AppController extends ChangeNotifier {
     final apellidos = (_currentUser!.apellidos ?? '').trim();
     final telefono = (_currentUser!.telefono ?? '').trim();
 
-    final nombreValido = nombre.isNotEmpty && nombre.toLowerCase() != 'sin nombre';
+    final nombreValido =
+        nombre.isNotEmpty && nombre.toLowerCase() != 'sin nombre';
     final apellidosValidos = apellidos.isNotEmpty;
     final telefonoValido = telefono.length >= 10;
 
     return !nombreValido || !apellidosValidos || !telefonoValido;
+  }
+
+  /// Retorna un token válido, renovándolo automáticamente si ha expirado o está por expirar.
+  Future<String?> getValidAccessToken() async {
+    final session = _session;
+    if (session == null) return null;
+
+    bool needsRefresh = false;
+    try {
+      if (session.isExpired) {
+        needsRefresh = true;
+      } else if (session.expiresAt != null) {
+        final expiry =
+            DateTime.fromMillisecondsSinceEpoch(session.expiresAt! * 1000);
+        // Si falta menos de 60 segundos para expirar, renovar preventivamente
+        if (DateTime.now().isAfter(
+          expiry.subtract(const Duration(seconds: 60)),
+        )) {
+          needsRefresh = true;
+        }
+      }
+    } catch (_) {}
+
+    if (needsRefresh) {
+      try {
+        debugPrint('[AppController] Token expirado o próximo a expirar. Renovando...');
+        final res = await _supabaseClient.auth.refreshSession();
+        if (res.session != null) {
+          _session = res.session;
+        }
+      } catch (e) {
+        debugPrint('[AppController] Error al renovar sesión en getValidAccessToken: $e');
+      }
+    }
+
+    return _session?.accessToken;
   }
 
   Future<void> bootstrap() async {
@@ -74,12 +113,17 @@ class AppController extends ChangeNotifier {
     final splashDelay = Future.delayed(const Duration(seconds: 2));
 
     if (existing != null) {
-      await Future.wait([_refreshProfile(), splashDelay]);
+      try {
+        await getValidAccessToken();
+        await Future.wait([_refreshProfile(), splashDelay]);
+      } catch (e) {
+        debugPrint('Bootstrap _refreshProfile error: $e');
+      }
     } else {
       await splashDelay;
       _isLoading = false;
     }
-    
+
     _isInitializing = false;
     notifyListeners();
   }
@@ -102,7 +146,11 @@ class AppController extends ChangeNotifier {
 
     try {
       final response = await httpClient
-          .get(Uri.parse('${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/ping'))
+          .get(
+            Uri.parse(
+              '${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/ping',
+            ),
+          )
           .timeout(const Duration(seconds: 45));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -184,7 +232,9 @@ class AppController extends ChangeNotifier {
     try {
       await _supabaseClient.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: kIsWeb ? Uri.base.origin : 'io.supabase.haven://login-callback/',
+        redirectTo: kIsWeb
+            ? Uri.base.origin
+            : 'io.supabase.haven://login-callback/',
       );
     } on AuthException catch (error) {
       _errorMessage = error.message;
@@ -227,7 +277,8 @@ class AppController extends ChangeNotifier {
       } else {
         notifyToast(
           'Cuenta registrada correctamente.',
-          subtitle: 'Por favor inicia sesión o revisa tu correo para confirmar.',
+          subtitle:
+              'Por favor inicia sesión o revisa tu correo para confirmar.',
           success: true,
         );
         return true;
@@ -263,7 +314,10 @@ class AppController extends ChangeNotifier {
         raw == '1') {
       return 'administrador';
     }
-    if (raw == 'vigilante' || raw == 'guardia' || raw == 'guard' || raw == '3') {
+    if (raw == 'vigilante' ||
+        raw == 'guardia' ||
+        raw == 'guard' ||
+        raw == '3') {
       return 'vigilante';
     }
     if (raw == 'residente' || raw == 'resident' || raw == '2') {
@@ -308,35 +362,34 @@ class AppController extends ChangeNotifier {
       final profile = await _getJson('/api/Auth/me');
       debugPrint('RAW /api/Auth/me response: $profile');
       // Unwrap {data: {...}} if the backend wraps it
-      final Map<String, dynamic> p =
-          (profile['data'] is Map<String, dynamic>)
-              ? profile['data'] as Map<String, dynamic>
-              : profile;
+      final Map<String, dynamic> p = (profile['data'] is Map<String, dynamic>)
+          ? profile['data'] as Map<String, dynamic>
+          : profile;
       debugPrint('Unwrapped profile: $p');
 
       final mapped = AuthUser.fromJson(p);
       debugPrint('mapped.nombre: "${mapped.nombre}"');
       debugPrint('mapped.apellidos: "${mapped.apellidos}"');
-      
+
       final rawRole =
           (_nb(mapped.rolNombre) ??
-                  _nb(mapped.rolId?.toString()) ??
-                  _nb(p['rol']) ??
-                  _nb(p['role']) ??
-                  _nb(session.user.appMetadata['rol']) ??
-                  _nb(session.user.appMetadata['role']) ??
-                  'residente');
+          _nb(mapped.rolId?.toString()) ??
+          _nb(p['rol']) ??
+          _nb(p['role']) ??
+          _nb(session.user.appMetadata['rol']) ??
+          _nb(session.user.appMetadata['role']) ??
+          'residente');
       final normalized = normalizeRole(rawRole);
 
-      final resolvedNombre = _nb(mapped.nombre) ??
+      final resolvedNombre =
+          _nb(mapped.nombre) ??
           _nb(um['nombre']) ??
           _nb(um['name']) ??
           _nb(um['full_name']) ??
           session.user.email?.split('@').first;
 
-      final resolvedApellidos = _nb(mapped.apellidos) ??
-          _nb(um['apellidos']) ??
-          _nb(um['last_name']);
+      final resolvedApellidos =
+          _nb(mapped.apellidos) ?? _nb(um['apellidos']) ?? _nb(um['last_name']);
 
       debugPrint('resolvedNombre: "$resolvedNombre"');
       debugPrint('resolvedApellidos: "$resolvedApellidos"');
@@ -365,20 +418,20 @@ class AppController extends ChangeNotifier {
     final um = session.user.userMetadata ?? {};
     final rawRole =
         (_nb(session.user.appMetadata['rol']) ??
-                _nb(session.user.appMetadata['role']) ??
-                'residente');
+        _nb(session.user.appMetadata['role']) ??
+        'residente');
     final normalized = normalizeRole(rawRole);
     _currentUser = AuthUser(
       id: session.user.id,
       email: session.user.email ?? '',
       role: normalized,
       rol: normalized,
-      nombre: _nb(um['nombre']) ??
+      nombre:
+          _nb(um['nombre']) ??
           _nb(um['name']) ??
           _nb(um['full_name']) ??
           session.user.email?.split('@').first,
-      apellidos: _nb(um['apellidos']) ??
-          _nb(um['last_name']),
+      apellidos: _nb(um['apellidos']) ?? _nb(um['last_name']),
     );
     _errorMessage = null;
     _isLoading = false;
@@ -388,13 +441,31 @@ class AppController extends ChangeNotifier {
   Future<Map<String, dynamic>> _getJson(String endpoint) async {
     final baseUrl = dotenv.env['API_BASE_URL_USUARIOS'] ?? '';
     final uri = Uri.parse('$baseUrl$endpoint');
+    
+    var token = await getValidAccessToken();
     final headers = <String, String>{};
-    final token = accessToken;
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final response = await httpClient.get(uri, headers: headers);
+    var response = await httpClient.get(uri, headers: headers);
+    if (response.statusCode == 401) {
+      debugPrint('[AppController] 401 recibido en $endpoint. Intentando renovar sesión...');
+      try {
+        final refreshRes = await _supabaseClient.auth.refreshSession();
+        if (refreshRes.session != null) {
+          _session = refreshRes.session;
+          token = _session?.accessToken;
+          if (token != null && token.isNotEmpty) {
+            headers['Authorization'] = 'Bearer $token';
+          }
+          response = await httpClient.get(uri, headers: headers);
+        }
+      } catch (e) {
+        debugPrint('[AppController] Error al renovar sesión tras 401: $e');
+      }
+    }
+
     if (response.statusCode == 401) {
       await _handleUnauthorized();
       throw const UnauthorizedException();
@@ -499,7 +570,11 @@ class AppController extends ChangeNotifier {
     );
   }
 
-  Future<bool> completarPerfil(String nombre, String apellidos, String telefono) async {
+  Future<bool> completarPerfil(
+    String nombre,
+    String apellidos,
+    String telefono,
+  ) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -510,10 +585,13 @@ class AppController extends ChangeNotifier {
         'telefono': telefono.trim(),
       };
 
+      final token = await getValidAccessToken();
       final response = await httpClient.patch(
-        Uri.parse('${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/completar-perfil'),
+        Uri.parse(
+          '${dotenv.env['API_BASE_URL_USUARIOS'] ?? ''}/api/Auth/completar-perfil',
+        ),
         headers: {
-          'Authorization': 'Bearer $accessToken',
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
         body: jsonEncode(payload),
@@ -523,34 +601,41 @@ class AppController extends ChangeNotifier {
         final decoded = jsonDecode(response.body);
         final Map<String, dynamic> p =
             (decoded is Map && decoded['data'] is Map<String, dynamic>)
-                ? decoded['data'] as Map<String, dynamic>
-                : (decoded is Map<String, dynamic> ? decoded : {});
-        
+            ? decoded['data'] as Map<String, dynamic>
+            : (decoded is Map<String, dynamic> ? decoded : {});
+
         final mapped = AuthUser.fromJson(p);
-        
-        final rawRole = _nb(mapped.rolNombre) ?? _nb(p['rol']) ?? _nb(p['role']) ?? _currentUser?.role ?? 'residente';
+
+        final rawRole =
+            _nb(mapped.rolNombre) ??
+            _nb(p['rol']) ??
+            _nb(p['role']) ??
+            _currentUser?.role ??
+            'residente';
         final normalized = normalizeRole(rawRole);
 
-        final updatedNombre = (mapped.nombre != null && mapped.nombre!.isNotEmpty)
+        final updatedNombre =
+            (mapped.nombre != null && mapped.nombre!.isNotEmpty)
             ? mapped.nombre!
             : nombre.trim();
-        final updatedApellidos = (mapped.apellidos != null && mapped.apellidos!.isNotEmpty)
+        final updatedApellidos =
+            (mapped.apellidos != null && mapped.apellidos!.isNotEmpty)
             ? mapped.apellidos!
             : apellidos.trim();
-        final updatedTelefono = (mapped.telefono != null && mapped.telefono!.isNotEmpty)
+        final updatedTelefono =
+            (mapped.telefono != null && mapped.telefono!.isNotEmpty)
             ? mapped.telefono!
             : telefono.trim();
 
-        _currentUser = _currentUser?.copyWith(
-          nombre: updatedNombre,
-          apellidos: updatedApellidos,
-          telefono: updatedTelefono,
-          role: normalized,
-          rol: normalized,
-        ) ?? mapped.copyWith(
-          role: normalized,
-          rol: normalized,
-        );
+        _currentUser =
+            _currentUser?.copyWith(
+              nombre: updatedNombre,
+              apellidos: updatedApellidos,
+              telefono: updatedTelefono,
+              role: normalized,
+              rol: normalized,
+            ) ??
+            mapped.copyWith(role: normalized, rol: normalized);
         notifyToast('Perfil guardado correctamente.', success: true);
         return true;
       } else {
@@ -575,6 +660,48 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  Future<List<Map<String, dynamic>>> obtenerMisViviendas() async {
+    final token = await getValidAccessToken();
+    if (token == null || token.isEmpty) return [];
+
+    final baseUrl = dotenv.env['API_BASE_URL_VIVIENDAS'] ?? '';
+    final url = '$baseUrl/api/Viviendas/mis-viviendas';
+
+    try {
+      final response = await httpClient.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          return List<Map<String, dynamic>>.from(
+            decoded.map((item) {
+              if (item is Map) {
+                return {
+                  'id': item['viviendaId'] ?? item['id'],
+                  'numeroCasa': item['numeroCasa']?.toString() ?? '',
+                  'tipo': item['tipo']?.toString(),
+                  'activo': item['activo'] ?? true,
+                  'creadoEn': item['creadoEn'],
+                };
+              }
+              return <String, dynamic>{};
+            }),
+          );
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('[AppController] Error al obtener mis-viviendas: $e');
+      return [];
+    }
+  }
+
   @override
   void dispose() {
     _authSubscription?.cancel();
@@ -582,4 +709,3 @@ class AppController extends ChangeNotifier {
     super.dispose();
   }
 }
-

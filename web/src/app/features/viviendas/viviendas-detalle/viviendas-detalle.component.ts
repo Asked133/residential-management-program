@@ -371,13 +371,8 @@ export class ViviendasDetalleComponent implements OnChanges {
     this.cargandoResidente = true;
 
     try {
-      // 1. Intentar consultar residentes vinculados a la vivienda
       const residentes = await this.viviendasService.obtenerResidentesVivienda(this.vivienda.id);
-      if (residentes && residentes.length > 0) {
-        this.residenteAsignado = residentes[0];
-      } else {
-        this.residenteAsignado = null;
-      }
+      this.residenteAsignado = (residentes && residentes.length > 0) ? residentes[0] : null;
     } catch {
       this.residenteAsignado = null;
     } finally {
@@ -427,8 +422,6 @@ export class ViviendasDetalleComponent implements OnChanges {
     try {
       await this.viviendasService.vincularResidente(this.vivienda.id, this.residenteSeleccionadoId);
 
-      const nuevoResidente = this.catalogoResidentes.find(r => r.id === this.residenteSeleccionadoId) || null;
-      this.residenteAsignado = nuevoResidente;
       this.mostrarFormularioVinculacion = false;
       this.residenteSeleccionadoId = null;
 
@@ -440,10 +433,29 @@ export class ViviendasDetalleComponent implements OnChanges {
         confirmButtonColor: '#0F172A'
       });
 
+      await this.cargarDetalleResidente();
       this.viviendaUpdated.emit();
     } catch (err: any) {
       console.error('Error al vincular residente:', err);
       const errorMsg = err?.error?.error || err?.message || 'No fue posible vincular el residente a la vivienda.';
+
+      if (errorMsg.includes('ya está asignado a esta vivienda') || err?.status === 409) {
+        this.mostrarFormularioVinculacion = false;
+        this.residenteSeleccionadoId = null;
+
+        await Swal.fire({
+          title: 'Asignación Existente',
+          text: `El residente ya se encuentra asignado a la vivienda ${this.vivienda.numeroCasa} en el sistema.`,
+          icon: 'info',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#0F172A'
+        });
+
+        await this.cargarDetalleResidente();
+        this.viviendaUpdated.emit();
+        return;
+      }
+
       Swal.fire({
         title: 'Error de Vinculación',
         text: errorMsg,

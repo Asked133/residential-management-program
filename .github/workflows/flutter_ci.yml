@@ -1,0 +1,144 @@
+name: Flutter CI
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'mobile/**'
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - 'mobile/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Unit and Widget Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./mobile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create .env
+        run: |
+          echo "SUPABASE_URL=https://qunkgbmxmxmjponyxzdu.supabase.co" > .env
+          echo "SUPABASE_ANON_KEY=sb_publishable_2an39B-QMQpwkuaCYfg1Bw_EgWoC-SF" >> .env
+          echo "API_BASE_URL=https://residential-management-program-1.onrender.com" >> .env
+          echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> .env
+          echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}" >> .env
+          echo "ADMIN_USER_EMAIL=${{ secrets.ADMIN_USER_EMAIL }}" >> .env
+          echo "ADMIN_USER_PASSWORD=${{ secrets.ADMIN_USER_PASSWORD }}" >> .env
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run unit and widget tests
+        run: flutter test
+
+      - name: Notify Discord on Success/Failure
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅"
+            COLOR="65280"
+          else
+            EMOJI="❌"
+            COLOR="16711680"
+          fi
+          
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "embeds": [{
+              "title": "'$EMOJI' CI/CD: Unit & Widget Tests '$STATUS'",
+              "description": "Repository: ${{ github.repository }}\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.sha }}",
+              "color": '$COLOR'
+            }]
+          }' \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+  integration_test_linux:
+    name: Linux Integration Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./mobile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create .env
+        run: |
+          echo "SUPABASE_URL=https://qunkgbmxmxmjponyxzdu.supabase.co" > .env
+          echo "SUPABASE_ANON_KEY=sb_publishable_2an39B-QMQpwkuaCYfg1Bw_EgWoC-SF" >> .env
+          echo "API_BASE_URL=https://residential-management-program-1.onrender.com" >> .env
+          echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> .env
+          echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}" >> .env
+          echo "ADMIN_USER_EMAIL=${{ secrets.ADMIN_USER_EMAIL }}" >> .env
+          echo "ADMIN_USER_PASSWORD=${{ secrets.ADMIN_USER_PASSWORD }}" >> .env
+
+      - name: Setup Linux Desktop for testing
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgtk-3-dev xvfb
+          flutter config --enable-linux-desktop
+
+      - name: Run Linux integration tests
+        run: xvfb-run flutter test integration_test/app_test.dart -d linux
+
+      - name: Notify Discord on Integration Test
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅"
+            COLOR="65280"
+          else
+            EMOJI="❌"
+            COLOR="16711680"
+          fi
+          
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "embeds": [{
+              "title": "'$EMOJI' CI/CD: Linux Integration Tests '$STATUS'",
+              "description": "Repository: ${{ github.repository }}\nBranch: ${{ github.ref_name }}",
+              "color": '$COLOR'
+            }]
+          }' \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
