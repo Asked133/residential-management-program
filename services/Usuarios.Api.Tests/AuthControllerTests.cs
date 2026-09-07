@@ -81,8 +81,12 @@ public class AuthControllerTests : IAsyncLifetime
         var response = await client.GetAsync("/api/Auth/ping");
 
         // Assert
-        response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode) 
+        {
+            throw new Exception($"Status: {response.StatusCode}, Content: {content}");
+        }
+        
         Assert.Contains("15.0", content);
         Assert.Contains("Haven API is running", content);
     }
