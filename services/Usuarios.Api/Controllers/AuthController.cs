@@ -11,10 +11,12 @@ namespace Usuarios.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly ISupabaseService _supabaseService;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(ISupabaseService supabaseService)
+    public AuthController(ISupabaseService supabaseService, ILogger<AuthController> logger)
     {
         _supabaseService = supabaseService;
+        _logger = logger;
     }
 
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -46,8 +48,12 @@ public class AuthController : ControllerBase
         if (error != null)
         {
             if (error.Contains("ya esta registrado"))
+            {
+                _logger.LogWarning("RegisterAdmin: Conflict, {Error}", error);
                 return Conflict(new { error });
+            }
 
+            _logger.LogWarning("RegisterAdmin: Bad request, {Error}", error);
             return BadRequest(new { error });
         }
 
@@ -74,7 +80,10 @@ public class AuthController : ControllerBase
                           ?? User.FindFirst("sub")?.Value;
 
         if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            _logger.LogWarning("Me: Unauthorized, missing or invalid user ID in token.");
             return Unauthorized(new { error = "Token invalido: no contiene ID de usuario" });
+        }
 
         var accessToken = HttpContext.Request.Headers["Authorization"]
             .ToString().Replace("Bearer ", "");
@@ -82,7 +91,10 @@ public class AuthController : ControllerBase
         var usuario = await _supabaseService.GetUsuarioByIdAsync(userId, accessToken, userId);
 
         if (usuario == null)
+        {
+            _logger.LogWarning("Me: User {UserId} not found in 'usuarios' table.", userId);
             return NotFound(new { error = "Usuario no encontrado en la tabla 'usuarios'" });
+        }
 
         return Ok(new
         {
@@ -110,7 +122,10 @@ public class AuthController : ControllerBase
                           ?? User.FindFirst("sub")?.Value;
 
         if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            _logger.LogWarning("GetResidentes: Unauthorized, missing or invalid user ID.");
             return Unauthorized(new { error = "Token invalido: no contiene ID de usuario" });
+        }
 
         var accessToken = HttpContext.Request.Headers["Authorization"]
             .ToString().Replace("Bearer ", "");
@@ -118,10 +133,16 @@ public class AuthController : ControllerBase
         var usuario = await _supabaseService.GetUsuarioByIdAsync(userId, accessToken, userId);
 
         if (usuario == null)
+        {
+            _logger.LogWarning("GetResidentes: Requesting user {UserId} not found.", userId);
             return NotFound(new { error = "Usuario no encontrado en la tabla 'usuarios'" });
+        }
 
         if (!string.Equals(usuario.EffectiveRol, "Administrador", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("GetResidentes: Forbidden, user {UserId} is not an Admin.", userId);
             return StatusCode(403, new { error = "Se requiere rol de administrador" });
+        }
 
         var residentes = await _supabaseService.GetResidentesAsync(userId);
 
@@ -150,7 +171,10 @@ public class AuthController : ControllerBase
                           ?? User.FindFirst("sub")?.Value;
 
         if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            _logger.LogWarning("CompletarPerfil: Unauthorized, missing or invalid user ID.");
             return Unauthorized(new { error = "Token invalido: no contiene ID de usuario" });
+        }
 
         var accessToken = HttpContext.Request.Headers["Authorization"]
             .ToString().Replace("Bearer ", "");
@@ -159,11 +183,15 @@ public class AuthController : ControllerBase
 
         if (error != null)
         {
+            _logger.LogWarning("CompletarPerfil: Bad request for user {UserId}. Error: {Error}", userId, error);
             return BadRequest(new { error });
         }
 
         if (usuario == null)
+        {
+            _logger.LogWarning("CompletarPerfil: User {UserId} not found.", userId);
             return NotFound(new { error = "Usuario no encontrado" });
+        }
 
         return Ok(new
         {
