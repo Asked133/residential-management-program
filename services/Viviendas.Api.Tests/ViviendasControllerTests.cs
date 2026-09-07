@@ -16,7 +16,9 @@ public class ViviendasControllerTests : IAsyncLifetime
 
     public ViviendasControllerTests()
     {
-        Environment.SetEnvironmentVariable("Supabase__Url", "http://localhost:54321");
+        // Fake Supabase URL for AuthExtensions.cs validation.
+        // It must be HTTPS to prevent JwtBearerPostConfigureOptions from throwing RequireHttpsMetadata exception.
+        Environment.SetEnvironmentVariable("Supabase__Url", "https://localhost:54321");
 
         // Se levanta un contenedor PostgreSQL real como fue solicitado
         _dbContainer = new PostgreSqlBuilder()
