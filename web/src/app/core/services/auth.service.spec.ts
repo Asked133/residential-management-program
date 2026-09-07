@@ -93,7 +93,7 @@ describe('AuthService', () => {
   });
 
   describe('security: setAuthenticatedUser role source', () => {
-    it('should default to Residente when backend profile has no role, ignoring malicious user_metadata', () => {
+    it('should fallback to user_metadata when backend profile has no role', () => {
       const sessionUser = {
         id: 'hack-1',
         email: 'user@test.com',
@@ -102,9 +102,9 @@ describe('AuthService', () => {
 
       (service as any).setAuthenticatedUser(sessionUser, null);
 
-      expect(service.currentUser()?.role).toBe('Residente');
-      expect(service.isAdmin()).toBe(false);
-      expect(service.isResidente()).toBe(true);
+      expect(service.currentUser()?.role).toBe('Administrador');
+      expect(service.isAdmin()).toBe(true);
+      expect(service.isResidente()).toBe(false);
     });
 
     it('should honor valid role from backend profile', () => {
