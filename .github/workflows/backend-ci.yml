@@ -31,13 +31,13 @@ jobs:
             ${{ runner.os }}-nuget-
             
       - name: Restore dependencies
-        run: dotnet restore services/
+        run: dotnet restore services/HavenApi.sln
         
       - name: Build
-        run: dotnet build services/ --no-restore
+        run: dotnet build services/HavenApi.sln --no-restore
         
       - name: Test
-        run: dotnet test services/ --no-build --verbosity normal
+        run: dotnet test services/HavenApi.sln --no-build --verbosity normal
 
       - name: Notify Discord on Success
         if: success()

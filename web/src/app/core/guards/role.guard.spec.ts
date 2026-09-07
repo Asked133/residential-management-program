@@ -51,12 +51,9 @@ describe('roleGuard', () => {
     mockAuthService.isLoading.set(false);
 
     const guard = roleGuard(['administrador']);
-    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any)) as Observable<boolean | UrlTree>;
-
-    result$.subscribe((res) => {
-      expect(mockRouter.createUrlTree).toHaveBeenCalledWith(['/login']);
-      done();
-    });
+    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any));
+    expect(mockRouter.createUrlTree).toHaveBeenCalledWith(['/login']);
+    done();
   });
 
   it('should allow access if user role matches allowed roles (admin -> admin)', (done) => {
@@ -65,12 +62,9 @@ describe('roleGuard', () => {
     mockAuthService.isLoading.set(false);
 
     const guard = roleGuard(['administrador']);
-    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any)) as Observable<boolean | UrlTree>;
-
-    result$.subscribe((res) => {
-      expect(res).toBe(true);
-      done();
-    });
+    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any));
+    expect(result$).toBe(true);
+    done();
   });
 
   it('should allow access if user role matches allowed roles (residente -> residente)', (done) => {
@@ -79,12 +73,9 @@ describe('roleGuard', () => {
     mockAuthService.isLoading.set(false);
 
     const guard = roleGuard(['residente']);
-    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any)) as Observable<boolean | UrlTree>;
-
-    result$.subscribe((res) => {
-      expect(res).toBe(true);
-      done();
-    });
+    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any));
+    expect(result$).toBe(true);
+    done();
   });
 
   it('should allow access if user role matches allowed roles (vigilante -> vigilante)', (done) => {
@@ -93,12 +84,9 @@ describe('roleGuard', () => {
     mockAuthService.isLoading.set(false);
 
     const guard = roleGuard(['vigilante']);
-    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any)) as Observable<boolean | UrlTree>;
-
-    result$.subscribe((res) => {
-      expect(res).toBe(true);
-      done();
-    });
+    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any));
+    expect(result$).toBe(true);
+    done();
   });
 
   it('should redirect to user specific dashboard if user role does not match allowed roles (residente trying admin)', (done) => {
@@ -107,11 +95,8 @@ describe('roleGuard', () => {
     mockAuthService.isLoading.set(false);
 
     const guard = roleGuard(['administrador']);
-    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any)) as Observable<boolean | UrlTree>;
-
-    result$.subscribe(() => {
-      expect(mockRouter.createUrlTree).toHaveBeenCalledWith(['/dashboard/residente']);
-      done();
-    });
+    const result$ = TestBed.runInInjectionContext(() => guard({} as ActivatedRouteSnapshot, {} as any));
+    expect(mockRouter.createUrlTree).toHaveBeenCalledWith(['/dashboard/residente']);
+    done();
   });
 });
