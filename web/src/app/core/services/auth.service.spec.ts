@@ -100,7 +100,7 @@ describe('AuthService', () => {
         user_metadata: { rol: 'Administrador', role: 'admin' }
       };
 
-      (service as any).setAuthenticatedUser(sessionUser, null);
+      service['setAuthenticatedUser'](sessionUser, null);
 
       expect(service.currentUser()?.role).toBe('Administrador');
       expect(service.isAdmin()).toBe(true);
