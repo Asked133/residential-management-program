@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { PingService } from '../../../core/services/ping.service';
@@ -13,7 +14,11 @@ describe('LoginComponent', () => {
   let pingServiceSpy: jasmine.SpyObj<PingService>;
 
   beforeEach(async () => {
-    const authSpy = jasmine.createSpyObj('AuthService', ['login']);
+    const authSpy = jasmine.createSpyObj('AuthService', ['login', 'navigateToDashboard']);
+    authSpy.authStatus = signal<'loading' | 'authenticated' | 'unauthenticated'>('unauthenticated');
+    authSpy.currentUser = signal<any>(null);
+    authSpy.isLoading = signal(false);
+    
     const pingSpy = jasmine.createSpyObj('PingService', ['checkBackendConnection']);
 
     await TestBed.configureTestingModule({

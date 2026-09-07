@@ -33,12 +33,9 @@ describe('authGuard', () => {
     mockAuthService.currentUser.set({ id: '1', email: 'admin@test.com', role: 'Administrador' });
     mockAuthService.isLoading.set(false);
 
-    const guardResult = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any)) as Observable<boolean | UrlTree>;
-
-    guardResult.subscribe((result) => {
-      expect(result).toBe(true);
-      done();
-    });
+    const guardResult = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
+    expect(guardResult).toBe(true);
+    done();
   });
 
   it('should grant access if user is authenticated (residente)', (done) => {
@@ -46,12 +43,9 @@ describe('authGuard', () => {
     mockAuthService.currentUser.set({ id: '2', email: 'user@test.com', role: 'Residente' });
     mockAuthService.isLoading.set(false);
 
-    const guardResult = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any)) as Observable<boolean | UrlTree>;
-
-    guardResult.subscribe((result) => {
-      expect(result).toBe(true);
-      done();
-    });
+    const guardResult = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
+    expect(guardResult).toBe(true);
+    done();
   });
 
   it('should grant access if user is authenticated (vigilante)', (done) => {
@@ -59,12 +53,9 @@ describe('authGuard', () => {
     mockAuthService.currentUser.set({ id: '3', email: 'guard@test.com', role: 'Vigilante' });
     mockAuthService.isLoading.set(false);
 
-    const guardResult = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any)) as Observable<boolean | UrlTree>;
-
-    guardResult.subscribe((result) => {
-      expect(result).toBe(true);
-      done();
-    });
+    const guardResult = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
+    expect(guardResult).toBe(true);
+    done();
   });
 
   it('should redirect to /login if user is unauthenticated', (done) => {
@@ -72,12 +63,9 @@ describe('authGuard', () => {
     mockAuthService.currentUser.set(null);
     mockAuthService.isLoading.set(false);
 
-    const guardResult = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any)) as Observable<boolean | UrlTree>;
-
-    guardResult.subscribe((result) => {
-      expect(mockRouter.createUrlTree).toHaveBeenCalledWith(['/login']);
-      done();
-    });
+    const guardResult = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
+    expect(mockRouter.createUrlTree).toHaveBeenCalledWith(['/login']);
+    done();
   });
 });
 
