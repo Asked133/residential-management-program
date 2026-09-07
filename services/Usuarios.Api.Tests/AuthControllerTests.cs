@@ -57,6 +57,10 @@ public class AuthControllerTests : IAsyncLifetime
                 });
                 builder.ConfigureServices(services =>
                 {
+                    services.PostConfigure<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions>(
+                        Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme, 
+                        options => { options.Authority = null; });
+
                     var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ISupabaseService));
                     if (descriptor != null) services.Remove(descriptor);
                     services.AddSingleton(mockSupabaseService.Object);
