@@ -16,6 +16,8 @@ public class ViviendasControllerTests : IAsyncLifetime
 
     public ViviendasControllerTests()
     {
+        Environment.SetEnvironmentVariable("Supabase__Url", "http://localhost:54321");
+
         // Se levanta un contenedor PostgreSQL real como fue solicitado
         _dbContainer = new PostgreSqlBuilder()
             .WithImage("postgres:15-alpine")
