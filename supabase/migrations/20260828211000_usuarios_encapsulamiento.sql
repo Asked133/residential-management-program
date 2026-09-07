@@ -197,8 +197,7 @@ DECLARE
     v_apellidos VARCHAR(50);
 BEGIN
     v_es_google := (
-        COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google' OR 
-        COALESCE(NEW.app_metadata->>'provider', '') = 'google'
+        COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google'
     );
 
     v_nombre := COALESCE(

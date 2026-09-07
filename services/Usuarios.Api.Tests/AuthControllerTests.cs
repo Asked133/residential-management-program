@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -45,6 +46,13 @@ public class AuthControllerTests : IAsyncLifetime
         await using var application = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
+                builder.ConfigureAppConfiguration((context, configBuilder) =>
+                {
+                    configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        { "Supabase:Url", "http://localhost:54321" }
+                    });
+                });
                 builder.ConfigureServices(services =>
                 {
                     var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ISupabaseService));
