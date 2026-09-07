@@ -14,7 +14,7 @@ describe('LoginComponent', () => {
 
   beforeEach(async () => {
     const authSpy = jasmine.createSpyObj('AuthService', ['login']);
-    const pingSpy = jasmine.createSpyObj('PingService', ['ping']);
+    const pingSpy = jasmine.createSpyObj('PingService', ['checkBackendConnection']);
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent, ReactiveFormsModule],
