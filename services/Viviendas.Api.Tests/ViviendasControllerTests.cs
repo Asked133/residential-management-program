@@ -16,6 +16,10 @@ public class ViviendasControllerTests : IAsyncLifetime
 
     public ViviendasControllerTests()
     {
+        // Fake Supabase URL for AuthExtensions.cs validation.
+        // It must be HTTPS to prevent JwtBearerPostConfigureOptions from throwing RequireHttpsMetadata exception.
+        Environment.SetEnvironmentVariable("Supabase__Url", "https://localhost:54321");
+
         // Se levanta un contenedor PostgreSQL real como fue solicitado
         _dbContainer = new PostgreSqlBuilder()
             .WithImage("postgres:15-alpine")
@@ -55,6 +59,18 @@ public class ViviendasControllerTests : IAsyncLifetime
                 });
                 builder.ConfigureServices(services =>
                 {
+                    services.PostConfigure<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions>(
+                        Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme, 
+                        options => 
+                        { 
+                            options.Authority = null;
+                            options.TokenValidationParameters.ValidateIssuer = false;
+                            options.TokenValidationParameters.ValidateAudience = false;
+                            options.TokenValidationParameters.ValidateLifetime = false;
+                            options.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                            options.TokenValidationParameters.RequireSignedTokens = false;
+                        });
+
                     var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ISupabaseService));
                     if (descriptor != null) services.Remove(descriptor);
                     services.AddSingleton(mockSupabaseService.Object);
