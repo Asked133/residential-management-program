@@ -5,6 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHavenJwtAuth(builder.Configuration);
 
+builder.Services.AddHavenExceptionHandler();
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddHttpClient<ISupabaseService, SupabaseService>();
@@ -57,6 +59,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseHavenExceptionHandler();
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>
