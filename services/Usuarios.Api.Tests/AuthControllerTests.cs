@@ -59,7 +59,15 @@ public class AuthControllerTests : IAsyncLifetime
                 {
                     services.PostConfigure<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions>(
                         Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme, 
-                        options => { options.Authority = null; });
+                        options => 
+                        { 
+                            options.Authority = null;
+                            options.TokenValidationParameters.ValidateIssuer = false;
+                            options.TokenValidationParameters.ValidateAudience = false;
+                            options.TokenValidationParameters.ValidateLifetime = false;
+                            options.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                            options.TokenValidationParameters.RequireSignedTokens = false;
+                        });
 
                     var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ISupabaseService));
                     if (descriptor != null) services.Remove(descriptor);
