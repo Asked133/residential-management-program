@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: web/package-lock.json
           
       - name: Cache Angular cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: web/.angular/cache
           key: ${{ runner.os }}-angular-${{ hashFiles('web/package-lock.json') }}
