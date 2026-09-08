@@ -516,7 +516,7 @@ class AppController extends ChangeNotifier {
     if (response.statusCode == 401) {
       debugPrint('[AppController] 401 recibido en $endpoint. Intentando renovar sesión...');
       try {
-        if (_supabaseClient == null) rethrow;
+        if (_supabaseClient == null) throw Exception('Supabase client is null');
         final refreshRes = await _supabaseClient!.auth.refreshSession();
         if (refreshRes.session != null) {
           _session = refreshRes.session;
