@@ -53,3 +53,39 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_condominio ON public.usuarios(condominio
 UPDATE public.usuarios 
 SET condominio_id = 'a0000000-0000-0000-0000-000000000001'
 WHERE condominio_id IS NULL;
+
+-- ==============================================================================
+-- 3. TABLA BITÁCORA DE AUDITORÍA (CONDOMINIOS)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.condominios_bitacora (
+    id BIGSERIAL PRIMARY KEY,
+    registro_id TEXT NOT NULL,
+    operacion VARCHAR(10) NOT NULL CHECK (operacion IN ('INSERT','UPDATE','DELETE')),
+    datos_anteriores JSONB,
+    datos_nuevos JSONB,
+    modificado_por TEXT,
+    modificado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_condominios_bitacora_registro ON public.condominios_bitacora(registro_id);
+CREATE INDEX IF NOT EXISTS idx_condominios_bitacora_fecha ON public.condominios_bitacora(modificado_en);
+
+REVOKE ALL ON public.condominios_bitacora FROM authenticated, anon, service_role;
+
+-- ==============================================================================
+-- 4. TRIGGERS DE AUDITORÍA CONECTADOS A fn_auditoria()
+-- ==============================================================================
+DROP TRIGGER IF EXISTS trg_condominios_auditoria_insert ON public.condominios;
+CREATE TRIGGER trg_condominios_auditoria_insert
+    AFTER INSERT ON public.condominios
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_condominios_auditoria_update ON public.condominios;
+CREATE TRIGGER trg_condominios_auditoria_update
+    BEFORE UPDATE ON public.condominios
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_condominios_auditoria_delete ON public.condominios;
+CREATE TRIGGER trg_condominios_auditoria_delete
+    BEFORE DELETE ON public.condominios
+    FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
