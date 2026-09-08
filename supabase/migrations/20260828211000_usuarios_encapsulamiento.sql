@@ -248,7 +248,7 @@ CREATE TRIGGER on_auth_user_created
 
 NOTIFY pgrst, 'reload schema';
 
-    -- ==============================================================================
+-- ==============================================================================
 -- 8. TRIGGER DE RESINCRONIZACIÓN POR GOOGLE OAUTH
 -- ==============================================================================
 DROP FUNCTION IF EXISTS public.handle_user_metadata_sync() CASCADE;
@@ -263,15 +263,15 @@ BEGIN
         UPDATE public.usuarios
         SET 
             nombre = COALESCE(
+                NULLIF(trim(nombre), ''),
                 NEW.raw_user_meta_data->>'nombre',
                 NEW.raw_user_meta_data->>'given_name',
-                NEW.raw_user_meta_data->>'name', 
-                nombre
+                NEW.raw_user_meta_data->>'name'
             ),
             apellidos = COALESCE(
+                NULLIF(trim(apellidos), ''),
                 NEW.raw_user_meta_data->>'apellidos',
-                NEW.raw_user_meta_data->>'family_name', 
-                apellidos
+                NEW.raw_user_meta_data->>'family_name'
             )
         WHERE id = NEW.id;
     END IF;
