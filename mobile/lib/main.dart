@@ -11,25 +11,37 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 final GlobalKey<ScaffoldMessengerState> messengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
+/// Whether Supabase was successfully initialized.
+/// When false the app will show LoginScreen without attempting auth operations.
+bool supabaseReady = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
-
-  final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
-
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    throw Exception(
-      'No se encontraron las credenciales de Supabase en el archivo .env',
+  try {
+    await dotenv.load(fileName: ".env").timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        debugPrint('[main] dotenv.load() timed out after 10 s');
+      },
     );
-  }
 
-  await Supabase.initialize(
-    url: supabaseUrl,
-    publishableKey: supabaseAnonKey,
-    authOptions: FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
-  );
+    final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
+    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+
+    if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+      await Supabase.initialize(
+        url: supabaseUrl,
+        publishableKey: supabaseAnonKey,
+        authOptions: FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
+      ).timeout(const Duration(seconds: 10));
+      supabaseReady = true;
+    } else {
+      debugPrint('[main] Supabase credentials missing in .env');
+    }
+  } catch (e) {
+    debugPrint('[main] Initialization error (app will still launch): $e');
+  }
 
   runApp(const HavenApp());
 }
@@ -47,11 +59,17 @@ class _HavenAppState extends State<HavenApp> {
   @override
   void initState() {
     super.initState();
-    controller = AppController(Supabase.instance.client);
-    unawaited(controller.bootstrap());
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(controller.checkBackendConnection());
-    });
+    if (supabaseReady) {
+      controller = AppController(Supabase.instance.client);
+      unawaited(controller.bootstrap());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(controller.checkBackendConnection());
+      });
+    } else {
+      // Supabase didn't initialize — create a stub controller that
+      // immediately transitions out of the splash so the user can retry.
+      controller = AppController.unavailable();
+    }
   }
 
   @override
