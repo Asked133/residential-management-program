@@ -31,11 +31,12 @@ SET nombre = EXCLUDED.nombre,
 -- ============================================================================
 -- 4. USUARIO EN AUTH.USERS (Satisface la llave foránea usuarios_id_fkey)
 -- ============================================================================
-INSERT INTO auth.users (id, email, raw_user_meta_data, aud, role)
+INSERT INTO auth.users (id, email, raw_user_meta_data, raw_app_meta_data, aud, role)
 VALUES (
   '6754a566-e529-40fb-8610-bd136ec77fd5',
   'admin@haven.com',
   '{"nombre": "Admin", "apellidos": "Principal"}'::jsonb,
+  '{"provider": "email", "providers": ["email"]}'::jsonb,
   'authenticated',
   'authenticated'
 )
