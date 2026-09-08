@@ -51,7 +51,7 @@ residential-management-program/
 │   └── src/app/
 │       ├── core/         # auth.service, guards, api.service
 │       └── features/     # login, dashboard
-├── mobile/                # App para residentes (pendiente de implementación)
+├── mobile/                # App Movil para administradores y residentes 
 ├── supabase/              # Migraciones SQL, seed y config de Supabase CLI
 │   └── migrations/
 ├── docs/
