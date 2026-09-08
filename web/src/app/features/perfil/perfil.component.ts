@@ -87,7 +87,7 @@ import Swal from 'sweetalert2';
               </div>
               <div>
                 <dt class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Teléfono</dt>
-                <dd class="text-sm text-slate-800">{{ user()?.telefono || 'No registrado' }}</dd>
+                <dd class="text-sm text-slate-800">{{ (user()?.telefono && user()?.telefono !== '0') ? user()?.telefono : 'No registrado' }}</dd>
               </div>
               <div>
                 <dt class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Rol</dt>
@@ -147,18 +147,29 @@ import Swal from 'sweetalert2';
 
               <div>
                 <label for="telefono" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Teléfono (10 dígitos) <span *ngIf="isOnboarding()" class="text-red-500">*</span>
+                  Teléfono (10 dígitos) <span class="text-red-500">*</span>
                 </label>
                 <input
                   id="telefono"
                   type="tel"
+                  inputmode="numeric"
                   maxlength="10"
                   formControlName="telefono"
+                  (keydown)="soloNumerosKeydown($event)"
+                  (input)="onTelefonoInput($event)"
                   placeholder="Ej. 4421234567"
                   class="w-full px-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all disabled:opacity-60 disabled:bg-slate-100"
                 />
-                <div *ngIf="perfilForm.get('telefono')?.touched && perfilForm.get('telefono')?.invalid" class="mt-1 text-xs text-red-500 font-medium">
-                  El teléfono es requerido y debe contener 10 dígitos numéricos.
+                <div *ngIf="perfilForm.get('telefono')?.touched && perfilForm.get('telefono')?.invalid" class="mt-1 text-xs text-red-500 font-medium space-y-0.5">
+                  <span *ngIf="perfilForm.get('telefono')?.errors?.['required']" class="block">
+                    El teléfono es requerido.
+                  </span>
+                  <span *ngIf="perfilForm.get('telefono')?.errors?.['pattern']" class="block">
+                    Debe contener exactamente 10 dígitos numéricos (ej. 4421234567).
+                  </span>
+                  <span *ngIf="perfilForm.get('telefono')?.errors?.['backend']" class="block">
+                    {{ perfilForm.get('telefono')?.errors?.['backend'] }}
+                  </span>
                 </div>
               </div>
 
@@ -209,7 +220,7 @@ export class PerfilComponent implements OnInit {
   perfilForm: FormGroup = this.fb.group({
     nombre: ['', Validators.required],
     apellidos: ['', Validators.required],
-    telefono: ['']
+    telefono: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]]
   });
 
   ngOnInit(): void {
@@ -219,10 +230,6 @@ export class PerfilComponent implements OnInit {
 
       if (isParamOnboarding || isIncomplete) {
         this.isOnboarding.set(true);
-        this.perfilForm.get('telefono')?.setValidators([
-          Validators.required,
-          Validators.pattern('^[0-9]{10}$')
-        ]);
         this.entrarModoEdicion();
       } else {
         this.resetForm();
@@ -262,15 +269,48 @@ export class PerfilComponent implements OnInit {
     this.errorMessage.set(null);
   }
 
+  soloNumerosKeydown(event: KeyboardEvent): void {
+    // Permitir teclas de navegación y atajos
+    if (
+      ['Backspace', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(event.key) ||
+      (event.ctrlKey || event.metaKey)
+    ) {
+      return;
+    }
+    // Bloquear si no es un número del 0 al 9
+    if (!/^\d$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  onTelefonoInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const clean = input.value.replace(/\D/g, '').slice(0, 10);
+    if (input.value !== clean) {
+      input.value = clean;
+    }
+    this.perfilForm.get('telefono')?.setValue(clean, { emitEvent: false });
+    this.perfilForm.get('telefono')?.updateValueAndValidity();
+
+    // Limpiar error de backend si el usuario vuelve a escribir
+    const errors = this.perfilForm.get('telefono')?.errors;
+    if (errors?.['backend']) {
+      const { backend, ...rest } = errors;
+      this.perfilForm.get('telefono')?.setErrors(Object.keys(rest).length ? rest : null);
+    }
+  }
+
   private resetForm(): void {
     const u = this.user();
     const rawNombre = u?.nombre?.trim() ?? '';
     const cleanedNombre = rawNombre.toLowerCase() === 'sin nombre' ? '' : rawNombre;
+    const rawTelefono = (u?.telefono || '').trim();
+    const cleanedTelefono = /^\d{10}$/.test(rawTelefono) ? rawTelefono : '';
 
     this.perfilForm.reset({
       nombre: cleanedNombre,
       apellidos: u?.apellidos ?? '',
-      telefono: u?.telefono ?? ''
+      telefono: cleanedTelefono
     });
   }
 
@@ -318,6 +358,22 @@ export class PerfilComponent implements OnInit {
           timerProgressBar: true
         });
       } else {
+        if (resultado.validationErrors) {
+          for (const [key, val] of Object.entries(resultado.validationErrors)) {
+            const field = key.toLowerCase();
+            const msg = Array.isArray(val) ? val.join(', ') : String(val);
+            if (field.includes('telefono')) {
+              this.perfilForm.get('telefono')?.setErrors({ backend: msg });
+              this.perfilForm.get('telefono')?.markAsTouched();
+            } else if (field.includes('nombre')) {
+              this.perfilForm.get('nombre')?.setErrors({ backend: msg });
+              this.perfilForm.get('nombre')?.markAsTouched();
+            } else if (field.includes('apellido')) {
+              this.perfilForm.get('apellidos')?.setErrors({ backend: msg });
+              this.perfilForm.get('apellidos')?.markAsTouched();
+            }
+          }
+        }
         this.errorMessage.set(resultado.error || 'No se pudo actualizar el perfil.');
       }
     } catch (err: any) {

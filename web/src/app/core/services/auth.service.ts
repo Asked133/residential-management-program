@@ -293,7 +293,7 @@ export class AuthService implements OnDestroy {
     nombre: string;
     apellidos: string;
     telefono?: string;
-  }): Promise<{ success: boolean; error?: string }> {
+  }): Promise<{ success: boolean; error?: string; validationErrors?: Record<string, string[]> }> {
     try {
       const actualizado = await firstValueFrom(
         this.apiService.patch<{ id: string; nombre: string; apellidos: string; telefono: string }>(
@@ -315,8 +315,17 @@ export class AuthService implements OnDestroy {
 
       return { success: true };
     } catch (err: any) {
-      const message = err?.error?.error || err?.message || 'No se pudo actualizar el perfil.';
-      return { success: false, error: message };
+      const validationErrors = err?.error?.errors as Record<string, string[]> | undefined;
+      let message = err?.error?.error || err?.error?.title || err?.message || 'No se pudo actualizar el perfil.';
+
+      if (validationErrors && typeof validationErrors === 'object') {
+        const firstKey = Object.keys(validationErrors)[0];
+        if (firstKey && validationErrors[firstKey]?.length) {
+          message = validationErrors[firstKey][0];
+        }
+      }
+
+      return { success: false, error: message, validationErrors };
     }
   }
 
@@ -337,7 +346,7 @@ export class AuthService implements OnDestroy {
 
     const nombreValido = nombre.length > 0 && nombre.toLowerCase() !== 'sin nombre';
     const apellidosValidos = apellidos.length > 0;
-    const telefonoValido = telefono.length >= 10;
+    const telefonoValido = /^\d{10}$/.test(telefono);
 
     return !nombreValido || !apellidosValidos || !telefonoValido;
   }
