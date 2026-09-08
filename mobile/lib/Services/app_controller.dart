@@ -13,9 +13,20 @@ import '../main.dart';
 
 class AppController extends ChangeNotifier {
   AppController(this._supabaseClient, {http.Client? client})
-      : httpClient = client ?? http.Client();
+      : _available = true,
+        httpClient = client ?? http.Client();
 
-  final SupabaseClient _supabaseClient;
+  /// Creates a controller for when Supabase failed to initialize.
+  /// Immediately transitions out of splash/loading so the user sees the login.
+  AppController.unavailable()
+      : _supabaseClient = null,
+        _available = false,
+        httpClient = http.Client(),
+        _isInitializing = false,
+        _isLoading = false;
+
+  final SupabaseClient? _supabaseClient;
+  final bool _available;
   final http.Client httpClient;
   StreamSubscription<AuthState>? _authSubscription;
 
@@ -74,7 +85,7 @@ class AppController extends ChangeNotifier {
     if (needsRefresh) {
       try {
         debugPrint('[AppController] Token expirado o próximo a expirar. Renovando...');
-        final res = await _supabaseClient.auth.refreshSession();
+        final res = await _supabaseClient!.auth.refreshSession();
         if (res.session != null) {
           _session = res.session;
         }
@@ -87,7 +98,32 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> bootstrap() async {
-    _authSubscription = _supabaseClient.auth.onAuthStateChange.listen((
+    if (!_available || _supabaseClient == null) {
+      _isInitializing = false;
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _doBootstrap().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          debugPrint('[AppController] bootstrap() timed out after 15 s');
+        },
+      );
+    } catch (e) {
+      debugPrint('[AppController] bootstrap() error: $e');
+    } finally {
+      // GUARANTEE: no matter what happens, leave the splash screen.
+      _isInitializing = false;
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _doBootstrap() async {
+    _authSubscription = _supabaseClient!.auth.onAuthStateChange.listen((
       event,
     ) async {
       _session = event.session;
@@ -106,7 +142,7 @@ class AppController extends ChangeNotifier {
       }
     });
 
-    final existing = _supabaseClient.auth.currentSession;
+    final existing = _supabaseClient!.auth.currentSession;
     _session = existing;
 
     // Minimum delay to show the splash screen
@@ -195,7 +231,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _supabaseClient.auth.signInWithPassword(
+      final response = await _supabaseClient!.auth.signInWithPassword(
         email: email,
         password: password,
       );
@@ -230,7 +266,7 @@ class AppController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
-      await _supabaseClient.auth.signInWithOAuth(
+      await _supabaseClient!.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: kIsWeb
             ? Uri.base.origin
@@ -257,7 +293,7 @@ class AppController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
-      final response = await _supabaseClient.auth.signUp(
+      final response = await _supabaseClient!.auth.signUp(
         email: email.trim(),
         password: password,
         data: {
@@ -298,7 +334,9 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _supabaseClient.auth.signOut();
+    if (_supabaseClient != null) {
+      await _supabaseClient!.auth.signOut();
+    }
     _session = null;
     _currentUser = null;
     _errorMessage = null;
@@ -448,18 +486,22 @@ class AppController extends ChangeNotifier {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    var response = await httpClient.get(uri, headers: headers);
+    var response = await httpClient.get(uri, headers: headers).timeout(
+      const Duration(seconds: 15),
+    );
     if (response.statusCode == 401) {
       debugPrint('[AppController] 401 recibido en $endpoint. Intentando renovar sesión...');
       try {
-        final refreshRes = await _supabaseClient.auth.refreshSession();
+        final refreshRes = await _supabaseClient!.auth.refreshSession();
         if (refreshRes.session != null) {
           _session = refreshRes.session;
           token = _session?.accessToken;
           if (token != null && token.isNotEmpty) {
             headers['Authorization'] = 'Bearer $token';
           }
-          response = await httpClient.get(uri, headers: headers);
+          response = await httpClient.get(uri, headers: headers).timeout(
+            const Duration(seconds: 15),
+          );
         }
       } catch (e) {
         debugPrint('[AppController] Error al renovar sesión tras 401: $e');
