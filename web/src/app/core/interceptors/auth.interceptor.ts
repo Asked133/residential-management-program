@@ -12,7 +12,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   let authReq = req;
 
-  if (req.url.startsWith(environment.apiUrl) && session?.access_token) {
+  const targetUrls = Object.values(environment.services);
+  const isBackendReq = targetUrls.some(baseUrl => baseUrl && req.url.startsWith(baseUrl));
+
+  if (isBackendReq && session?.access_token) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${session.access_token}`
@@ -22,7 +25,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      if (error.status === 401 && !req.url.toLowerCase().includes('/api/auth/me')) {
         Swal.fire({
           icon: 'warning',
           title: 'Sesión Expirada',

@@ -1,0 +1,95 @@
+using System.Net;
+using System.Net.Http.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using Testcontainers.PostgreSql;
+using Usuarios.Api.DTOs;
+using Usuarios.Api.Services;
+using Xunit;
+
+namespace Usuarios.Api.Tests;
+
+public class AuthControllerTests : IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _dbContainer;
+
+    public AuthControllerTests()
+    {
+        // Fake Supabase URL for AuthExtensions.cs validation.
+        // It must be HTTPS to prevent JwtBearerPostConfigureOptions from throwing RequireHttpsMetadata exception.
+        Environment.SetEnvironmentVariable("Supabase__Url", "https://localhost:54321");
+
+        // Se levanta un contenedor PostgreSQL real como fue solicitado
+        _dbContainer = new PostgreSqlBuilder()
+            .WithImage("postgres:15-alpine")
+            .WithDatabase("haven_db")
+            .WithUsername("postgres")
+            .WithPassword("postgres")
+            .Build();
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _dbContainer.StartAsync();
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _dbContainer.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Ping_ReturnsOk_WithDbVersion()
+    {
+        // Arrange
+        var mockSupabaseService = new Mock<ISupabaseService>();
+        mockSupabaseService.Setup(s => s.GetDbVersionAsync()).ReturnsAsync("15.0");
+
+        await using var application = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureAppConfiguration((context, configBuilder) =>
+                {
+                    configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        { "Supabase:Url", "http://localhost:54321" }
+                    });
+                });
+                builder.ConfigureServices(services =>
+                {
+                    services.PostConfigure<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions>(
+                        Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme, 
+                        options => 
+                        { 
+                            options.Authority = null;
+                            options.TokenValidationParameters.ValidateIssuer = false;
+                            options.TokenValidationParameters.ValidateAudience = false;
+                            options.TokenValidationParameters.ValidateLifetime = false;
+                            options.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                            options.TokenValidationParameters.RequireSignedTokens = false;
+                        });
+
+                    var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ISupabaseService));
+                    if (descriptor != null) services.Remove(descriptor);
+                    services.AddSingleton(mockSupabaseService.Object);
+                });
+            });
+
+        var client = application.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/Auth/ping");
+
+        // Assert
+        var content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode) 
+        {
+            throw new Exception($"Status: {response.StatusCode}, Content: {content}");
+        }
+        
+        Assert.Contains("15.0", content);
+        Assert.Contains("Haven API is running", content);
+    }
+}

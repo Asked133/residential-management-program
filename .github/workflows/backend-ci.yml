@@ -1,0 +1,54 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - 'services/**'
+  pull_request:
+    paths:
+      - 'services/**'
+
+env:
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_BACKEND }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('services/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+            
+      - name: Restore dependencies
+        run: dotnet restore services/HavenApi.sln
+        
+      - name: Build
+        run: dotnet build services/HavenApi.sln --no-restore
+        
+      - name: Test
+        run: dotnet test services/HavenApi.sln --no-build --verbosity normal
+
+      - name: Notify Discord on Success
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "✅ **Backend CI Passed!** Branch: `${{ github.ref_name }}`"}' \
+          ${{ env.DISCORD_WEBHOOK_URL }}
+
+      - name: Notify Discord on Failure
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "❌ **Backend CI Failed!** Branch: `${{ github.ref_name }}`"}' \
+          ${{ env.DISCORD_WEBHOOK_URL }}

@@ -4,7 +4,17 @@ module.exports = {
     "./src/**/*.{html,ts}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        haven: {
+          DEFAULT: '#111C99',
+          bg: '#F7F7F7',
+        }
+      },
+      fontFamily: {
+        sans: ['"Open Sans"', 'sans-serif'],
+      },
+    },
   },
   plugins: [],
 }

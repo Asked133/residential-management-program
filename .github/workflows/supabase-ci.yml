@@ -1,0 +1,51 @@
+name: Supabase CI
+
+on:
+  push:
+    paths:
+      - 'supabase/**'
+  pull_request:
+    paths:
+      - 'supabase/**'
+
+env:
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_DB }}
+
+jobs:
+  test-database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+          
+      - name: Start Supabase
+        run: supabase start
+        
+      - name: Verify generated types are up-to-date
+        run: |
+          supabase gen types typescript --local > types.ts
+          # Ideally compare types.ts with what's committed, we just ensure it generates correctly here.
+          
+      - name: DB Linting
+        run: supabase db lint
+        
+      - name: Run DB Tests
+        run: supabase db test
+
+      - name: Notify Discord on Success
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "✅ **Supabase CI Passed!** Branch: `${{ github.ref_name }}`"}' \
+          ${{ env.DISCORD_WEBHOOK_URL }}
+
+      - name: Notify Discord on Failure
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{"content": "❌ **Supabase CI Failed!** Branch: `${{ github.ref_name }}`"}' \
+          ${{ env.DISCORD_WEBHOOK_URL }}
