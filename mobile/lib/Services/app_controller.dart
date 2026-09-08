@@ -18,12 +18,13 @@ class AppController extends ChangeNotifier {
 
   /// Creates a controller for when Supabase failed to initialize.
   /// Immediately transitions out of splash/loading so the user sees the login.
-  AppController.unavailable()
+  AppController.unavailable([String? error])
       : _supabaseClient = null,
         _available = false,
         httpClient = http.Client(),
         _isInitializing = false,
-        _isLoading = false;
+        _isLoading = false,
+        _errorMessage = error != null ? 'Error init: $error' : 'Servicio no disponible. Reinicia la app.';
 
   final SupabaseClient? _supabaseClient;
   final bool _available;

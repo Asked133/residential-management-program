@@ -14,6 +14,7 @@ final GlobalKey<ScaffoldMessengerState> messengerKey =
 /// Whether Supabase was successfully initialized.
 /// When false the app will show LoginScreen without attempting auth operations.
 bool supabaseReady = false;
+String? supabaseInitError;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,16 +31,26 @@ void main() async {
     final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
     if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
-      await Supabase.initialize(
-        url: supabaseUrl,
-        publishableKey: supabaseAnonKey,
-        authOptions: FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
-      ).timeout(const Duration(seconds: 10));
+      try {
+        await Supabase.initialize(
+          url: supabaseUrl,
+          publishableKey: supabaseAnonKey,
+          authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
+        ).timeout(const Duration(seconds: 10));
+      } catch (e) {
+        // Ignorar el error si Supabase ya está inicializado (por ejemplo, en un hot restart)
+        try {
+          final _ = Supabase.instance.client;
+        } catch (_) {
+          rethrow;
+        }
+      }
       supabaseReady = true;
     } else {
       debugPrint('[main] Supabase credentials missing in .env');
     }
   } catch (e) {
+    supabaseInitError = e.toString();
     debugPrint('[main] Initialization error (app will still launch): $e');
   }
 
@@ -68,7 +79,7 @@ class _HavenAppState extends State<HavenApp> {
     } else {
       // Supabase didn't initialize — create a stub controller that
       // immediately transitions out of the splash so the user can retry.
-      controller = AppController.unavailable();
+      controller = AppController.unavailable(supabaseInitError);
     }
   }
 
