@@ -47,7 +47,9 @@ DROP TRIGGER IF EXISTS trg_usuarios_auditoria_delete ON public.usuarios;
 CREATE TRIGGER trg_usuarios_auditoria_delete
     BEFORE DELETE ON public.usuarios
     FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
-
+    -- ==============================================================================
+-- 4. VISTA DE CONSULTA 
+-- ==============================================================================
 -- ==============================================================================
 -- 4. VISTA DE CONSULTA 
 -- ==============================================================================
@@ -58,7 +60,7 @@ SELECT
     u.rol_id, 
     r.nombre AS rol_nombre,
     u.email, 
-    u.nombre, 
+    u.nombre,
     u.apellidos, 
     u.telefono, 
     u.activo, 
@@ -66,7 +68,6 @@ SELECT
     u.creado_en
 FROM public.usuarios u
 JOIN public.roles r ON u.rol_id = r.id;
-
 -- ==============================================================================
 -- 5. FUNCIONES CRUD Y ADMINISTRATIVAS (ENCAPSULAMIENTO)
 -- ==============================================================================
@@ -96,7 +97,6 @@ BEGIN
     RETURN v_usuario;
 END;
 $$;
-
 -- b) baja_usuario
 DROP FUNCTION IF EXISTS public.baja_usuario(UUID);
 CREATE OR REPLACE FUNCTION public.baja_usuario(p_id UUID) 
@@ -116,14 +116,13 @@ BEGIN
     RETURN v_filas_afectadas > 0;
 END;
 $$;
-
 -- c) cambio_usuario
 DROP FUNCTION IF EXISTS public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN);
 CREATE OR REPLACE FUNCTION public.cambio_usuario(
     p_id UUID, 
-    p_rol_id INTEGER DEFAULT NULL, 
+    p_rol_id INTEGER DEFAULT NULL,
     p_nombre VARCHAR(50) DEFAULT NULL, 
-    p_apellidos VARCHAR(50) DEFAULT NULL, 
+    p_apellidos VARCHAR(50) DEFAULT NULL,
     p_telefono VARCHAR(20) DEFAULT NULL, 
     p_debe_cambiar_password BOOLEAN DEFAULT NULL
 ) 
@@ -143,10 +142,6 @@ BEGIN
         telefono = COALESCE(p_telefono, telefono),
         debe_cambiar_password = COALESCE(p_debe_cambiar_password, debe_cambiar_password)
     WHERE id = p_id;
-    
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Usuario con ID % no encontrado', p_id;
-    END IF;
     
     SELECT * INTO v_usuario FROM public.vw_usuarios WHERE id = p_id;
     RETURN v_usuario;
@@ -196,8 +191,10 @@ DECLARE
     v_nombre VARCHAR(50);
     v_apellidos VARCHAR(50);
 BEGIN
+    -- Detectar si viene de Google OAuth
     v_es_google := (
-        COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google'
+        COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google' OR 
+        COALESCE(NEW.app_metadata->>'provider', '') = 'google'
     );
 
     v_nombre := COALESCE(
@@ -249,6 +246,8 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+NOTIFY pgrst, 'reload schema';
+
 -- ==============================================================================
 -- 8. TRIGGER DE RESINCRONIZACIÓN POR GOOGLE OAUTH
 -- ==============================================================================
@@ -264,15 +263,15 @@ BEGIN
         UPDATE public.usuarios
         SET 
             nombre = COALESCE(
+                NULLIF(trim(nombre), ''),
                 NEW.raw_user_meta_data->>'nombre',
                 NEW.raw_user_meta_data->>'given_name',
-                NEW.raw_user_meta_data->>'name', 
-                nombre
+                NEW.raw_user_meta_data->>'name'
             ),
             apellidos = COALESCE(
+                NULLIF(trim(apellidos), ''),
                 NEW.raw_user_meta_data->>'apellidos',
-                NEW.raw_user_meta_data->>'family_name', 
-                apellidos
+                NEW.raw_user_meta_data->>'family_name'
             )
         WHERE id = NEW.id;
     END IF;
@@ -285,7 +284,7 @@ CREATE TRIGGER on_auth_user_metadata_updated
     AFTER UPDATE ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_user_metadata_sync();
 
--- ==============================================================================
+    -- ==============================================================================
 -- 9. JOB DE LIMPIEZA POR INACTIVIDAD
 -- ==============================================================================
 CREATE EXTENSION IF NOT EXISTS pg_cron;
@@ -317,6 +316,7 @@ BEGIN
 END;
 $$;
 
+-- Desprogramar de forma segura solo si ya existe
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'borrar_residentes_inactivos_diario') THEN
@@ -326,15 +326,13 @@ END;
 $$;
 
 SELECT cron.schedule('borrar_residentes_inactivos_diario', '0 3 * * *', 'SELECT public.borrar_residentes_inactivos();');
-
-NOTIFY pgrst, 'reload schema';
-
 -- ==============================================================================
--- 10. INCREMENTO DE VERSIÓN
+-- INCREMENTO DE VERSIÓN (MINOR)
 -- ==============================================================================
 UPDATE public.version 
 SET 
     numero_version = CASE 
+        -- Formato SemVer: 'X.Y.Z' o 'X.Y' -> Incrementa el minor (Y)
         WHEN numero_version ~ '^[0-9]+\.[0-9]+(\.[0-9]+)?$' THEN
             split_part(numero_version, '.', 1) || '.' || 
             ((split_part(numero_version, '.', 2)::integer) + 1)::text || 
@@ -342,8 +340,10 @@ SET
                 WHEN split_part(numero_version, '.', 3) <> '' THEN '.' || split_part(numero_version, '.', 3) 
                 ELSE '' 
             END
+        -- Formato numérico simple en texto: '1' -> '2'
         WHEN numero_version ~ '^[0-9]+$' THEN
             ((numero_version::integer) + 1)::text
+        -- Fallback
         ELSE numero_version || '.1'
     END,
     updated_at = now();

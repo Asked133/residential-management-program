@@ -61,7 +61,7 @@ CREATE TRIGGER trg_viviendas_auditoria_delete
     BEFORE DELETE ON public.viviendas
     FOR EACH ROW EXECUTE FUNCTION public.fn_auditoria();
 
-    -- ==============================================================================
+-- ==============================================================================
 -- 4. VISTA DE CONSULTA
 -- ==============================================================================
 DROP VIEW IF EXISTS public.vw_viviendas CASCADE;
@@ -72,7 +72,8 @@ SELECT
     v.tipo, 
     v.activo, 
     v.creado_en
-FROM public.viviendas v;
+FROM public.viviendas v
+WHERE v.activo = true;
 
 -- ==============================================================================
 -- 5. FUNCIONES DE ENCAPSULAMIENTO (STORED PROCEDURES)
