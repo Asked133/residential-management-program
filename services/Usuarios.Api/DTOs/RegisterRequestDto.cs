@@ -17,6 +17,7 @@ public class RegisterRequestDto
 
     [Required(ErrorMessage = "El teléfono es obligatorio")]
     [Phone(ErrorMessage = "El formato del teléfono no es valido")]
+    [MinLength(8, ErrorMessage = "El teléfono debe tener al menos 8 caracteres")]
     [MaxLength(20, ErrorMessage = "El teléfono no puede exceder 20 caracteres")]
     [JsonPropertyName("telefono")]
     public string Telefono { get; set; } = string.Empty;
