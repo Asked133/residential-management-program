@@ -43,8 +43,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Create dummy .env
-        run: touch .env
+      - name: Create .env from secrets
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+          echo "API_BASE_URL_USUARIOS=${{ secrets.API_BASE_URL_USUARIOS }}" >> .env
+          echo "API_BASE_URL_VIVIENDAS=${{ secrets.API_BASE_URL_VIVIENDAS }}" >> .env
 
       - name: Create keystore from secret
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
