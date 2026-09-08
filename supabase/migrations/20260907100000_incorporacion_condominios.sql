@@ -289,3 +289,107 @@ GRANT EXECUTE ON FUNCTION public.alta_vivienda(VARCHAR, VARCHAR) TO service_role
 GRANT EXECUTE ON FUNCTION public.cambio_vivienda(INTEGER, VARCHAR, VARCHAR, UUID) TO service_role;
 
 NOTIFY pgrst, 'reload schema';
+-- ==============================================================================
+-- 9. ACTUALIZACIÓN DE ENTIDAD: USUARIOS (VISTA Y STORED PROCEDURES)
+-- ==============================================================================
+
+-- A) Actualización de la vista vw_usuarios
+DROP VIEW IF EXISTS public.vw_usuarios CASCADE;
+CREATE VIEW public.vw_usuarios AS
+SELECT 
+    u.id, 
+    u.rol_id, 
+    r.nombre AS rol_nombre, 
+    u.email, 
+    u.nombre, 
+    u.apellidos, 
+    u.telefono, 
+    u.condominio_id,
+    u.activo, 
+    u.debe_cambiar_password, 
+    u.creado_en
+FROM public.usuarios u 
+JOIN public.roles r ON r.id = u.rol_id;
+
+-- B) Actualización de alta_usuario (Idempotente con soporte de condominio)
+DROP FUNCTION IF EXISTS public.alta_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, VARCHAR, UUID);
+DROP FUNCTION IF EXISTS public.alta_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, VARCHAR);
+
+CREATE OR REPLACE FUNCTION public.alta_usuario(
+    p_id UUID, 
+    p_rol_id INTEGER, 
+    p_email VARCHAR(255),
+    p_nombre VARCHAR(50), 
+    p_apellidos VARCHAR(50), 
+    p_telefono VARCHAR(20) DEFAULT NULL,
+    p_condominio_id UUID DEFAULT NULL
+) 
+RETURNS public.vw_usuarios
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_usuario public.vw_usuarios;
+BEGIN
+    INSERT INTO public.usuarios (id, rol_id, email, nombre, apellidos, telefono, condominio_id)
+    VALUES (p_id, p_rol_id, p_email, p_nombre, p_apellidos, p_telefono, p_condominio_id)
+    ON CONFLICT (id) DO UPDATE SET
+        rol_id = EXCLUDED.rol_id,
+        email = EXCLUDED.email,
+        nombre = EXCLUDED.nombre,
+        apellidos = EXCLUDED.apellidos,
+        telefono = EXCLUDED.telefono,
+        condominio_id = EXCLUDED.condominio_id;
+    
+    SELECT * INTO v_usuario FROM public.vw_usuarios WHERE id = p_id;
+    RETURN v_usuario;
+END;
+$$;
+
+-- C) Actualización de cambio_usuario
+DROP FUNCTION IF EXISTS public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN, UUID);
+DROP FUNCTION IF EXISTS public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN);
+
+CREATE OR REPLACE FUNCTION public.cambio_usuario(
+    p_id UUID, 
+    p_rol_id INTEGER DEFAULT NULL,
+    p_nombre VARCHAR(50) DEFAULT NULL, 
+    p_apellidos VARCHAR(50) DEFAULT NULL, 
+    p_telefono VARCHAR(20) DEFAULT NULL, 
+    p_debe_cambiar_password BOOLEAN DEFAULT NULL,
+    p_condominio_id UUID DEFAULT NULL
+) 
+RETURNS public.vw_usuarios
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_usuario public.vw_usuarios;
+BEGIN
+    UPDATE public.usuarios
+    SET 
+        rol_id = COALESCE(p_rol_id, rol_id),
+        nombre = COALESCE(NULLIF(trim(p_nombre), ''), nombre),
+        apellidos = COALESCE(NULLIF(trim(p_apellidos), ''), apellidos),
+        telefono = COALESCE(NULLIF(trim(p_telefono), ''), telefono),
+        debe_cambiar_password = COALESCE(p_debe_cambiar_password, debe_cambiar_password),
+        condominio_id = COALESCE(p_condominio_id, condominio_id)
+    WHERE id = p_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Usuario con ID % no encontrado', p_id;
+    END IF;
+
+    SELECT * INTO v_usuario FROM public.vw_usuarios WHERE id = p_id;
+    RETURN v_usuario;
+END;
+$$;
+
+-- D) Permisos y recarga PostgREST
+GRANT SELECT ON public.vw_usuarios TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.alta_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, VARCHAR, UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN, UUID) TO authenticated, service_role;
+
+NOTIFY pgrst, 'reload schema';
