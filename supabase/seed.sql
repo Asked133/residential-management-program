@@ -29,7 +29,20 @@ SET nombre = EXCLUDED.nombre,
     activo = EXCLUDED.activo;
 
 -- ============================================================================
--- 4. PERFIL DE USUARIO ADMINISTRADOR (Temporal)
+-- 4. USUARIO EN AUTH.USERS (Satisface la llave foránea usuarios_id_fkey)
+-- ============================================================================
+INSERT INTO auth.users (id, email, raw_user_meta_data, aud, role)
+VALUES (
+  '6754a566-e529-40fb-8610-bd136ec77fd5',
+  'admin@haven.com',
+  '{"nombre": "Admin", "apellidos": "Principal"}'::jsonb,
+  'authenticated',
+  'authenticated'
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 5. PERFIL DE USUARIO ADMINISTRADOR
 -- ============================================================================
 INSERT INTO public.usuarios (id, rol_id, email, nombre, apellidos, telefono, condominio_id)
 VALUES (
@@ -50,7 +63,7 @@ SET rol_id = EXCLUDED.rol_id,
     condominio_id = EXCLUDED.condominio_id;
 
 -- ===========================================================================
--- 5. INSERTAR VIVIENDAS CON VÍNCULO A CONDOMINIO
+-- 6. INSERTAR VIVIENDAS CON VÍNCULO A CONDOMINIO
 -- ===========================================================================
 INSERT INTO public.viviendas (condominio_id, numero_casa, tipo) VALUES
   ('a0000000-0000-0000-0000-000000000001', 'Casa 101', 'Grande'),
@@ -59,7 +72,7 @@ INSERT INTO public.viviendas (condominio_id, numero_casa, tipo) VALUES
 ON CONFLICT (condominio_id, numero_casa) DO NOTHING;
 
 -- ============================================================================
--- 6. ASIGNAR VIVIENDA AL ADMINISTRADOR
+-- 7. ASIGNAR VIVIENDA AL ADMINISTRADOR
 -- ============================================================================
 INSERT INTO public.vivienda_residente (vivienda_id, usuario_id) VALUES
   (1, '6754a566-e529-40fb-8610-bd136ec77fd5')
