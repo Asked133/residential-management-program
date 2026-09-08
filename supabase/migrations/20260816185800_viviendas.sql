@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.viviendas (
     CONSTRAINT uq_viviendas_numero_casa UNIQUE (numero_casa)
 );
 
+
 -- RLS: Lectura para usuarios autenticados
 DROP POLICY IF EXISTS "Permitir lectura de viviendas a usuarios autenticados" ON public.viviendas;
 CREATE POLICY "Permitir lectura de viviendas a usuarios autenticados"
