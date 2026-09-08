@@ -37,29 +37,34 @@ export const routes: Routes = [
     path: 'dashboard/admin',
     canActivate: [authGuard, roleGuard(['administrador'])],
     loadComponent: () =>
-      import('./features/dashboard/admin-dashboard/admin-dashboard.component')
-        .then(m => m.AdminDashboardComponent)
-  },
-  {
-    path: 'dashboard/admin/residentes',
-    canActivate: [authGuard, roleGuard(['administrador'])],
-    loadComponent: () =>
-      import('./features/residentes/residentes-list/residentes-list.component')
-        .then(m => m.ResidentesListComponent)
-  },
-  {
-    path: 'dashboard/admin/residentes/nuevo',
-    canActivate: [authGuard, roleGuard(['administrador'])],
-    loadComponent: () =>
-      import('./features/residentes/residentes-form/residentes-form.component')
-        .then(m => m.ResidentesFormComponent)
-  },
-  {
-    path: 'dashboard/admin/viviendas',
-    canActivate: [authGuard, roleGuard(['administrador'])],
-    loadComponent: () =>
-      import('./features/viviendas/viviendas-list/viviendas-list.component')
-        .then(m => m.ViviendasListComponent)
+      import('./features/dashboard/admin-layout/admin-layout.component')
+        .then(m => m.AdminLayoutComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/dashboard/admin-dashboard/admin-dashboard.component')
+            .then(m => m.AdminDashboardComponent)
+      },
+      {
+        path: 'residentes',
+        loadComponent: () =>
+          import('./features/residentes/residentes-list/residentes-list.component')
+            .then(m => m.ResidentesListComponent)
+      },
+      {
+        path: 'residentes/nuevo',
+        loadComponent: () =>
+          import('./features/residentes/residentes-form/residentes-form.component')
+            .then(m => m.ResidentesFormComponent)
+      },
+      {
+        path: 'viviendas',
+        loadComponent: () =>
+          import('./features/viviendas/viviendas-list/viviendas-list.component')
+            .then(m => m.ViviendasListComponent)
+      }
+    ]
   },
   {
     path: 'dashboard/residente',
