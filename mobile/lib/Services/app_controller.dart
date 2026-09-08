@@ -82,7 +82,7 @@ class AppController extends ChangeNotifier {
       }
     } catch (_) {}
 
-    if (needsRefresh) {
+    if (needsRefresh && _supabaseClient != null) {
       try {
         debugPrint('[AppController] Token expirado o próximo a expirar. Renovando...');
         final res = await _supabaseClient!.auth.refreshSession();
@@ -139,7 +139,11 @@ class AppController extends ChangeNotifier {
       if (event.event == AuthChangeEvent.signedIn ||
           event.event == AuthChangeEvent.initialSession ||
           event.event == AuthChangeEvent.tokenRefreshed) {
-        await _refreshProfile();
+        try {
+          await _refreshProfile();
+        } catch (e) {
+          debugPrint('[AppController] Error in onAuthStateChange _refreshProfile: $e');
+        }
       }
     });
 
@@ -227,6 +231,12 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> login(String email, String password) async {
+    if (_supabaseClient == null) {
+      _errorMessage = 'Servicio no disponible. Reinicia la app.';
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -263,6 +273,12 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> loginWithGoogle() async {
+    if (_supabaseClient == null) {
+      _errorMessage = 'Servicio no disponible. Reinicia la app.';
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -290,6 +306,12 @@ class AppController extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
+    if (_supabaseClient == null) {
+      _errorMessage = 'Servicio no disponible. Reinicia la app.';
+      notifyListeners();
+      return false;
+    }
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -494,6 +516,7 @@ class AppController extends ChangeNotifier {
     if (response.statusCode == 401) {
       debugPrint('[AppController] 401 recibido en $endpoint. Intentando renovar sesión...');
       try {
+        if (_supabaseClient == null) rethrow;
         final refreshRes = await _supabaseClient!.auth.refreshSession();
         if (refreshRes.session != null) {
           _session = refreshRes.session;
