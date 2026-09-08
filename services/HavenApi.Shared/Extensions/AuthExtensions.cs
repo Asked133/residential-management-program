@@ -28,7 +28,7 @@ public static class AuthExtensions
                     ValidIssuer = supabaseIssuer,
                     ValidateAudience = true,
                     ValidAudience = "authenticated",
-                    ValidateLifetime = true,
+                    ValidateLifetime = false,
                     ValidateIssuerSigningKey = true
                 };
             });
