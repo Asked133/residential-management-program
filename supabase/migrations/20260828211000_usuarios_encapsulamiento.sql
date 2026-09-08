@@ -176,9 +176,6 @@ GRANT EXECUTE ON FUNCTION public.baja_usuario(UUID) TO service_role;
 GRANT EXECUTE ON FUNCTION public.cambio_usuario(UUID, INTEGER, VARCHAR, VARCHAR, VARCHAR, BOOLEAN) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.eliminar_usuario_definitivo(UUID) TO service_role;
 
--- ==============================================================================
--- 7. TRIGGER DE AUTOREGISTRO (AUTH.USERS)
--- ==============================================================================
 DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
 RETURNS TRIGGER 
@@ -187,17 +184,12 @@ SET search_path = public
 LANGUAGE plpgsql 
 AS $$
 DECLARE
-    v_es_google := (
-        COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google'
-    );
+    v_es_google BOOLEAN;
     v_nombre VARCHAR(50);
     v_apellidos VARCHAR(50);
 BEGIN
-    -- Detectar si viene de Google OAuth
-    v_es_google := (
-        COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google' OR 
-        COALESCE(NEW.app_metadata->>'provider', '') = 'google'
-    );
+    -- Evaluación y asignación dentro del cuerpo de la función
+    v_es_google := (COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google');
 
     v_nombre := COALESCE(
         NEW.raw_user_meta_data->>'nombre',
@@ -209,7 +201,7 @@ BEGIN
 
     v_apellidos := COALESCE(
         NEW.raw_user_meta_data->>'apellidos',
-        NEW.raw_user_meta_data->>'family_name',
+        NEW.raw_user_meta_data->>'family_name', 
         NULLIF(trim(substr(COALESCE(NEW.raw_user_meta_data->>'full_name', ''), length(v_nombre) + 1)), ''),
         ''
     );
@@ -242,13 +234,6 @@ BEGIN
     RETURN NEW;
 END;
 $$;
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
-NOTIFY pgrst, 'reload schema';
 
 -- ==============================================================================
 -- 8. TRIGGER DE RESINCRONIZACIÓN POR GOOGLE OAUTH
