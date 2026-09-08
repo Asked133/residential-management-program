@@ -9,6 +9,7 @@ namespace Usuarios.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
+
 {
     private readonly ISupabaseService _supabaseService;
     private readonly ILogger<AuthController> _logger;
