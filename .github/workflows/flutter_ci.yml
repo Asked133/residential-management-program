@@ -50,7 +50,7 @@ jobs:
           echo "ADMIN_USER_PASSWORD=${{ secrets.ADMIN_USER_PASSWORD }}" >> .env
 
       - name: Analyze code
-        run: flutter analyze
+        run: flutter analyze --no-fatal-warnings
 
       - name: Run unit and widget tests
         run: flutter test

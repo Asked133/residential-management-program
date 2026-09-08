@@ -123,7 +123,8 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _doBootstrap() async {
-    _authSubscription = _supabaseClient!.auth.onAuthStateChange.listen((
+    final client = _supabaseClient!;
+    _authSubscription = client.auth.onAuthStateChange.listen((
       event,
     ) async {
       _session = event.session;
@@ -142,7 +143,7 @@ class AppController extends ChangeNotifier {
       }
     });
 
-    final existing = _supabaseClient!.auth.currentSession;
+    final existing = client.auth.currentSession;
     _session = existing;
 
     // Minimum delay to show the splash screen
@@ -334,8 +335,9 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    if (_supabaseClient != null) {
-      await _supabaseClient!.auth.signOut();
+    final client = _supabaseClient;
+    if (client != null) {
+      await client.auth.signOut();
     }
     _session = null;
     _currentUser = null;
