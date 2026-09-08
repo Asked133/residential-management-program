@@ -187,7 +187,9 @@ SET search_path = public
 LANGUAGE plpgsql 
 AS $$
 DECLARE
-    v_es_google BOOLEAN;
+    v_es_google := (
+        COALESCE(NEW.raw_app_meta_data->>'provider', '') = 'google'
+    );
     v_nombre VARCHAR(50);
     v_apellidos VARCHAR(50);
 BEGIN
