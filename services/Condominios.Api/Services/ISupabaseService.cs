@@ -5,5 +5,4 @@ namespace Condominios.Api.Services;
 public interface ISupabaseService
 {
     Task<List<CondominioDto>> GetCondominiosAsync();
-    Task<CondominioDto?> GetCondominioByIdAsync(Guid id);
 }

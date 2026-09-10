@@ -72,24 +72,4 @@ public class SupabaseService : ISupabaseService
         var condominios = await ParseJsonAsync<List<CondominioDto>>(response.Content);
         return condominios ?? new List<CondominioDto>();
     }
-
-    public async Task<CondominioDto?> GetCondominioByIdAsync(Guid id)
-    {
-        var requestUrl = $"{_supabaseUrl}/rest/v1/vw_condominios?id=eq.{id}&select=*";
-
-        var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-        request.Headers.Add("apikey", _serviceRoleKey);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
-
-        var response = await SendRequestAsync(request);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogWarning("Failed to fetch condominio by id {Id}. Status: {StatusCode}", id, response.StatusCode);
-            return null;
-        }
-
-        var condominios = await ParseJsonAsync<List<CondominioDto>>(response.Content);
-        return condominios?.FirstOrDefault();
-    }
 }
