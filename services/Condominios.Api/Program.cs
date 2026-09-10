@@ -22,8 +22,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Microservicio de Condominios para el sistema de gestión residencial Haven."
     });
 
-    options.AddDevKeySecurityDefinition();
-
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Name = "Authorization",
