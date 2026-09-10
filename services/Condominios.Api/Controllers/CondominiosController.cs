@@ -34,4 +34,26 @@ public class CondominiosController : ControllerBase
 
         return Ok(result);
     }
+
+    [Authorize]
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetCondominio(Guid id)
+    {
+        var condominio = await _supabaseService.GetCondominioByIdAsync(id);
+        if (condominio == null)
+        {
+            _logger.LogWarning("GetCondominio: Condominio {Id} not found.", id);
+            return NotFound(new { error = "Condominio no encontrado" });
+        }
+
+        return Ok(new
+        {
+            id = condominio.Id,
+            nombre = condominio.Nombre,
+            activo = condominio.Activo,
+            creadoEn = condominio.CreadoEn
+        });
+    }
 }
