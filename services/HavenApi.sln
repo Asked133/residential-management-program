@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Viviendas.Api.Tests", "Vivi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Condominios.Api", "Condominios.Api\Condominios.Api.csproj", "{FC508EFC-182A-4EF0-B8F9-7F1F1C965DF4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Condominios.Api.Tests", "Condominios.Api.Tests\Condominios.Api.Tests.csproj", "{D5DAE223-EDCE-4A1B-9C8F-F3F8B5008C85}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
