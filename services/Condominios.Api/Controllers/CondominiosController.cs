@@ -1,0 +1,37 @@
+using Condominios.Api.DTOs;
+using Condominios.Api.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Condominios.Api.Controllers;
+
+[Authorize]
+[ApiController]
+[Route("api/[controller]")]
+public class CondominiosController : ControllerBase
+{
+    private readonly ISupabaseService _supabaseService;
+    private readonly ILogger<CondominiosController> _logger;
+
+    public CondominiosController(ISupabaseService supabaseService, ILogger<CondominiosController> logger)
+    {
+        _supabaseService = supabaseService;
+        _logger = logger;
+    }
+
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [HttpGet]
+    public async Task<IActionResult> GetCondominios()
+    {
+        var condominios = await _supabaseService.GetCondominiosAsync();
+        var result = condominios.Select(c => new
+        {
+            id = c.Id,
+            nombre = c.Nombre,
+            activo = c.Activo,
+            creadoEn = c.CreadoEn
+        });
+
+        return Ok(result);
+    }
+}
