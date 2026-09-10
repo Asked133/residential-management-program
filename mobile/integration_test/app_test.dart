@@ -10,7 +10,8 @@ void main() {
   group('End-to-End Tests', () {
     testWidgets('Flujo de Login como Administrador', (tester) async {
       app.main();
-      await tester.pumpAndSettle();
+      await tester.pumpAndSettle(); 
+      
 
       // Esperar a que la pantalla de carga (SplashScreen) termine (2 segs)
       await tester.pumpAndSettle(const Duration(seconds: 3));
