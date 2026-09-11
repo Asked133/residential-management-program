@@ -12,7 +12,7 @@ import Swal from 'sweetalert2';
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-6 font-sans antialiased text-[#0f172a] selection:bg-[#111C99] selection:text-white">
-      <div class="w-full max-w-[480px] bg-white border border-[#e2e8f0] rounded-xl p-10 shadow-sm">
+      <div class="w-full max-w-[480px] bg-white border border-[#e2e8f0] rounded-lg p-8 shadow-sm">
 
         <!-- Brand Logo -->
         <div class="flex justify-center mb-8">

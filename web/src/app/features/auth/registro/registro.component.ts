@@ -18,7 +18,7 @@ export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): V
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-4 sm:p-6 font-sans antialiased text-[#0f172a] selection:bg-[#111C99] selection:text-white py-12">
-      <div class="w-full max-w-[540px] bg-white border border-[#e2e8f0] rounded-2xl p-6 sm:p-10 shadow-sm">
+      <div class="w-full max-w-[540px] bg-white border border-[#e2e8f0] rounded-lg p-6 sm:p-8 shadow-sm">
 
         <!-- Brand Logo -->
         <div class="flex justify-center mb-6">

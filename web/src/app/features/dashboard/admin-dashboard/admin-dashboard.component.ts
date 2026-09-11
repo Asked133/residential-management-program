@@ -10,13 +10,12 @@ import { ResidentesService } from '../../../core/services/residentes.service';
   standalone: true,
   imports: [CommonModule, RouterLink, DatePipe],
   template: `
-    <div class="p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto space-y-8">
+    <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       
       <!-- Welcome Hero Section -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-700 mb-3">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             Centro de Control Haven
           </div>
           <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
@@ -63,7 +62,7 @@ import { ResidentesService } from '../../../core/services/residentes.service';
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           
           <!-- KPI 1: Total Viviendas -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
+          <div class="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Viviendas</span>
               <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
@@ -86,7 +85,7 @@ import { ResidentesService } from '../../../core/services/residentes.service';
           </div>
 
           <!-- KPI 2: Total Residentes -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
+          <div class="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Padrón</span>
               <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100">
@@ -109,7 +108,7 @@ import { ResidentesService } from '../../../core/services/residentes.service';
           </div>
 
           <!-- KPI 3: Ocupación Habitacional -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
+          <div class="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Ocupación</span>
               <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
@@ -142,7 +141,7 @@ import { ResidentesService } from '../../../core/services/residentes.service';
           </div>
 
           <!-- KPI 4: Estado del Sistema -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
+          <div class="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sistema</span>
               <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center border border-purple-100">
@@ -153,7 +152,6 @@ import { ResidentesService } from '../../../core/services/residentes.service';
             </div>
             <div class="mt-4">
               <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 <p class="text-xl font-bold text-slate-900">En línea</p>
               </div>
               <p class="text-xs text-slate-500 mt-1 font-mono">Supabase Auth & API v1</p>
@@ -177,7 +175,7 @@ import { ResidentesService } from '../../../core/services/residentes.service';
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           <!-- Card: Gestión de Residentes -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+          <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
               <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#111C99] flex items-center justify-center border border-blue-100 mb-4 shadow-2xs">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -210,7 +208,7 @@ import { ResidentesService } from '../../../core/services/residentes.service';
           </div>
 
           <!-- Card: Gestión de Viviendas -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+          <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
               <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 mb-4 shadow-2xs">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -30,7 +30,7 @@ import Swal from 'sweetalert2';
         <!-- Banner Corporativo de Onboarding (Sin emojis) -->
         <div
           *ngIf="isOnboarding()"
-          class="mb-6 p-5 rounded-2xl bg-[#0f172a] text-white shadow-md flex items-start gap-4 border border-slate-800 animate-in fade-in duration-200"
+          class="mb-6 p-5 rounded-lg bg-[#0f172a] text-white shadow-md flex items-start gap-4 border border-slate-800 animate-in fade-in duration-200"
         >
           <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0 mt-0.5 text-blue-400">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -46,7 +46,7 @@ import Swal from 'sweetalert2';
         </div>
 
         <!-- Tarjeta de Perfil -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+        <div class="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
 
           <!-- Cabecera con Avatar -->
           <div class="p-6 sm:p-8 border-b border-slate-100 flex items-center gap-4">

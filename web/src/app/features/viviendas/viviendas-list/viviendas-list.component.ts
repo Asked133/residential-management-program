@@ -12,7 +12,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, DatePipe, ViviendasDetalleComponent],
   template: `
-    <div class="p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto space-y-6 selection:bg-[#111C99] selection:text-white">
+    <div class="p-4 sm:p-5 lg:p-6 max-w-7xl mx-auto space-y-4 selection:bg-[#111C99] selection:text-white">
 
       <!-- Breadcrumb & Top Navigation -->
       <nav class="flex items-center gap-2 text-xs text-slate-500 font-medium">
@@ -22,7 +22,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
       </nav>
 
       <!-- Page Header & Action Bar -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs">
+      <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div class="flex items-center gap-3">
@@ -44,7 +44,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
               (click)="cargarViviendas()"
               [disabled]="isLoading()"
               title="Actualizar datos"
-              class="p-2.5 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 border border-slate-200 text-slate-600 rounded-xl transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+              class="p-2 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 border border-slate-200 text-slate-600 rounded-lg transition-all shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <svg
                 [class.animate-spin]="isLoading()"
@@ -61,7 +61,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
             <!-- Nueva Vivienda Button -->
             <button
               (click)="abrirModalCrear()"
-              class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#111C99] hover:bg-[#0d1577] text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
+              class="inline-flex items-center gap-2 px-3 py-2 bg-[#111C99] hover:bg-[#0d1577] text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -73,7 +73,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
       </div>
 
       <!-- Live Search & Control Toolbar -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div class="flex items-center gap-2 flex-1 max-w-xl">
           <!-- Input Búsqueda -->
           <div class="relative flex-1">
@@ -85,7 +85,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
               [ngModel]="searchQuery()"
               (ngModelChange)="searchQuery.set($event)"
               placeholder="Buscar por número o identificador..."
-              class="w-full h-9 pl-9 pr-8 text-xs bg-slate-50/70 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
+              class="w-full h-8 pl-8 pr-8 text-xs bg-slate-50/70 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
             />
             <button
               *ngIf="searchQuery()"
@@ -103,7 +103,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
           <select
             [ngModel]="filtroTipo()"
             (ngModelChange)="filtroTipo.set($event)"
-            class="h-9 px-3 text-xs bg-slate-50/70 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all cursor-pointer shrink-0"
+            class="h-8 px-2 text-xs bg-slate-50/70 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all cursor-pointer shrink-0"
           >
             <option value="todos">Todos los tipos</option>
             <option *ngFor="let t of tiposDisponibles()" [value]="t">{{ t }}</option>
@@ -118,7 +118,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
       </div>
 
       <!-- Loading State -->
-      <div *ngIf="isLoading() && viviendas().length === 0" class="flex flex-col items-center justify-center py-24 gap-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
+      <div *ngIf="isLoading() && viviendas().length === 0" class="flex flex-col items-center justify-center py-16 gap-3 bg-white rounded-lg border border-slate-200 shadow-xs">
         <div class="w-10 h-10 border-3 border-slate-200 border-t-[#111C99] rounded-full animate-spin"></div>
         <p class="text-sm font-semibold text-slate-600">Sincronizando viviendas...</p>
       </div>
@@ -126,7 +126,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
       <!-- Error State -->
       <div
         *ngIf="!isLoading() && errorMessage()"
-        class="p-6 rounded-2xl bg-red-50/80 border border-red-200 text-red-800 flex items-center justify-between shadow-xs mb-8"
+        class="p-4 rounded-lg bg-red-50/80 border border-red-200 text-red-800 flex items-center justify-between shadow-xs mb-6"
       >
         <div class="flex items-center gap-3">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6 shrink-0 text-red-600">
@@ -148,7 +148,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
       <!-- Empty State -->
       <div
         *ngIf="!isLoading() && !errorMessage() && viviendas().length === 0"
-        class="bg-white border border-slate-200/80 rounded-2xl shadow-xs flex flex-col items-center justify-center py-20 px-4 text-center"
+        class="bg-white border border-slate-200/80 rounded-lg shadow-xs flex flex-col items-center justify-center py-12 px-4 text-center"
       >
         <div class="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-4 text-[#111C99]">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,7 +161,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
         </p>
         <button
           (click)="abrirModalCrear()"
-          class="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-[#111C99] hover:bg-[#0d1577] text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
+          class="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-[#111C99] hover:bg-[#0d1577] text-white rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -173,7 +173,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
       <!-- Empty State por Filtro / Búsqueda -->
       <div
         *ngIf="!isLoading() && !errorMessage() && viviendas().length > 0 && viviendasFiltradas().length === 0"
-        class="bg-white border border-slate-200 rounded-2xl shadow-xs flex flex-col items-center justify-center py-12 px-4 text-center"
+        class="bg-white border border-slate-200 rounded-lg shadow-xs flex flex-col items-center justify-center py-8 px-4 text-center"
       >
         <p class="text-xs text-slate-500">No se encontraron viviendas con los filtros actuales.</p>
         <button
@@ -187,7 +187,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
       <!-- Modern, Spacious Table (Estilo amigable aprobado) -->
       <div
         *ngIf="!isLoading() && !errorMessage() && viviendasFiltradas().length > 0"
-        class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden"
+        class="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden"
       >
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-slate-100">
@@ -296,7 +296,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
         class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
       >
         <div
-          class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150"
+          class="bg-white rounded-lg shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150"
           (click)="$event.stopPropagation()"
         >
           <!-- Header del Modal -->
@@ -349,7 +349,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
                 name="numeroCasa"
                 [(ngModel)]="formNumeroCasa"
                 placeholder="Ej. Casa 42, Depto 301, Manzana 3 Lote 5..."
-                class="w-full text-sm bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
+                class="w-full text-sm bg-slate-50/70 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
                 maxlength="50"
                 required
               />
@@ -381,7 +381,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
                 name="tipo"
                 [(ngModel)]="formTipo"
                 placeholder="Ej. Casa, Departamento, Townhouse..."
-                class="w-full text-sm bg-slate-50/70 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
+                class="w-full text-sm bg-slate-50/70 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
                 maxlength="50"
               />
             </div>
@@ -392,7 +392,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
                 type="button"
                 (click)="cerrarModal()"
                 [disabled]="isSaving()"
-                class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -400,7 +400,7 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
               <button
                 type="submit"
                 [disabled]="isSaving() || !formNumeroCasa.trim()"
-                class="inline-flex items-center gap-2 px-5 py-2 bg-[#111C99] hover:bg-[#0d1577] text-white text-sm font-semibold rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                class="inline-flex items-center gap-2 px-5 py-2 bg-[#111C99] hover:bg-[#0d1577] text-white text-sm font-semibold rounded-lg shadow-xs transition-all cursor-pointer disabled:opacity-50"
               >
                 <div *ngIf="isSaving()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 <span>{{ isSaving() ? 'Guardando...' : (isEditing() ? 'Actualizar' : 'Guardar') }}</span>
