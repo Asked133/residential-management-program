@@ -137,4 +137,37 @@ public class SupabaseService : ISupabaseService
 
         return await ParseJsonAsync<bool>(response.Content);
     }
+
+    public async Task<(CondominioDto? condominio, string? error)> ActualizarCondominioAsync(Guid id, UpdateCondominioRequestDto dto)
+    {
+        var requestUrl = $"{_supabaseUrl}/rest/v1/rpc/cambio_condominio";
+        var payload = new Dictionary<string, object> { { "p_id", id } };
+        if (dto.Nombre != null) payload["p_nombre"] = dto.Nombre;
+
+        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+        request.Headers.Add("apikey", _serviceRoleKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+        request.Content = JsonContent.Create(payload);
+
+        var response = await SendRequestAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync();
+            if (errorBody.Contains("no encontrad"))
+            {
+                _logger.LogWarning("ActualizarCondominio {Id} failed: no encontrado.", id);
+                return (null, "Condominio no encontrado");
+            }
+
+            _logger.LogError("ActualizarCondominio {Id} failed. Status: {StatusCode}, Body: {Body}", id, response.StatusCode, errorBody);
+            return (null, $"Error al actualizar condominio: {errorBody}");
+        }
+
+        var updated = await ParseJsonAsync<CondominioDto>(response.Content);
+        if (updated == null)
+            return (null, "Condominio no encontrado o no se pudo actualizar");
+
+        return (updated, null);
+    }
 }
