@@ -54,9 +54,8 @@ export const routes: Routes = [
       },
       {
         path: 'residentes/nuevo',
-        loadComponent: () =>
-          import('./features/residentes/residentes-form/residentes-form.component')
-            .then(m => m.ResidentesFormComponent)
+        redirectTo: 'residentes',
+        pathMatch: 'full'
       },
       {
         path: 'viviendas',
