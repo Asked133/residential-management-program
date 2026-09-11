@@ -124,5 +124,36 @@ describe('AuthService', () => {
       expect(service.currentUser()?.role).toBe('Administrador');
       expect(service.isAdmin()).toBe(true);
     });
+
+    it('should preserve existing user data and ignore google user_metadata when user already exists in database', () => {
+      const sessionUser = {
+        id: 'usr-123',
+        email: 'juan@test.com',
+        user_metadata: {
+          nombre: 'Google Name',
+          given_name: 'Google Given',
+          apellidos: 'Google Last',
+          family_name: 'Google Family',
+          telefono: '9999999999'
+        }
+      };
+
+      const existingProfile = {
+        id: 'usr-123',
+        email: 'juan@test.com',
+        nombre: 'Juan Carlos',
+        apellidos: 'Pérez Gómez',
+        telefono: '4421234567',
+        rol: 'Residente'
+      };
+
+      (service as any).setAuthenticatedUser(sessionUser, existingProfile);
+
+      const user = service.currentUser();
+      expect(user?.nombre).toBe('Juan Carlos');
+      expect(user?.apellidos).toBe('Pérez Gómez');
+      expect(user?.telefono).toBe('4421234567');
+      expect(user?.nombre).not.toBe('Google Name');
+    });
   });
 });

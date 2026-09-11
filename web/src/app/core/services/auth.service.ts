@@ -164,16 +164,29 @@ export class AuthService implements OnDestroy {
     } catch (err) {
       console.warn('[AuthService] Fallback activado (error o demora en /api/auth/me):', err);
       // Respaldo resiliente: Si el backend en Render falla (401/404/demora),
-      // consultamos la vista vw_usuarios directamente en Supabase para obtener el rol real
+      // consultamos la vista vw_usuarios directamente en Supabase para obtener los datos oficiales
       try {
-        const { data: dbUser, error: dbErr } = await this.supabase
+        let { data: dbUser, error: dbErr } = await this.supabase
           .from('vw_usuarios')
           .select('*')
           .eq('id', session.user.id)
           .maybeSingle();
 
+        // Si no se encuentra por id, verificar si ya fue registrado previamente por correo
+        if (!dbUser && session.user.email) {
+          const { data: byEmail, error: emailErr } = await this.supabase
+            .from('vw_usuarios')
+            .select('*')
+            .eq('email', session.user.email)
+            .maybeSingle();
+          if (byEmail && !emailErr) {
+            dbUser = byEmail;
+            dbErr = null;
+          }
+        }
+
         if (dbUser && !dbErr) {
-          console.log('[AuthService] Perfil obtenido directamente de Supabase (vw_usuarios):', dbUser);
+          console.log('[AuthService] Usuario preexistente obtenido de Supabase (vw_usuarios):', dbUser);
           this.setAuthenticatedUser(session.user, dbUser);
           return;
         }
@@ -355,9 +368,18 @@ export class AuthService implements OnDestroy {
     sessionUser: { id: string; email?: string; user_metadata?: Record<string, any>; app_metadata?: Record<string, any> },
     profile?: any | null
   ): void {
-    // El rol SIEMPRE debe venir del backend (/api/auth/me).
-    // Soportamos 'rol', 'role', 'role_id' o 'rol_id' (1=admin, 2=residente, 3=vigilante),
-    // app_metadata del servidor de Supabase o user_metadata como respaldo durante cold start.
+    // Determinar si el usuario ya está creado en la base de datos (Haven)
+    const yaEstaCreado = !!profile && (
+      !!profile.id ||
+      profile.creadoEn !== undefined ||
+      profile.creado_en !== undefined ||
+      profile.rol !== undefined ||
+      profile.rol_nombre !== undefined ||
+      (profile.nombre !== undefined && profile.nombre !== null)
+    );
+
+    // El rol SIEMPRE debe venir del backend (/api/auth/me) o de la vista de BD.
+    // Solo si el usuario es totalmente nuevo se permite fallback a metadata.
     const rawRole = (
       profile?.rol ??
       profile?.role ??
@@ -369,29 +391,48 @@ export class AuthService implements OnDestroy {
       profile?.roleId ??
       sessionUser.app_metadata?.['rol'] ??
       sessionUser.app_metadata?.['role'] ??
-      sessionUser.user_metadata?.['rol'] ??
-      sessionUser.user_metadata?.['role'] ??
+      (!yaEstaCreado ? (sessionUser.user_metadata?.['rol'] ?? sessionUser.user_metadata?.['role']) : undefined) ??
       'Residente'
     ).toString();
 
     const normalized = this.normalizeRole(rawRole);
     const formattedRole = normalized.charAt(0).toUpperCase() + normalized.slice(1);
 
-    console.log('[AuthService] Perfil resuelto:', {
+    console.log('[AuthService] Perfil resuelto (yaEstaCreado=' + yaEstaCreado + '):', {
       profile,
       rawRole,
       normalized,
       formattedRole
     });
 
+    const condominioId =
+      profile?.condominio_id ||
+      profile?.condominioId ||
+      (!yaEstaCreado ? (sessionUser.app_metadata?.['condominio_id'] || sessionUser.user_metadata?.['condominio_id']) : undefined);
+
+    // REGLA: Si el usuario ya está creado, lo que ya estaba creado se mantiene intacto.
+    // NUNCA jalamos ni sobrescribimos con los datos del inicio de sesión de Google (user_metadata).
+    const resolvedNombre = yaEstaCreado
+      ? (profile?.nombre ?? '')
+      : (sessionUser.user_metadata?.['nombre'] || sessionUser.user_metadata?.['given_name'] || '');
+
+    const resolvedApellidos = yaEstaCreado
+      ? (profile?.apellidos ?? '')
+      : (sessionUser.user_metadata?.['apellidos'] || sessionUser.user_metadata?.['family_name'] || '');
+
+    const resolvedTelefono = yaEstaCreado
+      ? (profile?.telefono ?? '')
+      : (sessionUser.user_metadata?.['telefono'] || '');
+
     this.currentUser.set({
       id: profile?.id || sessionUser.id,
       email: profile?.email || sessionUser.email || '',
       role: formattedRole,
       rol: formattedRole,
-      nombre: profile?.nombre || sessionUser.user_metadata?.['nombre'],
-      apellidos: profile?.apellidos || sessionUser.user_metadata?.['apellidos'],
-      telefono: profile?.telefono || sessionUser.user_metadata?.['telefono'],
+      nombre: resolvedNombre,
+      apellidos: resolvedApellidos,
+      telefono: resolvedTelefono,
+      condominioId,
       creadoEn: profile?.creadoEn ?? profile?.creado_en ?? undefined
     });
     this.authStatus.set('authenticated');
