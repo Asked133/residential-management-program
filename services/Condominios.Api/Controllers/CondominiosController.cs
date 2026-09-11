@@ -1,5 +1,6 @@
 using Condominios.Api.DTOs;
 using Condominios.Api.Services;
+using HavenApi.Shared.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,6 +50,32 @@ public class CondominiosController : ControllerBase
         }
 
         return Ok(new
+        {
+            id = condominio.Id,
+            nombre = condominio.Nombre,
+            activo = condominio.Activo,
+            creadoEn = condominio.CreadoEn
+        });
+    }
+
+    [AllowAnonymous]
+    [RequireDevKey]
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> CreateCondominio([FromBody] CreateCondominioRequestDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var (condominio, error) = await _supabaseService.CrearCondominioAsync(dto);
+        if (error != null)
+        {
+            return BadRequest(new { error });
+        }
+
+        return CreatedAtAction(nameof(GetCondominio), new { id = condominio!.Id }, new
         {
             id = condominio.Id,
             nombre = condominio.Nombre,

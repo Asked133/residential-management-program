@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Condominios.Api.DTOs;
 using HavenApi.Shared.Exceptions;
@@ -91,5 +92,28 @@ public class SupabaseService : ISupabaseService
 
         var condominios = await ParseJsonAsync<List<CondominioDto>>(response.Content);
         return condominios?.FirstOrDefault();
+    }
+
+    public async Task<(CondominioDto? condominio, string? error)> CrearCondominioAsync(CreateCondominioRequestDto dto)
+    {
+        var requestUrl = $"{_supabaseUrl}/rest/v1/rpc/alta_condominio";
+        var payload = new { p_nombre = dto.Nombre };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+        request.Headers.Add("apikey", _serviceRoleKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+        request.Content = JsonContent.Create(payload);
+
+        var response = await SendRequestAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync();
+            _logger.LogError("CrearCondominio failed. Status: {StatusCode}, Body: {Body}", response.StatusCode, errorBody);
+            return (null, $"Error al crear condominio: {errorBody}");
+        }
+
+        var result = await ParseJsonAsync<CondominioDto>(response.Content);
+        return (result, null);
     }
 }
