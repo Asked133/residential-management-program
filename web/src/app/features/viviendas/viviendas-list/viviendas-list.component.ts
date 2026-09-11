@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import Swal from 'sweetalert2';
 import { ViviendasService } from '../../../core/services/viviendas.service';
 import { Vivienda } from '../../../core/models/vivienda.model';
+import { CondominiosService } from '../../../core/services/condominios.service';
+import { Condominio } from '../../../core/models/condominio.model';
 import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detalle.component';
 
 @Component({
@@ -25,12 +27,19 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
       <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
               <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 Directorio de Viviendas
               </h1>
               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-[#111C99] border border-blue-200">
                 {{ viviendas().length }} {{ viviendas().length === 1 ? 'vivienda' : 'viviendas' }}
+              </span>
+              <!-- Condominio Badge del Administrador -->
+              <span *ngIf="condominioActual()" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span>{{ condominioActual()?.nombre }}</span>
               </span>
             </div>
             <p class="text-sm text-slate-500 mt-1.5">
@@ -339,6 +348,28 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
               <span>{{ formError() }}</span>
             </div>
 
+            <!-- Campo: Condominio (GET de condominios) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Condominio <span class="text-red-500">*</span>
+              </label>
+              <select
+                name="condominioId"
+                [(ngModel)]="formCondominioId"
+                class="w-full text-sm bg-slate-50/70 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all cursor-pointer"
+              >
+                <option *ngFor="let c of listaCondominios()" [value]="c.id">
+                  {{ c.nombre }} {{ c.id === condominioActual()?.id ? '(Tu condominio)' : '' }}
+                </option>
+                <option *ngIf="listaCondominios().length === 0" [value]="condominioActual()?.id || 'a0000000-0000-0000-0000-000000000001'">
+                  {{ condominioActual()?.nombre || 'Condominio Residencial Principal' }}
+                </option>
+              </select>
+              <p class="text-[11px] text-slate-400 mt-1">
+                Condominio al que pertenece la vivienda (obtenido del sistema).
+              </p>
+            </div>
+
             <!-- Campo: Número de Casa -->
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -423,12 +454,17 @@ import { ViviendasDetalleComponent } from '../viviendas-detalle/viviendas-detall
 })
 export class ViviendasListComponent implements OnInit {
   private readonly viviendasService = inject(ViviendasService);
+  private readonly condominiosService = inject(CondominiosService);
 
   readonly viviendas = signal<Vivienda[]>([]);
   readonly searchQuery = signal<string>('');
   readonly filtroTipo = signal<string>('todos');
   readonly isLoading = signal<boolean>(true);
   readonly errorMessage = signal<string | null>(null);
+
+  // Estado del Condominio del Administrador y lista para selección
+  readonly condominioActual = this.condominiosService.condominioActual;
+  readonly listaCondominios = signal<Condominio[]>([]);
 
   // Modal State
   readonly showModal = signal<boolean>(false);
@@ -443,6 +479,7 @@ export class ViviendasListComponent implements OnInit {
 
   formNumeroCasa: string = '';
   formTipo: string = '';
+  formCondominioId: string = '';
 
   readonly tiposDisponibles = computed(() => {
     const list = this.viviendas();
@@ -468,7 +505,22 @@ export class ViviendasListComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    await this.cargarViviendas();
+    await Promise.all([
+      this.cargarCondominios(),
+      this.cargarViviendas()
+    ]);
+  }
+
+  async cargarCondominios(): Promise<void> {
+    try {
+      const conds = await this.condominiosService.listar();
+      this.listaCondominios.set(conds);
+      if (!this.condominioActual() && conds.length > 0) {
+        await this.condominiosService.cargarCondominioUsuario(conds[0].id);
+      }
+    } catch (err) {
+      console.warn('[ViviendasList] Error al cargar condominios:', err);
+    }
   }
 
   async cargarViviendas(): Promise<void> {
@@ -498,6 +550,7 @@ export class ViviendasListComponent implements OnInit {
     this.editingId.set(null);
     this.formNumeroCasa = '';
     this.formTipo = '';
+    this.formCondominioId = this.condominioActual()?.id || (this.listaCondominios().length > 0 ? this.listaCondominios()[0].id : 'a0000000-0000-0000-0000-000000000001');
     this.formError.set(null);
     this.showModal.set(true);
   }
@@ -507,6 +560,7 @@ export class ViviendasListComponent implements OnInit {
     this.editingId.set(vivienda.id);
     this.formNumeroCasa = vivienda.numeroCasa;
     this.formTipo = vivienda.tipo || '';
+    this.formCondominioId = vivienda.condominioId || this.condominioActual()?.id || (this.listaCondominios().length > 0 ? this.listaCondominios()[0].id : '');
     this.formError.set(null);
     this.showModal.set(true);
   }
@@ -531,7 +585,8 @@ export class ViviendasListComponent implements OnInit {
         const id = this.editingId()!;
         await this.viviendasService.actualizar(id, {
           numeroCasa,
-          tipo: this.formTipo.trim() || null
+          tipo: this.formTipo.trim() || null,
+          condominioId: this.formCondominioId || undefined
         });
         await Swal.fire({
           title: '¡Actualizada!',
@@ -543,7 +598,8 @@ export class ViviendasListComponent implements OnInit {
       } else {
         await this.viviendasService.crear({
           numeroCasa,
-          tipo: this.formTipo.trim() || null
+          tipo: this.formTipo.trim() || null,
+          condominioId: this.formCondominioId || undefined
         });
         await Swal.fire({
           title: '¡Vivienda Creada!',
