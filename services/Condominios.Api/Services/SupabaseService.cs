@@ -54,9 +54,14 @@ public class SupabaseService : ISupabaseService
         }
     }
 
-    public async Task<List<CondominioDto>> GetCondominiosAsync()
+    public async Task<List<CondominioDto>> GetCondominiosAsync(string? nombre = null)
     {
         var requestUrl = $"{_supabaseUrl}/rest/v1/vw_condominios?select=*";
+        if (!string.IsNullOrWhiteSpace(nombre))
+        {
+            var filterValue = Uri.EscapeDataString(nombre.Trim());
+            requestUrl += $"&nombre=ilike.*{filterValue}*";
+        }
 
         var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
         request.Headers.Add("apikey", _serviceRoleKey);

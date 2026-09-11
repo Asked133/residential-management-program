@@ -22,9 +22,9 @@ public class CondominiosController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status200OK)]
     [HttpGet]
-    public async Task<IActionResult> GetCondominios()
+    public async Task<IActionResult> GetCondominios([FromQuery] string? nombre)
     {
-        var condominios = await _supabaseService.GetCondominiosAsync();
+        var condominios = await _supabaseService.GetCondominiosAsync(nombre);
         var result = condominios.Select(c => new
         {
             id = c.Id,
