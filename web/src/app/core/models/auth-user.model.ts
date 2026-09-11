@@ -6,5 +6,7 @@ export interface AuthUser {
   nombre?: string;
   apellidos?: string;
   telefono?: string;
+  condominioId?: string;
+  condominioNombre?: string;
   creadoEn?: string;
 }
