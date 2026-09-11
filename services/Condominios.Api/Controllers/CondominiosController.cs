@@ -83,4 +83,21 @@ public class CondominiosController : ControllerBase
             creadoEn = condominio.CreadoEn
         });
     }
+
+    [AllowAnonymous]
+    [RequireDevKey]
+    [HttpPost("{id}/baja")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> BajaCondominio(Guid id)
+    {
+        var result = await _supabaseService.DesactivarCondominioAsync(id);
+        if (!result)
+        {
+            return NotFound(new { error = "Condominio no encontrado" });
+        }
+
+        return NoContent();
+    }
 }
