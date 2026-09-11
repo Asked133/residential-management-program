@@ -116,4 +116,25 @@ public class SupabaseService : ISupabaseService
         var result = await ParseJsonAsync<CondominioDto>(response.Content);
         return (result, null);
     }
+
+    public async Task<bool> DesactivarCondominioAsync(Guid id)
+    {
+        var requestUrl = $"{_supabaseUrl}/rest/v1/rpc/baja_condominio";
+        var payload = new { p_id = id };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+        request.Headers.Add("apikey", _serviceRoleKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+        request.Content = JsonContent.Create(payload);
+
+        var response = await SendRequestAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("DesactivarCondominio {Id} failed. Status: {StatusCode}", id, response.StatusCode);
+            return false;
+        }
+
+        return await ParseJsonAsync<bool>(response.Content);
+    }
 }
