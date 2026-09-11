@@ -31,8 +31,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
       </button>
     </div>
 
-    <!-- Drawer Body -->
-    <div class="p-6 sm:p-8 space-y-8 flex-1 flex flex-col justify-between">
+    <div class="p-4 sm:p-6 space-y-6 flex-1 flex flex-col justify-between">
       <div class="space-y-6">
         <!-- Hero Profile -->
         <div class="flex flex-col items-center text-center">
@@ -50,8 +49,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
           </div>
         </div>
 
-        <!-- Information Card -->
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs divide-y divide-slate-100">
+        <div class="bg-white border border-slate-200/80 rounded-lg p-4 sm:p-5 shadow-xs divide-y divide-slate-100">
           <!-- Correo Electrónico -->
           <div class="pb-4">
             <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">

@@ -28,7 +28,7 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
           <div class="flex items-center gap-2.5">
             <img src="/haven-logo.png" alt="Haven" class="w-7 h-7 rounded-lg object-contain" />
             <span class="font-bold text-base tracking-tight text-slate-900">Haven</span>
-            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
               Admin
             </span>
           </div>
@@ -47,25 +47,33 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
 
       <!-- Persistent Sidebar (Desktop & Mobile Drawer) -->
       <aside
-        class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen lg:shrink-0"
+        class="fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col justify-between transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen lg:shrink-0 overflow-hidden"
+        [class.w-64]="!sidebarCollapsed()"
+        [class.w-16]="sidebarCollapsed()"
         [class.translate-x-0]="mobileMenuOpen()"
         [class.-translate-x-full]="!mobileMenuOpen()"
       >
-        <div>
+        <div class="flex-1 overflow-hidden flex flex-col">
           <!-- Sidebar Brand Header -->
-          <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <img src="/haven-logo.png" alt="Haven" class="w-9 h-9 rounded-xl object-contain shadow-2xs" />
-              <div>
-                <span class="font-bold text-base tracking-tight text-slate-900 block leading-none">Haven</span>
-                <span class="text-[11px] text-slate-400 font-medium mt-1 block">Condominio Residencial</span>
+          <div
+            class="h-16 border-b border-slate-100 flex items-center shrink-0 w-full transition-all duration-300"
+            [class.px-4]="!sidebarCollapsed()"
+            [class.px-2]="sidebarCollapsed()"
+            [class.justify-center]="sidebarCollapsed()"
+          >
+            <div class="flex items-center gap-3 overflow-hidden" [class.justify-center]="sidebarCollapsed()">
+              <img src="/haven-logo.png" alt="Haven" class="w-8 h-8 rounded-lg object-contain shadow-2xs shrink-0" />
+              <div *ngIf="showText()" class="whitespace-nowrap fade-in-direct">
+                <span class="font-bold text-sm tracking-tight text-slate-900 block leading-none">Haven</span>
+                <span class="text-[10px] text-slate-400 font-medium mt-0.5 block">Condominio Residencial</span>
               </div>
             </div>
 
             <button
+              *ngIf="showText()"
               type="button"
               (click)="mobileMenuOpen.set(false)"
-              class="lg:hidden p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              class="lg:hidden p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer ml-auto shrink-0"
               aria-label="Cerrar menú"
             >
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,20 +82,36 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
             </button>
           </div>
 
-          <!-- Condominium Badge Indicator -->
-          <div class="px-5 py-3 bg-slate-50/60 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-xs font-semibold text-slate-700">Haven Principal</span>
+          <!-- Condominium Badge Indicator / Toggle -->
+          <div
+            class="h-10 bg-slate-50/60 border-b border-slate-100 flex items-center shrink-0 transition-all duration-300"
+            [class.px-3]="!sidebarCollapsed()"
+            [class.px-2]="sidebarCollapsed()"
+            [class.justify-between]="!sidebarCollapsed()"
+            [class.justify-center]="sidebarCollapsed()"
+          >
+            <div *ngIf="showText()" class="flex flex-col whitespace-nowrap overflow-hidden fade-in-direct">
+              <span class="text-[11px] font-semibold text-slate-700 leading-tight">Haven Principal</span>
+              <span class="text-[9px] font-semibold text-indigo-700 leading-tight">Administrador</span>
             </div>
-            <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-              Administrador
-            </span>
+            <button
+              type="button"
+              (click)="toggleSidebar()"
+              class="hidden lg:flex p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-md transition-colors shrink-0 cursor-pointer"
+              [title]="sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú'"
+            >
+              <svg class="w-4 h-4 transition-transform duration-300" [class.rotate-180]="sidebarCollapsed()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+            </button>
           </div>
 
           <!-- Navigation Links -->
-          <nav class="p-3 space-y-1">
-            <p class="px-3 pt-2 pb-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <nav class="p-2 space-y-1 overflow-y-auto flex-1 custom-scrollbar w-full select-none">
+            <p
+              *ngIf="showText()"
+              class="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap fade-in-direct"
+            >
               Gestión General
             </p>
 
@@ -95,65 +119,87 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
             <a
               routerLink="/dashboard/admin"
               [routerLinkActiveOptions]="{ exact: true }"
-              routerLinkActive="bg-[#111C99] text-white font-semibold shadow-2xs shadow-[#111C99]/20"
-              class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer group"
+              routerLinkActive="bg-[#111C99] text-white font-semibold shadow-xs"
+              class="flex items-center h-10 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer group whitespace-nowrap"
+              [class.px-3]="!sidebarCollapsed()"
+              [class.px-0]="sidebarCollapsed()"
+              [class.justify-center]="sidebarCollapsed()"
+              [title]="sidebarCollapsed() ? 'Panel Principal' : ''"
               (click)="mobileMenuOpen.set(false)"
             >
-              <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-105" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                class="w-5 h-5 shrink-0 transition-transform group-hover:scale-105"
+                [class.mr-3]="!sidebarCollapsed()"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
-              <span class="flex-1">Panel Principal</span>
+              <span *ngIf="showText()" class="whitespace-nowrap font-medium fade-in-direct">Panel Principal</span>
             </a>
 
             <!-- Residentes -->
             <a
               routerLink="/dashboard/admin/residentes"
               [routerLinkActiveOptions]="{ exact: false }"
-              routerLinkActive="bg-[#111C99] text-white font-semibold shadow-2xs shadow-[#111C99]/20"
-              class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer group"
+              routerLinkActive="bg-[#111C99] text-white font-semibold shadow-xs"
+              class="flex items-center h-10 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer group whitespace-nowrap"
+              [class.px-3]="!sidebarCollapsed()"
+              [class.px-0]="sidebarCollapsed()"
+              [class.justify-center]="sidebarCollapsed()"
+              [title]="sidebarCollapsed() ? 'Directorio de Residentes' : ''"
               (click)="mobileMenuOpen.set(false)"
             >
-              <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-105" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                class="w-5 h-5 shrink-0 transition-transform group-hover:scale-105"
+                [class.mr-3]="!sidebarCollapsed()"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span class="flex-1">Directorio de Residentes</span>
+              <span *ngIf="showText()" class="whitespace-nowrap font-medium fade-in-direct">Directorio de Residentes</span>
             </a>
 
             <!-- Viviendas -->
             <a
               routerLink="/dashboard/admin/viviendas"
               [routerLinkActiveOptions]="{ exact: false }"
-              routerLinkActive="bg-[#111C99] text-white font-semibold shadow-2xs shadow-[#111C99]/20"
-              class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer group"
+              routerLinkActive="bg-[#111C99] text-white font-semibold shadow-xs"
+              class="flex items-center h-10 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer group whitespace-nowrap"
+              [class.px-3]="!sidebarCollapsed()"
+              [class.px-0]="sidebarCollapsed()"
+              [class.justify-center]="sidebarCollapsed()"
+              [title]="sidebarCollapsed() ? 'Directorio de Viviendas' : ''"
               (click)="mobileMenuOpen.set(false)"
             >
-              <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-105" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                class="w-5 h-5 shrink-0 transition-transform group-hover:scale-105"
+                [class.mr-3]="!sidebarCollapsed()"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              <span class="flex-1">Directorio de Viviendas</span>
+              <span *ngIf="showText()" class="whitespace-nowrap font-medium fade-in-direct">Directorio de Viviendas</span>
             </a>
           </nav>
         </div>
 
-        <!-- Sidebar User Footer (Botón de Admin / Mi Perfil) -->
-        <div class="p-3 border-t border-slate-100 bg-slate-50/40">
-          <div class="flex items-center justify-between gap-2">
+        <!-- Sidebar User Footer -->
+        <div class="p-2 border-t border-slate-100 bg-slate-50/40 shrink-0 w-full overflow-hidden">
+          <!-- Expanded View -->
+          <div *ngIf="showText()" class="flex items-center justify-between gap-1 fade-in-direct">
             <a
               routerLink="/perfil"
               (click)="mobileMenuOpen.set(false)"
               routerLinkActive="bg-indigo-50/80 border-indigo-200 text-[#111C99]"
-              class="flex items-center gap-2.5 overflow-hidden flex-1 p-2 rounded-xl hover:bg-slate-100 transition-colors group cursor-pointer border border-transparent"
+              class="flex items-center p-1.5 rounded-lg hover:bg-slate-100 transition-colors group cursor-pointer border border-transparent whitespace-nowrap overflow-hidden flex-1 min-w-0"
               title="Ver mi perfil de administrador"
             >
-              <div class="w-8 h-8 rounded-full bg-[#111C99] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+              <div class="w-7 h-7 rounded-md bg-[#111C99] text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                 {{ userInitials }}
               </div>
-              <div class="truncate">
-                <p class="text-xs font-bold text-slate-900 group-hover:text-[#111C99] transition-colors truncate">
+              <div class="ml-2.5 truncate">
+                <p class="text-[11px] font-bold text-slate-900 group-hover:text-[#111C99] transition-colors leading-tight truncate">
                   {{ currentUser()?.nombre || 'Administrador' }}
-                </p>
-                <p class="text-[11px] text-slate-500 font-mono truncate">
-                  {{ currentUser()?.email }}
                 </p>
               </div>
             </a>
@@ -162,7 +208,31 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
               type="button"
               (click)="onLogout()"
               title="Cerrar sesión"
-              class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+              class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer shrink-0"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Collapsed View (Only icons, centered) -->
+          <div *ngIf="!showText()" class="flex flex-col items-center gap-2 py-1">
+            <a
+              routerLink="/perfil"
+              (click)="mobileMenuOpen.set(false)"
+              routerLinkActive="ring-2 ring-indigo-500 ring-offset-1"
+              class="w-8 h-8 rounded-lg bg-[#111C99] text-white font-bold text-[11px] flex items-center justify-center shadow-xs hover:scale-105 transition-transform cursor-pointer"
+              [title]="'Perfil: ' + (currentUser()?.nombre || 'Administrador')"
+            >
+              {{ userInitials }}
+            </a>
+
+            <button
+              type="button"
+              (click)="onLogout()"
+              title="Cerrar sesión"
+              class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
             >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -178,7 +248,20 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
       </main>
 
     </div>
-  `
+  `,
+  styles: [`
+    @keyframes fadeInDirect {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    .fade-in-direct {
+      animation: fadeInDirect 150ms ease-out forwards;
+    }
+  `]
 })
 export class AdminLayoutComponent {
   private readonly authService = inject(AuthService);
@@ -186,6 +269,10 @@ export class AdminLayoutComponent {
 
   readonly currentUser = this.authService.currentUser;
   readonly mobileMenuOpen = signal<boolean>(false);
+  readonly sidebarCollapsed = signal<boolean>(false);
+  readonly showText = signal<boolean>(true);
+
+  private textTimeout?: ReturnType<typeof setTimeout>;
 
   get userInitials(): string {
     const user = this.currentUser();
@@ -195,7 +282,37 @@ export class AdminLayoutComponent {
   }
 
   toggleMobileMenu(): void {
-    this.mobileMenuOpen.update(o => !o);
+    this.mobileMenuOpen.update(o => {
+      const next = !o;
+      if (next && this.sidebarCollapsed()) {
+        this.sidebarCollapsed.set(false);
+        this.showText.set(true);
+      }
+      return next;
+    });
+  }
+
+  toggleSidebar(): void {
+    if (this.textTimeout) {
+      clearTimeout(this.textTimeout);
+      this.textTimeout = undefined;
+    }
+
+    const willCollapse = !this.sidebarCollapsed();
+    this.sidebarCollapsed.set(willCollapse);
+
+    if (willCollapse) {
+      // Al colapsar: ocultar texto INMEDIATAMENTE para que solo queden los logos
+      this.showText.set(false);
+    } else {
+      // Al expandir: esperar a que termine la animación de ensanchado (280ms)
+      // y luego mostrar el texto directo sin que se vea cómo se acomoda
+      this.textTimeout = setTimeout(() => {
+        if (!this.sidebarCollapsed()) {
+          this.showText.set(true);
+        }
+      }, 280);
+    }
   }
 
   onLogout(): void {

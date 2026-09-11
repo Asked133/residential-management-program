@@ -11,10 +11,10 @@ import Swal from 'sweetalert2';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
-    <div [class]="isDrawer ? 'p-6 sm:p-8' : 'min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-12 font-sans antialiased text-slate-900'">
+    <div [class]="isDrawer ? 'p-4 sm:p-5' : 'min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 font-sans antialiased text-slate-900'">
       
       <!-- Container for Standalone (Half-page card) vs Drawer -->
-      <div [class]="isDrawer ? 'w-full' : 'w-full max-w-4xl bg-white border border-slate-200/80 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden grid grid-cols-1 lg:grid-cols-12'">
+      <div [class]="isDrawer ? 'w-full' : 'w-full max-w-4xl bg-white border border-slate-200/80 rounded-lg shadow-xl shadow-slate-200/50 overflow-hidden grid grid-cols-1 lg:grid-cols-12'">
 
         <!-- Left Branding Panel (only shown in standalone route / non-drawer mode) -->
         <div *ngIf="!isDrawer" class="lg:col-span-5 bg-gradient-to-br from-[#0a1160] via-[#111C99] to-[#1e2bb8] p-8 text-white flex flex-col justify-between relative overflow-hidden">
@@ -34,11 +34,6 @@ import Swal from 'sweetalert2';
               Volver al listado
             </a>
 
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 mb-4">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Alta de Residente
-            </div>
-
             <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-3">
               Nuevo residente
             </h1>
@@ -56,7 +51,7 @@ import Swal from 'sweetalert2';
         </div>
 
         <!-- Form section (Occupies Right half in standalone or full width in drawer) -->
-        <div [class]="isDrawer ? 'w-full' : 'lg:col-span-7 p-8 sm:p-10'">
+        <div [class]="isDrawer ? 'w-full' : 'lg:col-span-7 p-6 sm:p-8'">
 
           <!-- Form Header inside drawer -->
           <div *ngIf="isDrawer" class="mb-6">
@@ -77,7 +72,7 @@ import Swal from 'sweetalert2';
           <!-- Error Banner -->
           <div
             *ngIf="errorMessage()"
-            class="mb-6 p-4 rounded-xl bg-red-50/90 border border-red-200 text-red-700 text-sm font-medium flex items-start gap-3 shadow-2xs transition-all"
+            class="mb-6 p-4 rounded-lg bg-red-50/90 border border-red-200 text-red-700 text-sm font-medium flex items-start gap-3 shadow-2xs transition-all"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 shrink-0 text-red-600 mt-0.5">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
@@ -274,7 +269,7 @@ import Swal from 'sweetalert2';
             </div>
 
             <!-- Notice card -->
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 flex items-start gap-2.5">
+            <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 text-xs text-slate-600 flex items-start gap-2.5">
               <svg class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>

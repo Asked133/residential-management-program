@@ -32,7 +32,7 @@ import Swal from 'sweetalert2';
       <!-- Top Sticky Bar -->
       <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm border border-blue-100">
+          <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm border border-blue-100">
             <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
@@ -62,7 +62,7 @@ import Swal from 'sweetalert2';
       <!-- Body Scrollable -->
       <div class="p-6 overflow-y-auto flex-1 space-y-6">
         <!-- Hero del Inmueble -->
-        <div class="bg-gradient-to-b from-slate-50/80 to-white border border-slate-200/80 rounded-2xl p-6 text-center shadow-xs">
+        <div class="bg-gradient-to-b from-slate-50/80 to-white border border-slate-200/80 rounded-xl p-6 text-center shadow-xs">
           <div class="w-20 h-20 mx-auto rounded-2xl bg-[#eff6ff] text-[#3b82f6] flex items-center justify-center shadow-sm border border-blue-100 ring-4 ring-blue-50/50">
             <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -178,7 +178,7 @@ import Swal from 'sweetalert2';
           <!-- CASO 2: NO TIENE RESIDENTE ASIGNADO (Estado vacio amigable) -->
           <div
             *ngIf="!cargandoResidente && !residenteAsignado && !mostrarFormularioVinculacion"
-            class="bg-slate-50/70 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center"
+            class="bg-slate-50/70 border-2 border-dashed border-slate-200 rounded-xl p-6 text-center"
           >
             <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -204,7 +204,7 @@ import Swal from 'sweetalert2';
           <!-- CASO 3: FORMULARIO DE VINCULACION (Issue #87) -->
           <div
             *ngIf="mostrarFormularioVinculacion"
-            class="bg-white border border-blue-200 rounded-2xl p-5 shadow-sm space-y-4 ring-2 ring-blue-500/10"
+            class="bg-white border border-blue-200 rounded-xl p-5 shadow-sm space-y-4 ring-2 ring-blue-500/10"
           >
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
               <div class="flex items-center gap-2">
@@ -306,7 +306,7 @@ import Swal from 'sweetalert2';
         </div>
 
         <!-- Informacion Tecnica Adicional -->
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs divide-y divide-slate-100 text-xs">
+        <div class="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs divide-y divide-slate-100 text-xs">
           <div class="py-2 flex items-center justify-between">
             <span class="text-slate-400 font-medium">ID Interno</span>
             <span class="font-mono font-semibold text-slate-700">#{{ vivienda?.id }}</span>

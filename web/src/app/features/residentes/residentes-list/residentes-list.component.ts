@@ -12,7 +12,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, DatePipe, ResidentesDetalleComponent],
   template: `
-    <div class="p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto space-y-6 selection:bg-[#111C99] selection:text-white">
+    <div class="p-4 sm:p-5 lg:p-6 max-w-7xl mx-auto space-y-4 selection:bg-[#111C99] selection:text-white">
 
       <!-- Breadcrumb & Top Navigation -->
       <nav class="flex items-center gap-2 text-xs text-slate-500 font-medium">
@@ -22,7 +22,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
       </nav>
 
       <!-- Page Header & Action Bar -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs">
+      <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div class="flex items-center gap-3">
@@ -43,7 +43,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
             <!-- Nuevo Residente Button -->
             <a
               routerLink="/dashboard/admin/residentes/nuevo"
-              class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#111C99] hover:bg-[#0d1577] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+              class="inline-flex items-center gap-2 px-3 py-2 bg-[#111C99] hover:bg-[#0d1577] text-white text-xs font-bold rounded-lg transition-all shadow-xs cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -56,7 +56,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
               (click)="cargarResidentes()"
               [disabled]="isLoading()"
               title="Actualizar datos"
-              class="p-2.5 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 border border-slate-200 text-slate-600 rounded-xl transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+              class="p-2 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 border border-slate-200 text-slate-600 rounded-lg transition-all shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <svg
                 [class.animate-spin]="isLoading()"
@@ -74,7 +74,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
       </div>
 
       <!-- Live Search & Control Toolbar -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div class="relative flex-1 max-w-md">
           <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -84,7 +84,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
             placeholder="Buscar por nombre, correo o teléfono..."
-            class="w-full h-9 pl-9 pr-8 text-xs bg-slate-50/70 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
+            class="w-full h-8 pl-8 pr-8 text-xs bg-slate-50/70 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#111C99]/10 focus:border-[#111C99] transition-all"
           />
           <button
             *ngIf="searchQuery()"
@@ -106,7 +106,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
       </div>
 
       <!-- Loading State -->
-      <div *ngIf="isLoading() && residentes().length === 0" class="flex flex-col items-center justify-center py-24 gap-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
+      <div *ngIf="isLoading() && residentes().length === 0" class="flex flex-col items-center justify-center py-16 gap-3 bg-white rounded-lg border border-slate-200 shadow-xs">
         <div class="w-10 h-10 border-3 border-slate-200 border-t-[#111C99] rounded-full animate-spin"></div>
         <p class="text-sm font-semibold text-slate-600">Sincronizando residentes...</p>
       </div>
@@ -114,7 +114,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
       <!-- Error State -->
       <div
         *ngIf="!isLoading() && errorMessage()"
-        class="p-6 rounded-2xl bg-red-50/80 border border-red-200 text-red-800 flex items-center justify-between shadow-xs mb-8"
+        class="p-4 rounded-lg bg-red-50/80 border border-red-200 text-red-800 flex items-center justify-between shadow-xs mb-6"
       >
         <div class="flex items-center gap-3">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6 shrink-0 text-red-600">
@@ -136,7 +136,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
       <!-- Empty State (No residents at all) -->
       <div
         *ngIf="!isLoading() && !errorMessage() && residentes().length === 0"
-        class="bg-white border border-slate-200/80 rounded-2xl shadow-xs flex flex-col items-center justify-center py-20 px-4 text-center"
+        class="bg-white border border-slate-200/80 rounded-lg shadow-xs flex flex-col items-center justify-center py-12 px-4 text-center"
       >
         <div class="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4 text-indigo-600">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,7 +149,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
         </p>
         <a
           routerLink="/dashboard/admin/residentes/nuevo"
-          class="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-[#111C99] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#0d1577] transition-all"
+          class="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-[#111C99] text-white text-xs font-bold rounded-lg shadow-xs hover:bg-[#0d1577] transition-all"
         >
           + Dar de alta residente
         </a>
@@ -158,7 +158,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
       <!-- Empty State por Filtro / Búsqueda -->
       <div
         *ngIf="!isLoading() && !errorMessage() && residentes().length > 0 && residentesFiltrados().length === 0"
-        class="bg-white border border-slate-200 rounded-2xl shadow-xs flex flex-col items-center justify-center py-12 px-4 text-center"
+        class="bg-white border border-slate-200 rounded-lg shadow-xs flex flex-col items-center justify-center py-8 px-4 text-center"
       >
         <p class="text-xs text-slate-500">No se encontraron residentes con ese criterio de búsqueda.</p>
         <button
@@ -172,7 +172,7 @@ import { getInitials } from '../../../core/utils/iniciales.util';
       <!-- Modern, Spacious Residents Table (Estilo amigable aprobado) -->
       <div
         *ngIf="!isLoading() && !errorMessage() && residentesFiltrados().length > 0"
-        class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden"
+        class="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden"
       >
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-slate-100">
