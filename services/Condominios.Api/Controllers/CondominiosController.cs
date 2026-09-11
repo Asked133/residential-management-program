@@ -100,4 +100,35 @@ public class CondominiosController : ControllerBase
 
         return NoContent();
     }
+
+    [AllowAnonymous]
+    [RequireDevKey]
+    [HttpPatch("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateCondominio(Guid id, [FromBody] UpdateCondominioRequestDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var (condominio, error) = await _supabaseService.ActualizarCondominioAsync(id, dto);
+        if (error != null)
+        {
+            if (error == "Condominio no encontrado")
+            {
+                return NotFound(new { error });
+            }
+            return BadRequest(new { error });
+        }
+
+        return Ok(new
+        {
+            id = condominio!.Id,
+            nombre = condominio.Nombre,
+            activo = condominio.Activo,
+            creadoEn = condominio.CreadoEn
+        });
+    }
 }
