@@ -134,14 +134,8 @@ import { getInitials } from '../../../core/utils/iniciales.util';
         </div>
         <h3 class="text-lg font-bold text-slate-900">No hay residentes registrados</h3>
         <p class="text-sm text-slate-500 max-w-sm mt-1">
-          Comienza dando de alta al primer habitante de Haven Residencial.
+          Los residentes se registran directamente desde la aplicación móvil o el portal de registro.
         </p>
-        <a
-          routerLink="/dashboard/admin/residentes/nuevo"
-          class="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-[#111C99] text-white text-xs font-bold rounded-lg shadow-xs hover:bg-[#0d1577] transition-all"
-        >
-          + Dar de alta residente
-        </a>
       </div>
 
       <!-- Empty State por Filtro / Búsqueda -->
