@@ -40,17 +40,6 @@ import { getInitials } from '../../../core/utils/iniciales.util';
 
           <!-- Action Buttons -->
           <div class="flex items-center gap-3 shrink-0">
-            <!-- Nuevo Residente Button -->
-            <a
-              routerLink="/dashboard/admin/residentes/nuevo"
-              class="inline-flex items-center gap-2 px-3 py-2 bg-[#111C99] hover:bg-[#0d1577] text-white text-xs font-bold rounded-lg transition-all shadow-xs cursor-pointer"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Nuevo Residente</span>
-            </a>
-
             <!-- Refresh Button -->
             <button
               (click)="cargarResidentes()"

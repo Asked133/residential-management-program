@@ -205,15 +205,9 @@ import { CondominiosService } from '../../../core/services/condominios.service';
               >
                 Abrir Directorio
               </a>
-              <a
-                routerLink="/dashboard/admin/residentes/nuevo"
-                class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Nuevo Residente
-              </a>
+              <span class="text-xs font-medium text-slate-400">
+                Padrón de Habitantes
+              </span>
             </div>
           </div>
 
