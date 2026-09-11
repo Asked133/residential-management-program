@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ViviendasService } from '../../../core/services/viviendas.service';
 import { ResidentesService } from '../../../core/services/residentes.service';
+import { CondominiosService } from '../../../core/services/condominios.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -12,27 +13,36 @@ import { ResidentesService } from '../../../core/services/residentes.service';
   template: `
     <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       
-      <!-- Welcome Hero Section -->
-      <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-700 mb-3">
-            Centro de Control Haven
+      <!-- Welcome Hero Section (Spartan UI Style: Sobrio, Tipográfico y Neutral) -->
+      <div class="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="space-y-2">
+          <!-- Spartan UI Context Badge -->
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200/80">
+              <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              {{ condominioActual()?.nombre || 'Condominio Plata' }}
+            </span>
+            <span class="text-slate-300">•</span>
+            <span class="text-xs text-slate-500 font-medium">Panel de Administración</span>
           </div>
-          <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             Hola, {{ currentUser()?.nombre || 'Administrador' }}
           </h1>
-          <p class="text-sm text-slate-500 mt-1">
-            Resumen operativo y estado general del condominio residencial.
+          <p class="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
+            Resumen operativo y estado general del residencial <strong class="font-semibold text-slate-800">{{ condominioActual()?.nombre || 'tu condominio' }}</strong>.
           </p>
         </div>
 
-        <div class="flex items-center gap-3">
-          <div class="text-right hidden sm:block">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fecha</p>
-            <p class="text-xs font-medium text-slate-700 font-mono mt-0.5">{{ today | date:'EEEE, dd MMMM yyyy' }}</p>
+        <div class="flex items-center gap-3 bg-slate-50 p-2.5 sm:p-3 rounded-lg border border-slate-200/80 self-start lg:self-center shrink-0">
+          <div class="text-right">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fecha</p>
+            <p class="text-xs font-semibold text-slate-700 font-mono mt-0.5">{{ today | date:'EEEE, dd MMMM yyyy' }}</p>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200 shrink-0">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="w-8 h-8 rounded-md bg-white flex items-center justify-center text-slate-700 border border-slate-200 shadow-2xs shrink-0">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
@@ -107,7 +117,7 @@ import { ResidentesService } from '../../../core/services/residentes.service';
             </div>
           </div>
 
-          <!-- KPI 3: Ocupación Habitacional -->
+          <!-- KPI 3: Ocupación Habitacional (Acento Esmeralda Original) -->
           <div class="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Ocupación</span>
@@ -126,7 +136,7 @@ import { ResidentesService } from '../../../core/services/residentes.service';
                   {{ viviendasAsignadas() }} / {{ totalViviendas() }} viv.
                 </span>
               </div>
-              <!-- Progress Bar -->
+              <!-- Progress Bar (Verde Esmeralda) -->
               <div class="w-full h-2 bg-slate-100 rounded-full mt-2 overflow-hidden">
                 <div
                   class="h-full bg-emerald-500 rounded-full transition-all duration-500"
@@ -140,11 +150,11 @@ import { ResidentesService } from '../../../core/services/residentes.service';
             </div>
           </div>
 
-          <!-- KPI 4: Estado del Sistema -->
+          <!-- KPI 4: Estado del Sistema (Spartan Style) -->
           <div class="bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sistema</span>
-              <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center border border-purple-100">
+              <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
@@ -157,7 +167,7 @@ import { ResidentesService } from '../../../core/services/residentes.service';
               <p class="text-xs text-slate-500 mt-1 font-mono">Supabase Auth & API v1</p>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100">
-              <span class="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+              <span class="text-xs text-slate-600 font-medium flex items-center gap-1">
                 ✓ Sincronización continua
               </span>
             </div>
@@ -207,10 +217,10 @@ import { ResidentesService } from '../../../core/services/residentes.service';
             </div>
           </div>
 
-          <!-- Card: Gestión de Viviendas -->
+          <!-- Card: Gestión de Viviendas (Neutral Spartan Style - Sin verdes) -->
           <div class="bg-white border border-slate-200 rounded-lg p-4 sm:p-5 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
             <div>
-              <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 mb-4 shadow-2xs">
+              <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-200 mb-4 shadow-2xs">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
@@ -242,10 +252,12 @@ import { ResidentesService } from '../../../core/services/residentes.service';
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly condominiosService = inject(CondominiosService);
   private readonly viviendasService = inject(ViviendasService);
   private readonly residentesService = inject(ResidentesService);
 
   readonly currentUser = this.authService.currentUser;
+  readonly condominioActual = this.condominiosService.condominioActual;
   readonly today = new Date();
 
   readonly totalViviendas = signal<number>(0);
@@ -267,6 +279,8 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    const user = this.currentUser();
+    this.condominiosService.cargarCondominioUsuario(user?.condominioId);
     await this.cargarMetricas();
   }
 

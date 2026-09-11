@@ -1,7 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { CondominiosService } from '../../../core/services/condominios.service';
 import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.component';
 
 @Component({
@@ -59,21 +60,36 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
             class="h-16 border-b border-slate-100 flex items-center shrink-0 w-full transition-all duration-300"
             [class.px-4]="!sidebarCollapsed()"
             [class.px-2]="sidebarCollapsed()"
+            [class.justify-between]="!sidebarCollapsed()"
             [class.justify-center]="sidebarCollapsed()"
           >
             <div class="flex items-center gap-3 overflow-hidden" [class.justify-center]="sidebarCollapsed()">
               <img src="/haven-logo.png" alt="Haven" class="w-8 h-8 rounded-lg object-contain shadow-2xs shrink-0" />
               <div *ngIf="showText()" class="whitespace-nowrap fade-in-direct">
-                <span class="font-bold text-sm tracking-tight text-slate-900 block leading-none">Haven</span>
-                <span class="text-[10px] text-slate-400 font-medium mt-0.5 block">Condominio Residencial</span>
+                <span class="font-bold text-base tracking-tight text-slate-900 block leading-none">Haven</span>
+                <span class="text-[10px] text-slate-400 font-medium mt-0.5 block">Gestión Residencial</span>
               </div>
             </div>
 
+            <!-- Botón Colapsar Sidebar (Desktop) -->
+            <button
+              *ngIf="showText()"
+              type="button"
+              (click)="toggleSidebar()"
+              class="hidden lg:flex p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shrink-0"
+              title="Colapsar menú"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <!-- Botón Cerrar Drawer (Móvil) -->
             <button
               *ngIf="showText()"
               type="button"
               (click)="mobileMenuOpen.set(false)"
-              class="lg:hidden p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer ml-auto shrink-0"
+              class="lg:hidden p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shrink-0"
               aria-label="Cerrar menú"
             >
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,26 +98,38 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
             </button>
           </div>
 
-          <!-- Condominium Badge Indicator / Toggle -->
-          <div
-            class="h-10 bg-slate-50/60 border-b border-slate-100 flex items-center shrink-0 transition-all duration-300"
-            [class.px-3]="!sidebarCollapsed()"
-            [class.px-2]="sidebarCollapsed()"
-            [class.justify-between]="!sidebarCollapsed()"
-            [class.justify-center]="sidebarCollapsed()"
-          >
-            <div *ngIf="showText()" class="flex flex-col whitespace-nowrap overflow-hidden fade-in-direct">
-              <span class="text-[11px] font-semibold text-slate-700 leading-tight">Haven Principal</span>
-              <span class="text-[9px] font-semibold text-indigo-700 leading-tight">Administrador</span>
+          <!-- Spartan UI Workspace Switcher Style -->
+          <div *ngIf="showText()" class="px-3 pt-3 pb-2 fade-in-direct">
+            <div class="flex items-center gap-2.5 p-2 rounded-lg border border-slate-200/90 bg-slate-50/70 hover:bg-slate-100/70 transition-colors shadow-2xs">
+              <div class="flex size-7 shrink-0 items-center justify-center rounded-md bg-slate-900 text-white font-semibold text-xs shadow-2xs">
+                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div class="grid flex-1 text-left min-w-0">
+                <span class="truncate text-xs font-semibold text-slate-900 leading-tight" [title]="condominioActual()?.nombre || 'Condominio'">
+                  {{ condominioActual()?.nombre || 'Condominio Plata' }}
+                </span>
+                <span class="truncate text-[10px] text-slate-500 font-medium leading-tight">Condominio activo</span>
+              </div>
+              <div class="shrink-0 text-slate-400">
+                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                </svg>
+              </div>
             </div>
+          </div>
+
+          <!-- Icono de Condominio cuando el Sidebar está colapsado -->
+          <div *ngIf="!showText()" class="py-2.5 flex flex-col items-center border-b border-slate-100">
             <button
               type="button"
               (click)="toggleSidebar()"
-              class="hidden lg:flex p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-md transition-colors shrink-0 cursor-pointer"
-              [title]="sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú'"
+              class="size-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-2xs cursor-pointer hover:bg-slate-800 transition-colors"
+              [title]="'Condominio: ' + (condominioActual()?.nombre || 'Condominio')"
             >
-              <svg class="w-4 h-4 transition-transform duration-300" [class.rotate-180]="sidebarCollapsed()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </button>
           </div>
@@ -125,6 +153,7 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
               [class.px-0]="sidebarCollapsed()"
               [class.justify-center]="sidebarCollapsed()"
               [title]="sidebarCollapsed() ? 'Panel Principal' : ''"
+              aria-label="Panel Principal"
               (click)="mobileMenuOpen.set(false)"
             >
               <svg
@@ -147,6 +176,7 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
               [class.px-0]="sidebarCollapsed()"
               [class.justify-center]="sidebarCollapsed()"
               [title]="sidebarCollapsed() ? 'Directorio de Residentes' : ''"
+              aria-label="Directorio de Residentes"
               (click)="mobileMenuOpen.set(false)"
             >
               <svg
@@ -169,6 +199,7 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
               [class.px-0]="sidebarCollapsed()"
               [class.justify-center]="sidebarCollapsed()"
               [title]="sidebarCollapsed() ? 'Directorio de Viviendas' : ''"
+              aria-label="Directorio de Viviendas"
               (click)="mobileMenuOpen.set(false)"
             >
               <svg
@@ -265,14 +296,25 @@ import { UserMenuComponent } from '../../../core/components/user-menu/user-menu.
 })
 export class AdminLayoutComponent {
   private readonly authService = inject(AuthService);
+  private readonly condominiosService = inject(CondominiosService);
   private readonly router = inject(Router);
 
   readonly currentUser = this.authService.currentUser;
+  readonly condominioActual = this.condominiosService.condominioActual;
   readonly mobileMenuOpen = signal<boolean>(false);
   readonly sidebarCollapsed = signal<boolean>(false);
   readonly showText = signal<boolean>(true);
 
   private textTimeout?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    effect(() => {
+      const user = this.currentUser();
+      if (user) {
+        this.condominiosService.cargarCondominioUsuario(user.condominioId);
+      }
+    });
+  }
 
   get userInitials(): string {
     const user = this.currentUser();
