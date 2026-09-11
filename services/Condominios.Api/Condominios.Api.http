@@ -1,0 +1,41 @@
+# X-Dev-Key debe reemplazarse por el valor configurado localmente vía
+# dotnet user-secrets set "DevTools:ApiKey" "..."
+# dentro de services/Condominios.Api
+
+@Condominios.Api_HostAddress = http://localhost:5215
+@CondominioId = 00000000-0000-0000-0000-000000000000
+
+### GET /api/condominios (con placeholder de Authorization Bearer)
+GET {{Condominios.Api_HostAddress}}/api/condominios
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Accept: application/json
+
+### GET /api/condominios/{id}
+GET {{Condominios.Api_HostAddress}}/api/condominios/{{CondominioId}}
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Accept: application/json
+
+### POST /api/condominios
+POST {{Condominios.Api_HostAddress}}/api/condominios
+X-Dev-Key: YOUR_DEV_KEY
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Condominio de Prueba"
+}
+
+### POST /api/condominios/{id}/baja
+POST {{Condominios.Api_HostAddress}}/api/condominios/{{CondominioId}}/baja
+X-Dev-Key: YOUR_DEV_KEY
+Accept: application/json
+
+### PATCH /api/condominios/{id}
+PATCH {{Condominios.Api_HostAddress}}/api/condominios/{{CondominioId}}
+X-Dev-Key: YOUR_DEV_KEY
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Condominio Actualizado"
+}
