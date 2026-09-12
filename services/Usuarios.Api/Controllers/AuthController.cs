@@ -3,7 +3,7 @@ using Usuarios.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-
+using HavenApi.Shared.Filters;
 namespace Usuarios.Api.Controllers;
 
 [ApiController]
@@ -200,6 +200,47 @@ public class AuthController : ControllerBase
             nombre = usuario.Nombre,
             apellidos = usuario.Apellidos,
             telefono = usuario.Telefono
+        });
+    }
+
+    [RequireDevKey]
+    [HttpPost("~/api/usuarios/{id}/condominio")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AsignarCondominioAdmin(Guid id, [FromBody] AsignarCondominioAdminRequestDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var (usuario, error) = await _supabaseService.AsignarCondominioAdminAsync(id, dto.CondominioId);
+
+        if (error != null)
+        {
+            if (error == "Usuario no encontrado")
+            {
+                return NotFound(new { error });
+            }
+            if (error.Contains("Ya existe un administrador"))
+            {
+                return Conflict(new { error });
+            }
+
+            return BadRequest(new { error });
+        }
+
+        return Ok(new
+        {
+            id = usuario!.Id,
+            nombre = usuario.Nombre,
+            apellidos = usuario.Apellidos,
+            email = usuario.Email,
+            rolId = usuario.RolId,
+            condominioId = usuario.CondominioId
         });
     }
 }

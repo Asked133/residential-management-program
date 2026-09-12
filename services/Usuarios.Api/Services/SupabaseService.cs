@@ -235,4 +235,81 @@ public class SupabaseService : ISupabaseService
         var residentes = await ParseJsonAsync<List<UsuarioDto>>(response.Content);
         return residentes ?? new List<UsuarioDto>();
     }
+
+    public async Task<(UsuarioDto? usuario, string? error)> AsignarCondominioAdminAsync(Guid adminId, Guid condominioId)
+    {
+        // a) Validar que el usuario objetivo exista y tenga rol_id = 1
+        var userRequestUrl = $"{_supabaseUrl}/rest/v1/vw_usuarios?id=eq.{adminId}&select=*";
+        var userRequest = new HttpRequestMessage(HttpMethod.Get, userRequestUrl);
+        userRequest.Headers.Add("apikey", _serviceRoleKey);
+        userRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+
+        var userResponse = await SendRequestAsync(userRequest);
+        if (!userResponse.IsSuccessStatusCode)
+        {
+            var err = await userResponse.Content.ReadAsStringAsync();
+            _logger.LogError("Failed to fetch user {AdminId}. Status: {StatusCode}, Body: {Body}", adminId, userResponse.StatusCode, err);
+            return (null, "Error al buscar el usuario");
+        }
+
+        var usuarios = await ParseJsonAsync<List<UsuarioDto>>(userResponse.Content);
+        var targetUser = usuarios?.FirstOrDefault();
+
+        if (targetUser == null)
+        {
+            return (null, "Usuario no encontrado");
+        }
+
+        if (targetUser.RolId?.ToString() != "1")
+        {
+            return (null, "El usuario debe tener rol de Administrador");
+        }
+
+        // b) Validar que no exista YA otro admin distinto asignado a ese condominio
+        var adminRequestUrl = $"{_supabaseUrl}/rest/v1/vw_usuarios?rol_id=eq.1&condominio_id=eq.{condominioId}&select=id";
+        var adminRequest = new HttpRequestMessage(HttpMethod.Get, adminRequestUrl);
+        adminRequest.Headers.Add("apikey", _serviceRoleKey);
+        adminRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+
+        var adminResponse = await SendRequestAsync(adminRequest);
+        if (!adminResponse.IsSuccessStatusCode)
+        {
+            var err = await adminResponse.Content.ReadAsStringAsync();
+            _logger.LogError("Failed to check existing admins for condominio {CondominioId}. Status: {StatusCode}, Body: {Body}", condominioId, adminResponse.StatusCode, err);
+            return (null, "Error al verificar administradores existentes");
+        }
+
+        var existingAdmins = await ParseJsonAsync<List<UsuarioDto>>(adminResponse.Content);
+        if (existingAdmins != null && existingAdmins.Any(a => a.Id != adminId))
+        {
+            return (null, "Ya existe un administrador asignado a este condominio");
+        }
+
+        // c) Invocar RPC cambio_usuario
+        var rpcUrl = $"{_supabaseUrl}/rest/v1/rpc/cambio_usuario";
+        var rpcPayload = new
+        {
+            p_id = adminId,
+            p_condominio_id = condominioId
+        };
+
+        var rpcRequest = new HttpRequestMessage(HttpMethod.Post, rpcUrl);
+        rpcRequest.Headers.Add("apikey", _serviceRoleKey);
+        rpcRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _serviceRoleKey);
+        
+        var jsonString = JsonSerializer.Serialize(rpcPayload);
+        rpcRequest.Content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json");
+
+        var rpcResponse = await SendRequestAsync(rpcRequest);
+
+        if (!rpcResponse.IsSuccessStatusCode)
+        {
+            var errorBody = await rpcResponse.Content.ReadAsStringAsync();
+            _logger.LogError("Failed to link admin {AdminId} to condominio {CondominioId}. Status: {StatusCode}, Body: {Body}", adminId, condominioId, rpcResponse.StatusCode, errorBody);
+            return (null, $"Error al vincular administrador: {errorBody}");
+        }
+
+        var updatedUsuario = await ParseJsonAsync<UsuarioDto>(rpcResponse.Content);
+        return (updatedUsuario, null);
+    }
 }
