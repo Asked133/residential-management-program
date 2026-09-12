@@ -146,9 +146,22 @@ public class ViviendasController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var (adminError, _) = await ValidateAdminAsync();
+        var (adminError, condominioId) = await ValidateAdminAsync();
         if (adminError != null)
             return adminError;
+
+        var currentVivienda = await _supabaseService.GetViviendaByIdAsync(id);
+        if (currentVivienda == null)
+        {
+            _logger.LogWarning("UpdateVivienda: Vivienda {Id} not found.", id);
+            return NotFound(new { error = "Vivienda no encontrada" });
+        }
+
+        if (currentVivienda.CondominioId != condominioId)
+        {
+            _logger.LogWarning("UpdateVivienda: Forbidden, user doesn't own this condominium.");
+            return StatusCode(403, new { error = "No tienes permiso sobre viviendas de otro condominio" });
+        }
 
         var (vivienda, error) = await _supabaseService.UpdateViviendaAsync(id, dto);
         if (error != null)
