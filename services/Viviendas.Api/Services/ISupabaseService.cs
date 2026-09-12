@@ -6,6 +6,7 @@ namespace Viviendas.Api.Services;
 public interface ISupabaseService
 {
     Task<string?> GetUsuarioRolAsync(Guid userId, string accessToken);
+    Task<(string? rolNombre, Guid? condominioId)> GetContextoAdminAsync(Guid userId, string accessToken);
     Task<List<ViviendaDto>> GetViviendasAsync();
     Task<ViviendaDto?> GetViviendaByIdAsync(int id);
     Task<(ViviendaDto? vivienda, string? error)> CreateViviendaAsync(CreateViviendaRequestDto dto);
