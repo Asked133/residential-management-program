@@ -48,4 +48,7 @@ public class UsuarioDto
 
     [JsonPropertyName("creado_en")]
     public DateTime CreadoEn { get; set; }
+
+    [JsonPropertyName("condominio_id")]
+    public Guid? CondominioId { get; set; }
 }
