@@ -282,9 +282,22 @@ public class ViviendasController : ControllerBase
     [HttpDelete("{id}/residentes/{usuarioId}")]
     public async Task<IActionResult> RemoveResidente(int id, Guid usuarioId)
     {
-        var (adminError, _) = await ValidateAdminAsync();
+        var (adminError, condominioId) = await ValidateAdminAsync();
         if (adminError != null)
             return adminError;
+
+        var currentVivienda = await _supabaseService.GetViviendaByIdAsync(id);
+        if (currentVivienda == null)
+        {
+            _logger.LogWarning("RemoveResidente: Vivienda {Id} not found.", id);
+            return NotFound(new { error = "Vivienda no encontrada" });
+        }
+
+        if (currentVivienda.CondominioId != condominioId)
+        {
+            _logger.LogWarning("RemoveResidente: Forbidden, user doesn't own this condominium.");
+            return StatusCode(403, new { error = "No tienes permiso sobre viviendas de otro condominio" });
+        }
 
         var success = await _supabaseService.RemoveResidenteAsync(id, usuarioId);
         if (!success)
@@ -330,9 +343,22 @@ public class ViviendasController : ControllerBase
     [HttpGet("{id}/residentes")]
     public async Task<IActionResult> GetResidentes(int id)
     {
-        var (adminError, _) = await ValidateAdminAsync();
+        var (adminError, condominioId) = await ValidateAdminAsync();
         if (adminError != null)
             return adminError;
+
+        var currentVivienda = await _supabaseService.GetViviendaByIdAsync(id);
+        if (currentVivienda == null)
+        {
+            _logger.LogWarning("GetResidentes: Vivienda {Id} not found.", id);
+            return NotFound(new { error = "Vivienda no encontrada" });
+        }
+
+        if (currentVivienda.CondominioId != condominioId)
+        {
+            _logger.LogWarning("GetResidentes: Forbidden, user doesn't own this condominium.");
+            return StatusCode(403, new { error = "No tienes permiso sobre viviendas de otro condominio" });
+        }
 
         var residentes = await _supabaseService.GetResidentesByViviendaIdAsync(id);
         return Ok(residentes);
