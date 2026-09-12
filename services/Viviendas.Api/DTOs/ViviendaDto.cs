@@ -16,6 +16,12 @@ public class ViviendaDto
     [JsonPropertyName("activo")]
     public bool Activo { get; set; }
 
+    [JsonPropertyName("condominio_id")]
+    public Guid CondominioId { get; set; }
+
+    [JsonPropertyName("condominio_nombre")]
+    public string CondominioNombre { get; set; } = string.Empty;
+
     [JsonPropertyName("creado_en")]
     public DateTime CreadoEn { get; set; }
 }
