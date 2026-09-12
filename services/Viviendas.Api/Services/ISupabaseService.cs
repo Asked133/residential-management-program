@@ -9,7 +9,7 @@ public interface ISupabaseService
     Task<(string? rolNombre, Guid? condominioId)> GetContextoAdminAsync(Guid userId, string accessToken);
     Task<List<ViviendaDto>> GetViviendasAsync();
     Task<ViviendaDto?> GetViviendaByIdAsync(int id);
-    Task<(ViviendaDto? vivienda, string? error)> CreateViviendaAsync(CreateViviendaRequestDto dto);
+    Task<(ViviendaDto? vivienda, string? error)> CreateViviendaAsync(CreateViviendaRequestDto dto, Guid condominioId);
     Task<(ViviendaDto? vivienda, string? error)> UpdateViviendaAsync(int id, UpdateViviendaRequestDto dto);
     Task<bool> DeleteViviendaAsync(int id);
     Task<(JsonElement? data, string? error)> AssignResidenteAsync(int viviendaId, AsignarResidenteRequestDto dto);

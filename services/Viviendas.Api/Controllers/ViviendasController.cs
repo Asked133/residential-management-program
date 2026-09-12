@@ -100,11 +100,17 @@ public class ViviendasController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var (adminError, _) = await ValidateAdminAsync();
+        var (adminError, condominioId) = await ValidateAdminAsync();
         if (adminError != null)
             return adminError;
 
-        var (vivienda, error) = await _supabaseService.CreateViviendaAsync(dto);
+        if (condominioId == null)
+        {
+            _logger.LogWarning("CreateVivienda: El administrador no tiene un condominio asignado.");
+            return BadRequest(new { error = "El administrador no tiene un condominio asignado" });
+        }
+
+        var (vivienda, error) = await _supabaseService.CreateViviendaAsync(dto, condominioId.Value);
         if (error != null)
         {
             if (error.Contains("Ya existe una vivienda registrada con ese número de casa"))
@@ -122,6 +128,8 @@ public class ViviendasController : ControllerBase
             id = vivienda.Id,
             numeroCasa = vivienda.NumeroCasa,
             tipo = vivienda.Tipo,
+            condominioId = vivienda.CondominioId,
+            condominioNombre = vivienda.CondominioNombre,
             creadoEn = vivienda.CreadoEn
         });
     }
