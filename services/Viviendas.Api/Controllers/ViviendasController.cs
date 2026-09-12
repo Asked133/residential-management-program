@@ -20,7 +20,7 @@ public class ViviendasController : ControllerBase
         _logger = logger;
     }
 
-    private async Task<IActionResult?> ValidateAdminAsync()
+    private async Task<(IActionResult? Error, Guid? CondominioId)> ValidateAdminAsync()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                           ?? User.FindFirst("sub")?.Value;
@@ -28,27 +28,27 @@ public class ViviendasController : ControllerBase
         if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
         {
             _logger.LogWarning("ValidateAdmin: Unauthorized, missing or invalid user ID.");
-            return Unauthorized(new { error = "Token invalido: no contiene ID de usuario" });
+            return (Unauthorized(new { error = "Token invalido: no contiene ID de usuario" }), null);
         }
 
         var accessToken = HttpContext.Request.Headers["Authorization"]
             .ToString().Replace("Bearer ", "");
 
-        var rol = await _supabaseService.GetUsuarioRolAsync(userId, accessToken);
+        var (rolNombre, condominioId) = await _supabaseService.GetContextoAdminAsync(userId, accessToken);
 
-        if (rol == null)
+        if (rolNombre == null)
         {
             _logger.LogWarning("ValidateAdmin: User {UserId} not found.", userId);
-            return NotFound(new { error = "Usuario no encontrado en la tabla 'usuarios'" });
+            return (NotFound(new { error = "Usuario no encontrado en la tabla 'usuarios'" }), null);
         }
 
-        if (!string.Equals(rol, "Administrador", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(rolNombre, "Administrador", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("ValidateAdmin: Forbidden, user {UserId} is not an Admin.", userId);
-            return StatusCode(403, new { error = "Se requiere rol de administrador" });
+            return (StatusCode(403, new { error = "Se requiere rol de administrador" }), null);
         }
 
-        return null;
+        return (null, condominioId);
     }
 
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -100,9 +100,9 @@ public class ViviendasController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var adminValidation = await ValidateAdminAsync();
-        if (adminValidation != null)
-            return adminValidation;
+        var (adminError, _) = await ValidateAdminAsync();
+        if (adminError != null)
+            return adminError;
 
         var (vivienda, error) = await _supabaseService.CreateViviendaAsync(dto);
         if (error != null)
@@ -138,9 +138,9 @@ public class ViviendasController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var adminValidation = await ValidateAdminAsync();
-        if (adminValidation != null)
-            return adminValidation;
+        var (adminError, _) = await ValidateAdminAsync();
+        if (adminError != null)
+            return adminError;
 
         var (vivienda, error) = await _supabaseService.UpdateViviendaAsync(id, dto);
         if (error != null)
@@ -177,9 +177,9 @@ public class ViviendasController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteVivienda(int id)
     {
-        var adminValidation = await ValidateAdminAsync();
-        if (adminValidation != null)
-            return adminValidation;
+        var (adminError, _) = await ValidateAdminAsync();
+        if (adminError != null)
+            return adminError;
 
         var success = await _supabaseService.DeleteViviendaAsync(id);
         if (!success)
@@ -203,9 +203,9 @@ public class ViviendasController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var adminValidation = await ValidateAdminAsync();
-        if (adminValidation != null)
-            return adminValidation;
+        var (adminError, _) = await ValidateAdminAsync();
+        if (adminError != null)
+            return adminError;
 
         var (data, error) = await _supabaseService.AssignResidenteAsync(id, dto);
         if (data == null)
@@ -235,9 +235,9 @@ public class ViviendasController : ControllerBase
     [HttpDelete("{id}/residentes/{usuarioId}")]
     public async Task<IActionResult> RemoveResidente(int id, Guid usuarioId)
     {
-        var adminValidation = await ValidateAdminAsync();
-        if (adminValidation != null)
-            return adminValidation;
+        var (adminError, _) = await ValidateAdminAsync();
+        if (adminError != null)
+            return adminError;
 
         var success = await _supabaseService.RemoveResidenteAsync(id, usuarioId);
         if (!success)
@@ -283,9 +283,9 @@ public class ViviendasController : ControllerBase
     [HttpGet("{id}/residentes")]
     public async Task<IActionResult> GetResidentes(int id)
     {
-        var adminValidation = await ValidateAdminAsync();
-        if (adminValidation != null)
-            return adminValidation;
+        var (adminError, _) = await ValidateAdminAsync();
+        if (adminError != null)
+            return adminError;
 
         var residentes = await _supabaseService.GetResidentesByViviendaIdAsync(id);
         return Ok(residentes);
