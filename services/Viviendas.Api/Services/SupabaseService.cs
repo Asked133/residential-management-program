@@ -195,12 +195,13 @@ public class SupabaseService : ISupabaseService
         return viviendas?.FirstOrDefault();
     }
 
-    public async Task<(ViviendaDto? vivienda, string? error)> CreateViviendaAsync(CreateViviendaRequestDto dto)
+    public async Task<(ViviendaDto? vivienda, string? error)> CreateViviendaAsync(CreateViviendaRequestDto dto, Guid condominioId)
     {
         var requestUrl = $"{_supabaseUrl}/rest/v1/rpc/alta_vivienda";
         var payload = new
         {
             p_numero_casa = dto.NumeroCasa,
+            p_condominio_id = condominioId,
             p_tipo = dto.Tipo
         };
 
